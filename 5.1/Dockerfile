@@ -11,7 +11,7 @@ ENV SONARQUBE_JDBC_PASSWORD sonar
 ENV SONARQUBE_JDBC_URL jdbc:h2:tcp://localhost:9092/sonar
 
 RUN cd /opt \
-	&& wget -q -O sonarqube.zip http://dist.sonar.codehaus.org/sonarqube-$SONAR_VERSION.zip \
+	&& curl -o sonarqube.zip http://dist.sonar.codehaus.org/sonarqube-$SONAR_VERSION.zip \
 	&& unzip sonarqube.zip \
 	&& mv sonarqube-$SONAR_VERSION sonarqube \
 	&& rm sonarqube.zip \
