@@ -45,6 +45,8 @@ The production database is configured with theses variables:
     -e SONARQUBE_JDBC_URL=jdbc:postgresql://localhost/sonar \
     sonarqube:5.1
 
+More recipes can be found [here](https://github.com/SonarSource/docker-sonarqube/blob/master/recipes.md)
+
 ## Administration
 
 The administration guide can be found [here](http://docs.sonarqube.org/display/SONAR/Administration+Guide).
@@ -75,12 +77,3 @@ Before you start to code, we recommend discussing your plans through a [GitHub i
 especially for more ambitious contributions.
 This gives other contributors a chance to point you in the right direction,
 give you feedback on your design, and help you find out if someone else is working on the same thing.
-
-## TO BE IMPROVED
-
- + Backup
- + Clustering
- + Upgrade
- + Admin password
- + Plugins
- + ...
