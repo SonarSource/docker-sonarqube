@@ -1,8 +1,0 @@
-# maintainer: David Gageot <david.gageot@sonarsource.com> (@dgageot)
-
-# TODO: put the real SHA1s
-
-latest: git://github.com/SonarSource/docker-sonarqube@SHA1 5.1
-5.1: git://github.com/SonarSource/docker-sonarqube@SHA1 5.1
-lts: git://github.com/SonarSource/docker-sonarqube@SHA1 4.5.4
-4.5.4: git://github.com/SonarSource/docker-sonarqube@SHA1 4.5.4
