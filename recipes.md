@@ -23,7 +23,7 @@ db:
 Use [docker-machine](https://github.com/docker/machine) to start the containers.
 
 ```bash
-$ docker-machine up
+$ docker-compose up
 ```
 
 Analyse a project:
