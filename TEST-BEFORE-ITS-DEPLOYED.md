@@ -29,8 +29,10 @@ This is mandatory until the images are deployed on the Docker Hub.
 ```
 git clone https://github.com/dgageot/docker-sonarqube.git
 cd docker-sonarqube
-docker build -t sonarqube:5.1 -t sonarqube:latest 5.1
-docker build -t sonarqube:4.5.4 -t sonarqube:lts 4.5.4
+docker build -t sonarqube:5.1 5.1
+docker build -t sonarqube:latest 5.1
+docker build -t sonarqube:4.5.4 4.5.4
+docker build -t sonarqube:lts 4.5.4
 ```
 
 # Run SonarQube
