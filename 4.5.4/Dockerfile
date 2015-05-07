@@ -1,4 +1,4 @@
-FROM java:openjdk-7u79-jre
+FROM java:openjdk-8u45-jre
 MAINTAINER David Gageot <david.gageot@sonarsource.com>
 
 ENV SONAR_VERSION 4.5.4
