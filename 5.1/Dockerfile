@@ -35,4 +35,4 @@ RUN set -x \
 
 COPY run.sh $SONAR_HOME/bin/
 WORKDIR $SONAR_HOME
-CMD ["./bin/run.sh"]
+ENTRYPOINT ["./bin/run.sh"]
