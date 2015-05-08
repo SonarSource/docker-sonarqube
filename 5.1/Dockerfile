@@ -1,8 +1,14 @@
 FROM java:openjdk-8u45-jre
+
 MAINTAINER David Gageot <david.gageot@sonarsource.com>
 
 ENV SONAR_HOME /opt/sonarqube
-EXPOSE 9000 9092
+
+# Http port
+EXPOSE 9000
+
+# H2 Database port
+EXPOSE 9092
 
 # Database configuration
 ENV SONARQUBE_JDBC_USERNAME sonar
