@@ -11,6 +11,7 @@ EXPOSE 9000
 EXPOSE 9092
 
 # Database configuration
+# Defaults to using H2
 ENV SONARQUBE_JDBC_USERNAME sonar
 ENV SONARQUBE_JDBC_PASSWORD sonar
 ENV SONARQUBE_JDBC_URL jdbc:h2:tcp://localhost:9092/sonar
