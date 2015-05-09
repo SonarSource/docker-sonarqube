@@ -2,7 +2,7 @@ FROM java:openjdk-8u45-jre
 
 MAINTAINER David Gageot <david.gageot@sonarsource.com>
 
-ENV SONAR_HOME /opt/sonarqube
+ENV SONARQUBE_HOME /opt/sonarqube
 
 # Http port
 EXPOSE 9000
@@ -31,8 +31,8 @@ RUN set -x \
 	&& unzip sonarqube.zip \
 	&& mv sonarqube-$SONAR_VERSION sonarqube \
 	&& rm sonarqube.zip* \
-	&& rm -rf $SONAR_HOME/bin/*
+	&& rm -rf $SONARQUBE_HOME/bin/*
 
-COPY run.sh $SONAR_HOME/bin/
-WORKDIR $SONAR_HOME
+COPY run.sh $SONARQUBE_HOME/bin/
+WORKDIR $SONARQUBE_HOME
 ENTRYPOINT ["./bin/run.sh"]
