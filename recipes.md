@@ -7,7 +7,6 @@ sonarqube:
   build: "5.1"
   ports:
    - "9000:9000"
-   - "9092:9092"
    - "5432:5432"
   environment:
    - SONARQUBE_JDBC_URL=jdbc:postgresql://localhost/sonar
