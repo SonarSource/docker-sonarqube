@@ -34,6 +34,6 @@ RUN set -x \
 	&& rm sonarqube.zip* \
 	&& rm -rf $SONARQUBE_HOME/bin/*
 
-COPY run.sh $SONARQUBE_HOME/bin/
 WORKDIR $SONARQUBE_HOME
+COPY run.sh $SONARQUBE_HOME/bin/
 ENTRYPOINT ["./bin/run.sh"]
