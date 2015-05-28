@@ -9,7 +9,7 @@ sonarqube:
    - "9000:9000"
    - "5432:5432"
   environment:
-   - SONARQUBE_JDBC_URL=jdbc:postgresql://localhost/sonar
+   - SONARQUBE_JDBC_URL=jdbc:postgresql://localhost:5432/sonar
 
 db:
   image: postgres
@@ -19,7 +19,7 @@ db:
    - POSTGRES_PASSWORD=sonar
 ```
 
-Use [docker-machine](https://github.com/docker/machine) to start the containers.
+Use [docker-compose](https://github.com/docker/compose) to start the containers.
 
 ```bash
 $ docker-compose up
