@@ -47,6 +47,15 @@ The production database is configured with theses variables:
 
 More recipes can be found [here](https://github.com/SonarSource/docker-sonarqube/blob/master/recipes.md)
 
+## Passing JVM and SonarQube launcher parameters
+
+You might need to customize the JVM running SonarQube, typically to pass system properties or tweak heap memory settings.
+Use JAVA_OPTS environment variable for this purpose:
+
+    docker run --name sonarqube -p 9000:9000 --env JAVA_OPTS=-Dsonar.web.context=/sonarqube sonarqube:5.1
+
+You also can define sonar arguments as SONAR_OPTS.
+
 ## Administration
 
 The administration guide can be found [here](http://docs.sonarqube.org/display/SONAR/Administration+Guide).
