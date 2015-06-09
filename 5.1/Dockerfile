@@ -26,8 +26,8 @@ RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys F19F217FA669DEFA9E514
 
 RUN set -x \
 	&& cd /opt \
-	&& curl -o sonarqube.zip -fSL http://dist.sonar.codehaus.org/sonarqube-$SONAR_VERSION.zip \
-	&& curl -o sonarqube.zip.asc -fSL http://dist.sonar.codehaus.org/sonarqube-$SONAR_VERSION.zip.asc \
+	&& curl -o sonarqube.zip -fSL http://downloads.sonarsource.com/sonarqube/sonarqube-$SONAR_VERSION.zip \
+	&& curl -o sonarqube.zip.asc -fSL http://downloads.sonarsource.com/sonarqube/sonarqube-$SONAR_VERSION.zip.asc \
 	&& gpg --verify sonarqube.zip.asc \
 	&& unzip sonarqube.zip \
 	&& mv sonarqube-$SONAR_VERSION sonarqube \
