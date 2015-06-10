@@ -18,11 +18,11 @@ ENV SONARQUBE_JDBC_URL jdbc:h2:tcp://localhost:9092/sonar
 
 ENV SONAR_VERSION 5.1.1
 
-# pub   2048R/0C1F120F 2015-03-19
-#       Key fingerprint = F19F 217F A669 DEFA 9E51  4B64 F67E 93C6 0C1F 120F
-# uid                  sonartech <sonartech@sonarsource.com>
-# sub   2048R/5C6BEEA6 2015-03-19
-RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys F19F217FA669DEFA9E514B64F67E93C60C1F120F
+# pub   2048R/24452160 2011-11-01 [expires: 2016-12-15]
+#       Key fingerprint = A58D 5AF5 4809 A8A6 3F45  8BBD 56CD 8D5D 2445 2160
+# uid                  Eric Hartmann <eric.hartmann@sonarsource.com>
+# sub   2048R/562C56C0 2011-11-01 [expires: 2016-12-15]
+RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys 56CD8D5D24452160
 
 RUN set -x \
 	&& cd /opt \
