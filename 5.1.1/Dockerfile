@@ -1,4 +1,4 @@
-FROM java:openjdk-8u45-jre
+FROM java:openjdk-8u45-jdk
 
 MAINTAINER David Gageot <david.gageot@sonarsource.com>
 
