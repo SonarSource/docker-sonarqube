@@ -4,7 +4,7 @@ docker-sonarqube
 # Supported tags and respective Dockerfile links
 
 * `5.1`, `latest` ([Dockerfile](https://github.com/SonarSource/docker-sonarqube/blob/master/5.1/Dockerfile))
-* `4.5.4`, `lts` ([Dockerfile](https://github.com/SonarSource/docker-sonarqube/blob/master/5.1/Dockerfile))
+* `4.5.4`, `lts` ([Dockerfile](https://github.com/SonarSource/docker-sonarqube/blob/master/4.5.4/Dockerfile))
 
 For more information about this image and its history, please see the
 [relevant manifest file](https://github.com/docker-library/official-images/blob/master/library/sonarqube) (`library/sonarqube`) in the `docker-library/official-images` [GitHub repo](https://github.com/docker-library/official-images).
