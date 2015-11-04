@@ -3,8 +3,8 @@ docker-sonarqube
 
 # Supported tags and respective Dockerfile links
 
-* `5.1`, `latest` ([Dockerfile](https://github.com/SonarSource/docker-sonarqube/blob/master/5.1/Dockerfile))
-* `4.5.4`, `lts` ([Dockerfile](https://github.com/SonarSource/docker-sonarqube/blob/master/5.1/Dockerfile))
+* `5.2`, `latest` ([Dockerfile](https://github.com/SonarSource/docker-sonarqube/blob/master/5.2/Dockerfile))
+* `4.5.6`, `lts` ([Dockerfile](https://github.com/SonarSource/docker-sonarqube/blob/master/4.5.6/Dockerfile))
 
 For more information about this image and its history, please see the
 [relevant manifest file](https://github.com/docker-library/official-images/blob/master/library/sonarqube) (`library/sonarqube`) in the `docker-library/official-images` [GitHub repo](https://github.com/docker-library/official-images).
@@ -21,15 +21,15 @@ Put your technical debt under control [http://www.sonarqube.org/](http://www.son
 
 The server is started this way:
 
-    docker run -d --name sonarqube -p 9000:9000 -p 9092:9092 sonarqube:5.1
+    docker run -d --name sonarqube -p 9000:9000 sonarqube:5.2
 
-To analyse a project:
+To analyze a project:
 
     $ On Linux:
     mvn sonar:sonar
 
     $ With boot2docker:
-    mvn sonar:sonar -Dsonar.host.url=http://$(boot2docker ip):9000 -Dsonar.jdbc.url="jdbc:h2:tcp://$(boot2docker ip)/sonar"
+    mvn sonar:sonar -Dsonar.host.url=http://$(boot2docker ip):9000
 
 ## Database configuration
 
@@ -39,11 +39,11 @@ The production database is configured with theses variables:
 `SONARQUBE_JDBC_USERNAME`, `SONARQUBE_JDBC_PASSWORD` and `SONARQUBE_JDBC_URL`.
 
     docker run -d --name sonarqube \
-    -p 9000:9000 -p 9092:9092 \
+    -p 9000:9000 \
     -e SONARQUBE_JDBC_USERNAME=sonar \
     -e SONARQUBE_JDBC_PASSWORD=sonar \
     -e SONARQUBE_JDBC_URL=jdbc:postgresql://localhost/sonar \
-    sonarqube:5.1
+    sonarqube:5.2
 
 More recipes can be found [here](https://github.com/SonarSource/docker-sonarqube/blob/master/recipes.md)
 
