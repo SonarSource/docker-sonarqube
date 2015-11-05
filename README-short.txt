@@ -1,1 +1,0 @@
-Put your technical debt under control http://www.sonarqube.org
