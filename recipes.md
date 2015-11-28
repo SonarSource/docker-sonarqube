@@ -7,13 +7,13 @@ sonarqube:
   build: "5.1"
   ports:
    - "9000:9000"
-   - "5432:5432"
+  links:
+    - db
   environment:
-   - SONARQUBE_JDBC_URL=jdbc:postgresql://localhost:5432/sonar
+   - SONARQUBE_JDBC_URL=jdbc:postgresql://db:5432/sonar
 
 db:
   image: postgres
-  net: container:sonarqube
   environment:
    - POSTGRES_USER=sonar
    - POSTGRES_PASSWORD=sonar
