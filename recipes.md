@@ -23,7 +23,7 @@ db:
    - POSTGRES_PASSWORD=sonar
 
 datadb:
-  image: postgres:9.4
+  image: postgres
   volumes:
     - /var/lib/postgresql
   command: /bin/true
