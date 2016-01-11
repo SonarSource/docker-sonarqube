@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 docker build -t sonarsource/sonar-4.5.4 4.5.4
 docker build -t sonarsource/sonar-4.5.5 4.5.5
 docker build -t sonarsource/sonar-4.5.6 4.5.6
