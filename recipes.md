@@ -4,7 +4,7 @@ Create this `docker-compose.yml` file
 
 ```yaml
 sonarqube:
-  build: "5.2"
+  image: sonarqube
   ports:
    - "9000:9000"
   links:
@@ -29,7 +29,7 @@ datadb:
   command: /bin/true
 
 plugins:
-  build: "5.2"
+  image: sonarqube
   volumes:
    - /opt/sonarqube/extensions
    - /opt/sonarqube/lib/bundled-plugins
