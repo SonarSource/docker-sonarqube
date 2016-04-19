@@ -1,27 +1,27 @@
-FROM java:openjdk-8u45-jdk
+FROM java:openjdk-8u77-jdk-alpine
 
 MAINTAINER David Gageot <david.gageot@sonarsource.com>
 
-ENV SONARQUBE_HOME /opt/sonarqube
+ENV SONARQUBE_HOME=/opt/sonarqube \
+	# Database configuration
+	# Defaults to using H2
+	SONARQUBE_JDBC_USERNAME=sonar \
+	SONARQUBE_JDBC_PASSWORD=sonar \
+	SONARQUBE_JDBC_URL=jdbc:h2:tcp://localhost:9092/sonar \
+	SONAR_VERSION=5.2
 
 # Http port
 EXPOSE 9000
 
-# Database configuration
-# Defaults to using H2
-ENV SONARQUBE_JDBC_USERNAME sonar
-ENV SONARQUBE_JDBC_PASSWORD sonar
-ENV SONARQUBE_JDBC_URL jdbc:h2:tcp://localhost:9092/sonar
-
-ENV SONAR_VERSION 5.2
-
-# pub   2048R/D26468DE 2015-05-25
-#       Key fingerprint = F118 2E81 C792 9289 21DB  CAB4 CFCA 4A29 D264 68DE
-# uid                  sonarsource_deployer (Sonarsource Deployer) <infra@sonarsource.com>
-# sub   2048R/06855C1D 2015-05-25
-RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys F1182E81C792928921DBCAB4CFCA4A29D26468DE
-
-RUN set -x \
+RUN apk --update upgrade \
+	&& apk add gnupg unzip curl \
+	# pub   2048R/D26468DE 2015-05-25
+	#       Key fingerprint = F118 2E81 C792 9289 21DB  CAB4 CFCA 4A29 D264 68DE
+	# uid                  sonarsource_deployer (Sonarsource Deployer) <infra@sonarsource.com>
+	# sub   2048R/06855C1D 2015-05-25
+	&& gpg --keyserver ha.pool.sks-keyservers.net --recv-keys F1182E81C792928921DBCAB4CFCA4A29D26468DE \
+	&& set -x \
+	&& mkdir /opt \
 	&& cd /opt \
 	&& curl -o sonarqube.zip -fSL https://sonarsource.bintray.com/Distribution/sonarqube/sonarqube-$SONAR_VERSION.zip \
 	&& curl -o sonarqube.zip.asc -fSL https://sonarsource.bintray.com/Distribution/sonarqube/sonarqube-$SONAR_VERSION.zip.asc \
@@ -29,7 +29,9 @@ RUN set -x \
 	&& unzip sonarqube.zip \
 	&& mv sonarqube-$SONAR_VERSION sonarqube \
 	&& rm sonarqube.zip* \
-	&& rm -rf $SONARQUBE_HOME/bin/*
+	&& rm -rf $SONARQUBE_HOME/bin/* \
+	# clean apk cache
+	rm -rf /var/cache/apk/*
 
 VOLUME ["$SONARQUBE_HOME/data", "$SONARQUBE_HOME/extensions"]
 
