@@ -34,7 +34,7 @@ RUN apk --update upgrade \
 	&& rm sonarqube.zip* \
 	&& rm -rf $SONARQUBE_HOME/bin/* \
 	# clean apk cache
-	rm -rf /var/cache/apk/*
+	&& rm -rf /var/cache/apk/*
 
 VOLUME ["$SONARQUBE_HOME/data", "$SONARQUBE_HOME/extensions"]
 
