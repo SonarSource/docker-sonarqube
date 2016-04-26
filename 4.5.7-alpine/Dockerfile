@@ -1,4 +1,4 @@
-FROM java:openjdk-8u77-alpine
+FROM java:8-alpine
 
 MAINTAINER David Gageot <david.gageot@sonarsource.com>
 
