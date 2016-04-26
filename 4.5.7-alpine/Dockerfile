@@ -17,8 +17,7 @@ EXPOSE 9000
 EXPOSE 9092
 
 RUN set -x \
-    && apk --update upgrade \
-    && apk add gnupg unzip curl \
+    && apk add --no-cache gnupg unzip curl \
 
     # pub   2048R/D26468DE 2015-05-25
     #       Key fingerprint = F118 2E81 C792 9289 21DB  CAB4 CFCA 4A29 D264 68DE
@@ -34,10 +33,7 @@ RUN set -x \
     && unzip sonarqube.zip \
     && mv sonarqube-$SONAR_VERSION sonarqube \
     && rm sonarqube.zip* \
-    && rm -rf $SONARQUBE_HOME/bin/* \
-
-    # clean apk cache
-    && rm -rf /var/cache/apk/*
+    && rm -rf $SONARQUBE_HOME/bin/*
 
 VOLUME ["$SONARQUBE_HOME/data", "$SONARQUBE_HOME/extensions"]
 
