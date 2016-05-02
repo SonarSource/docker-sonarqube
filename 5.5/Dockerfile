@@ -2,7 +2,7 @@ FROM java:openjdk-8u45-jdk
 
 MAINTAINER David Gageot <david.gageot@sonarsource.com>
 
-ENV SONAR_VERSION=5.4 \
+ENV SONAR_VERSION=5.5 \
     SONARQUBE_HOME=/opt/sonarqube \
     # Database configuration
     # Defaults to using H2
