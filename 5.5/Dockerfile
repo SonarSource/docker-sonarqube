@@ -1,4 +1,4 @@
-FROM java:openjdk-8u45-jdk
+FROM java:8
 
 MAINTAINER David Gageot <david.gageot@sonarsource.com>
 
@@ -14,6 +14,14 @@ ENV SONAR_VERSION=5.5 \
 EXPOSE 9000
 
 RUN set -x \
+
+    # see https://bugs.debian.org/812708
+    # and https://github.com/SonarSource/docker-sonarqube/pull/18#issuecomment-194045499
+    && cd /tmp \
+    && curl -fSL -O "https://archive.raspbian.org/raspbian/pool/main/c/ca-certificates/ca-certificates_20130119+deb7u1_all.deb" \
+    && dpkg -P --force-all ca-certificates \
+    && dpkg -i ca-certificates_20130119+deb7u1_all.deb \
+    && rm ca-certificates_20130119+deb7u1_all.deb \
 
     # pub   2048R/D26468DE 2015-05-25
     #       Key fingerprint = F118 2E81 C792 9289 21DB  CAB4 CFCA 4A29 D264 68DE
