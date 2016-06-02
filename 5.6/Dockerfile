@@ -8,7 +8,7 @@ ENV SONAR_VERSION=5.6 \
     # Defaults to using H2
     SONARQUBE_JDBC_USERNAME=sonar \
     SONARQUBE_JDBC_PASSWORD=sonar \
-    SONARQUBE_JDBC_URL=jdbc:h2:tcp://localhost:9092/sonar
+    SONARQUBE_JDBC_URL=
 
 # Http port
 EXPOSE 9000
