@@ -22,6 +22,7 @@ RUN set -x \
     # and https://github.com/SonarSource/docker-sonarqube/pull/18#issuecomment-194045499
     && cd /tmp \
     && curl -fSL -O "https://archive.raspbian.org/raspbian/pool/main/c/ca-certificates/ca-certificates_20130119+deb7u1_all.deb" \
+    && echo "3494ecfd607e4233d8d1a656eceb6bd109d756bc0afe9d3b29dfc0acc4fe19cf  ca-certificates_20130119+deb7u1_all.deb" | sha256sum -c - \
     && dpkg -P --force-all ca-certificates \
     && dpkg -i ca-certificates_20130119+deb7u1_all.deb \
     && rm ca-certificates_20130119+deb7u1_all.deb \
