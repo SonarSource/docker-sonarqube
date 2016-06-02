@@ -2,7 +2,7 @@ FROM java:8-alpine
 
 MAINTAINER David Gageot <david.gageot@sonarsource.com>
 
-ENV SONAR_VERSION=4.5.7 \
+ENV SONAR_VERSION=5.6 \
     SONARQUBE_HOME=/opt/sonarqube \
     # Database configuration
     # Defaults to using H2
@@ -12,9 +12,6 @@ ENV SONAR_VERSION=4.5.7 \
 
 # Http port
 EXPOSE 9000
-
-# H2 Database port
-EXPOSE 9092
 
 RUN set -x \
     && apk add --no-cache gnupg unzip curl \
