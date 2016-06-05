@@ -29,7 +29,7 @@ datadb:
   command: /bin/true
 
 plugins:
-  image: sonarqube
+  image: java:openjdk-8u45-jdk
   volumes:
    - /opt/sonarqube/extensions
    - /opt/sonarqube/lib/bundled-plugins
