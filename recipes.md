@@ -1,6 +1,13 @@
 # Run SonarQube with a PostgreSQL database
 
-Create this `docker-compose.yml` file
+## Requirements
+
+ * Docker Engine 1.9
+ * Docker Compose 1.6
+
+## Compose file
+
+Create this `docker-compose.yml` file:
 
 ```yaml
 version: "2"
