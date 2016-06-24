@@ -1,39 +1,55 @@
 # Run SonarQube with a PostgreSQL database
 
-Create this `docker-compose.yml` file
+## Requirements
+
+ * Docker Engine 1.9
+ * Docker Compose 1.6
+
+## Compose file
+
+Create this `docker-compose.yml` file:
 
 ```yaml
-sonarqube:
-  image: sonarqube
-  ports:
-   - "9000:9000"
-  links:
-   - db
-  environment:
-   - SONARQUBE_JDBC_URL=jdbc:postgresql://db:5432/sonar
-  volumes_from:
-   - plugins
+version: "2"
 
-db:
-  image: postgres
-  volumes_from:
-    - datadb
-  environment:
-   - POSTGRES_USER=sonar
-   - POSTGRES_PASSWORD=sonar
+services:
+  sonarqube:
+    image: sonarqube
+    ports:
+      - "9000:9000"
+    networks:
+      - sonarnet
+    environment:
+      - SONARQUBE_JDBC_URL=jdbc:postgresql://db:5432/sonar
+    volumes:
+      - sonarqube_conf:/opt/sonarqube/conf
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_bundled-plugins:/opt/sonarqube/lib/bundled-plugins
 
-datadb:
-  image: postgres
-  volumes:
-    - /var/lib/postgresql
-  command: /bin/true
+  db:
+    image: postgres
+    networks:
+      - sonarnet
+    environment:
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=sonar
+    volumes:
+      - postgresql:/var/lib/postgresql
+      # This needs explicit mapping due to https://github.com/docker-library/postgres/blob/4e48e3228a30763913ece952c611e5e9b95c8759/Dockerfile.template#L52
+      - postgresql_data:/var/lib/postgresql/data
 
-plugins:
-  image: sonarqube
-  volumes:
-   - /opt/sonarqube/extensions
-   - /opt/sonarqube/lib/bundled-plugins
-  command: /bin/true
+networks:
+  sonarnet:
+    driver: bridge
+
+volumes:
+  sonarqube_conf:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_bundled-plugins:
+  postgresql:
+  postgresql_data:
 ```
 
 Use [docker-compose](https://github.com/docker/compose) to start the containers.
