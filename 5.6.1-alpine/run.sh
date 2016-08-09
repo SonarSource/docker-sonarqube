@@ -7,6 +7,7 @@ if [ "${1:0:1}" != '-' ]; then
 fi
 
 exec java -jar lib/sonar-application-$SONAR_VERSION.jar \
+  ${SONARQUBE_JAVA_ARGS} \
   -Dsonar.log.console=true \
   -Dsonar.jdbc.username="$SONARQUBE_JDBC_USERNAME" \
   -Dsonar.jdbc.password="$SONARQUBE_JDBC_PASSWORD" \
