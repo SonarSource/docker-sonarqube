@@ -37,9 +37,11 @@ RUN set -x \
     && unzip sonarqube.zip \
     && mv sonarqube-$SONAR_VERSION sonarqube \
     && rm sonarqube.zip* \
-    && rm -rf $SONARQUBE_HOME/bin/*
+    && rm -rf $SONARQUBE_HOME/bin/* \
+    && mkdir -p $SONARQUBE_HOME/samples \
+    && cp -a $SONARQUBE_HOME/conf $SONARQUBE_HOME/samples
 
-VOLUME ["$SONARQUBE_HOME/data", "$SONARQUBE_HOME/extensions"]
+VOLUME ["$SONARQUBE_HOME/conf", "$SONARQUBE_HOME/data", "$SONARQUBE_HOME/extensions", "$SONARQUBE_HOME/logs"]
 
 WORKDIR $SONARQUBE_HOME
 COPY run.sh $SONARQUBE_HOME/bin/
