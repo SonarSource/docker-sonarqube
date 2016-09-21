@@ -2,6 +2,10 @@
 
 set -e
 
+if [ ! $(ls -A "$SONARQUBE_HOME"/conf) ]; then
+  cp -a "$SONARQUBE_HOME"/samples/conf/* "$SONARQUBE_HOME"/conf
+fi
+
 if [ "${1:0:1}" != '-' ]; then
   exec "$@"
 fi
