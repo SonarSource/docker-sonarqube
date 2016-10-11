@@ -1,8 +1,8 @@
-FROM java:8
+FROM java:8-alpine
 
 MAINTAINER David Gageot <david.gageot@sonarsource.com>
 
-ENV SONAR_VERSION=6.0 \
+ENV SONAR_VERSION=6.1 \
     SONARQUBE_HOME=/opt/sonarqube \
     # Database configuration
     # Defaults to using H2
@@ -14,6 +14,7 @@ ENV SONAR_VERSION=6.0 \
 EXPOSE 9000
 
 RUN set -x \
+    && apk add --no-cache gnupg unzip curl \
 
     # pub   2048R/D26468DE 2015-05-25
     #       Key fingerprint = F118 2E81 C792 9289 21DB  CAB4 CFCA 4A29 D264 68DE
@@ -21,6 +22,7 @@ RUN set -x \
     # sub   2048R/06855C1D 2015-05-25
     && gpg --keyserver ha.pool.sks-keyservers.net --recv-keys F1182E81C792928921DBCAB4CFCA4A29D26468DE \
 
+    && mkdir /opt \
     && cd /opt \
     && curl -o sonarqube.zip -fSL https://sonarsource.bintray.com/Distribution/sonarqube/sonarqube-$SONAR_VERSION.zip \
     && curl -o sonarqube.zip.asc -fSL https://sonarsource.bintray.com/Distribution/sonarqube/sonarqube-$SONAR_VERSION.zip.asc \
