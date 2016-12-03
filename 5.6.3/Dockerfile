@@ -30,7 +30,7 @@ RUN set -x \
     && rm sonarqube.zip* \
     && rm -rf $SONARQUBE_HOME/bin/*
 
-VOLUME ["$SONARQUBE_HOME/data", "$SONARQUBE_HOME/extensions"]
+VOLUME ["$SONARQUBE_HOME/data", "$SONARQUBE_HOME/extensions", "$SONARQUBE_HOME/conf", "$SONARQUBE_HOME/logs"]
 
 WORKDIR $SONARQUBE_HOME
 COPY run.sh $SONARQUBE_HOME/bin/
