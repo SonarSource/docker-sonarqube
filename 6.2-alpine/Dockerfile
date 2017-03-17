@@ -1,4 +1,5 @@
-FROM openjdk:8-alpine
+FROM openjdk:8u111-jdk-alpine
+# note that something in later base image versions causes failure of certificate verification when downloading SonarQube
 
 MAINTAINER David Gageot <david.gageot@sonarsource.com>
 
