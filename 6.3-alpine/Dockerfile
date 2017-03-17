@@ -3,7 +3,7 @@ FROM openjdk:8u111-jdk-alpine
 
 MAINTAINER David Gageot <david.gageot@sonarsource.com>
 
-ENV SONAR_VERSION=6.2 \
+ENV SONAR_VERSION=6.3 \
     SONARQUBE_HOME=/opt/sonarqube \
     # Database configuration
     # Defaults to using H2
