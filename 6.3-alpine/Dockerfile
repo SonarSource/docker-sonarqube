@@ -1,5 +1,4 @@
-FROM openjdk:8u111-jdk-alpine
-# note that something in later base image versions causes failure of certificate verification when downloading SonarQube
+FROM openjdk:8-alpine
 
 MAINTAINER David Gageot <david.gageot@sonarsource.com>
 
@@ -15,7 +14,8 @@ ENV SONAR_VERSION=6.3 \
 EXPOSE 9000
 
 RUN set -x \
-    && apk add --no-cache gnupg unzip curl \
+    && apk add --no-cache gnupg unzip \
+    && apk add --no-cache libressl wget \
 
     # pub   2048R/D26468DE 2015-05-25
     #       Key fingerprint = F118 2E81 C792 9289 21DB  CAB4 CFCA 4A29 D264 68DE
@@ -25,8 +25,8 @@ RUN set -x \
 
     && mkdir /opt \
     && cd /opt \
-    && curl -o sonarqube.zip -fSL https://sonarsource.bintray.com/Distribution/sonarqube/sonarqube-$SONAR_VERSION.zip \
-    && curl -o sonarqube.zip.asc -fSL https://sonarsource.bintray.com/Distribution/sonarqube/sonarqube-$SONAR_VERSION.zip.asc \
+    && wget -O sonarqube.zip --no-verbose https://sonarsource.bintray.com/Distribution/sonarqube/sonarqube-$SONAR_VERSION.zip \
+    && wget -O sonarqube.zip.asc --no-verbose https://sonarsource.bintray.com/Distribution/sonarqube/sonarqube-$SONAR_VERSION.zip.asc \
     && gpg --batch --verify sonarqube.zip.asc sonarqube.zip \
     && unzip sonarqube.zip \
     && mv sonarqube-$SONAR_VERSION sonarqube \
