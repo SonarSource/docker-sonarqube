@@ -1,6 +1,6 @@
 FROM openjdk:8-alpine
 
-ENV SONAR_VERSION=6.3.1 \
+ENV SONAR_VERSION=6.4 \
     SONARQUBE_HOME=/opt/sonarqube \
     # Database configuration
     # Defaults to using H2
