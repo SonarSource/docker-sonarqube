@@ -1,7 +1,5 @@
 FROM openjdk:8-alpine
 
-MAINTAINER David Gageot <david.gageot@sonarsource.com>
-
 ENV SONAR_VERSION=6.3.1 \
     SONARQUBE_HOME=/opt/sonarqube \
     # Database configuration
