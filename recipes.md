@@ -20,7 +20,7 @@ services:
     networks:
       - sonarnet
     environment:
-      - SONARQUBE_JDBC_URL=jdbc:postgresql://db:5432/sonar
+      - SONARQUBE_JDBC_URL=jdbc:postgresql://db:5432/sonar?user=sonar&password=sonar
     volumes:
       - sonarqube_conf:/opt/sonarqube/conf
       - sonarqube_data:/opt/sonarqube/data
