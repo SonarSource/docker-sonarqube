@@ -78,5 +78,4 @@ mvn sonar:sonar \
  + Clustering
  + Upgrade
  + Admin password
- + Plugins
  + ...
