@@ -1,15 +1,12 @@
 FROM openjdk:8-alpine
 
-ENV SONAR_VERSION=6.4 \
-    SONARQUBE_HOME=/opt/sonarqube \
-    # Database configuration
-    # Defaults to using H2
-    SONARQUBE_JDBC_USERNAME=sonar \
-    SONARQUBE_JDBC_PASSWORD=sonar \
-    SONARQUBE_JDBC_URL=
-
-# Http port
-EXPOSE 9000
+ENV SONAR_VERSION=6.4
+ENV SONARQUBE_HOME=/opt/sonarqube
+# Database configuration
+# Defaults to using H2
+ENV SONARQUBE_JDBC_USERNAME=sonar
+ENV SONARQUBE_JDBC_PASSWORD=sonar
+ENV SONARQUBE_JDBC_URL=
 
 RUN set -x \
     && apk add --no-cache gnupg unzip \
@@ -31,8 +28,13 @@ RUN set -x \
     && rm sonarqube.zip* \
     && rm -rf $SONARQUBE_HOME/bin/*
 
+COPY run.sh $SONARQUBE_HOME/bin/
+
 VOLUME "$SONARQUBE_HOME/data"
 
+# Http port
+EXPOSE 9000
+
 WORKDIR $SONARQUBE_HOME
-COPY run.sh $SONARQUBE_HOME/bin/
+
 ENTRYPOINT ["./bin/run.sh"]
