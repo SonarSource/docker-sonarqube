@@ -8,8 +8,6 @@ ENV SONARQUBE_JDBC_USERNAME=sonar
 ENV SONARQUBE_JDBC_PASSWORD=sonar
 ENV SONARQUBE_JDBC_URL=
 
-COPY run.sh $SONARQUBE_HOME/bin/
-
 RUN set -x \
     && apk add --no-cache gnupg unzip \
     && apk add --no-cache libressl wget \
@@ -29,6 +27,8 @@ RUN set -x \
     && mv sonarqube-$SONAR_VERSION sonarqube \
     && rm sonarqube.zip* \
     && rm -rf $SONARQUBE_HOME/bin/*
+
+COPY run.sh $SONARQUBE_HOME/bin/
 
 VOLUME "$SONARQUBE_HOME/data"
 
