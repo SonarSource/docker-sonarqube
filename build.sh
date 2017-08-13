@@ -2,8 +2,7 @@
 
 set -euo pipefail
 
-docker build -t sonarsource/sonar-4.5.6 4.5.6
-docker build -t sonarsource/sonar-5.1.2 5.1.2
-docker build -t sonarsource/sonar-5.2 5.2
-docker build -t sonarsource/sonar-5.3 5.3
-docker build -t sonarsource/sonar-5.4 5.4
+docker build -t sonarsource/sonar-5.6.6 5.6.6
+docker build -t sonarsource/sonar-5.6.6-alpine 5.6.6-alpine
+docker build -t sonarsource/sonar-6.5 6.5
+docker build -t sonarsource/sonar-6.5-alpine 6.5-alpine
