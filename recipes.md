@@ -14,6 +14,8 @@ version: "2"
 
 services:
   sonarqube:
+    depends_on:
+      - db
     image: sonarqube
     ports:
       - "9000:9000"
