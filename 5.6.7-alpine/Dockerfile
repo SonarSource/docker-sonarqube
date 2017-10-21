@@ -11,9 +11,13 @@ ENV SONAR_VERSION=5.6.7 \
 # Http port
 EXPOSE 9000
 
+RUN addgroup -S sonarqube && adduser -S -G sonarqube sonarqube
+
 RUN set -x \
     && apk add --no-cache gnupg unzip \
     && apk add --no-cache libressl wget \
+    && apk add --no-cache su-exec \
+    && apk add --no-cache bash \
 
     # pub   2048R/D26468DE 2015-05-25
     #       Key fingerprint = F118 2E81 C792 9289 21DB  CAB4 CFCA 4A29 D264 68DE
@@ -28,6 +32,7 @@ RUN set -x \
     && gpg --batch --verify sonarqube.zip.asc sonarqube.zip \
     && unzip sonarqube.zip \
     && mv sonarqube-$SONAR_VERSION sonarqube \
+    && chown -R sonarqube:sonarqube sonarqube \
     && rm sonarqube.zip* \
     && rm -rf $SONARQUBE_HOME/bin/*
 
