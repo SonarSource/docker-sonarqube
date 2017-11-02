@@ -44,6 +44,13 @@ RUN set -x \
 
 VOLUME "$SONARQUBE_HOME/data"
 
+# Plangrid Specific Options
+COPY run-server /bin/
+RUN mkdir -p /opt/plangrid/settings/bin
+COPY pgs /opt/plangrid/settings/bin/
+ENV PGS_APP="sonarqube"
+# End Plangrid Specific Options
+
 WORKDIR $SONARQUBE_HOME
 COPY run.sh $SONARQUBE_HOME/bin/
 ENTRYPOINT ["./bin/run.sh"]
