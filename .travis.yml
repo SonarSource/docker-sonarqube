@@ -5,8 +5,17 @@ language: bash
 services:
   - docker
 
+env:
+  - VERSION=5.6.7
+  - VERSION=5.6.7 VARIANT=alpine
+  - VERSION=6.7
+  - VERSION=6.7 VARIANT=alpine
+
 script:
-  - ./build.sh
+  - v="${VERSION}${VARIANT:+-$VARIANT}"
+  - cd "$v"
+  - docker build -t "sonarqube-$v" .
+  - docker images
 
 notifications:
   email: false
