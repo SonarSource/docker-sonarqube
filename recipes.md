@@ -15,6 +15,7 @@ version: "2"
 services:
   sonarqube:
     image: sonarqube
+    restart: always
     ports:
       - "9000:9000"
     networks:
@@ -29,6 +30,7 @@ services:
 
   db:
     image: postgres
+    restart: always
     networks:
       - sonarnet
     environment:
