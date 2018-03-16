@@ -6,6 +6,7 @@ ENV SONAR_VERSION=7.0 \
     # Defaults to using H2
     SONARQUBE_JDBC_USERNAME=sonar \
     SONARQUBE_JDBC_PASSWORD=sonar \
+    SONARQUBE_WEB_CONTEXT="" \
     SONARQUBE_JDBC_URL=
 
 # Http port
