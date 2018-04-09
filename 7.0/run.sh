@@ -6,7 +6,6 @@ if [ "${1:0:1}" != '-' ]; then
   exec "$@"
 fi
 
-chown -R sonarqube:sonarqube $SONARQUBE_HOME
 exec gosu sonarqube \
   java -jar lib/sonar-application-$SONAR_VERSION.jar \
   -Dsonar.log.console=true \
