@@ -10,15 +10,13 @@
 Create this `docker-compose.yml` file:
 
 ```yaml
-version: "2"
+version: "3"
 
 services:
   sonarqube:
     image: sonarqube
     ports:
       - "9000:9000"
-    networks:
-      - sonarnet
     environment:
       - SONARQUBE_JDBC_URL=jdbc:postgresql://db:5432/sonar
     volumes:
@@ -29,8 +27,6 @@ services:
 
   db:
     image: postgres
-    networks:
-      - sonarnet
     environment:
       - POSTGRES_USER=sonar
       - POSTGRES_PASSWORD=sonar
@@ -38,10 +34,6 @@ services:
       - postgresql:/var/lib/postgresql
       # This needs explicit mapping due to https://github.com/docker-library/postgres/blob/4e48e3228a30763913ece952c611e5e9b95c8759/Dockerfile.template#L52
       - postgresql_data:/var/lib/postgresql/data
-
-networks:
-  sonarnet:
-    driver: bridge
 
 volumes:
   sonarqube_conf:
