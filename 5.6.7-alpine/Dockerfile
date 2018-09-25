@@ -28,8 +28,8 @@ RUN set -x \
 
     && mkdir /opt \
     && cd /opt \
-    && wget -O sonarqube.zip --no-verbose https://sonarsource.bintray.com/Distribution/sonarqube/sonarqube-$SONAR_VERSION.zip \
-    && wget -O sonarqube.zip.asc --no-verbose https://sonarsource.bintray.com/Distribution/sonarqube/sonarqube-$SONAR_VERSION.zip.asc \
+    && wget -O sonarqube.zip --no-verbose https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-$SONAR_VERSION.zip \
+    && wget -O sonarqube.zip.asc --no-verbose https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-$SONAR_VERSION.zip.asc \
     && gpg --batch --verify sonarqube.zip.asc sonarqube.zip \
     && unzip sonarqube.zip \
     && mv sonarqube-$SONAR_VERSION sonarqube \
