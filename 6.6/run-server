@@ -1,0 +1,34 @@
+#! /bin/bash
+set -e
+
+# Sets up the PGS command
+# Defaults to running gunicorn, but there are other options - cmd/env/node
+
+
+if [[ $PGS_APP ]]; then
+    # If PGS_APP is present, we must have a PGS_STACK as well
+    if [[ ! $PGS_STACK ]]; then
+        echo "PGS_APP in env, but no PGS_STACK."
+        exit 1
+    fi
+    # if $PGS is set by Dockerfile, use that. This lets us make use of
+    # pgs flags such as --local-overrides on a per-docker-image basis
+    export PGS=${PGS:-"/opt/plangrid/settings/bin/pgs run "}
+    echo "Setting PGS for ${PGS_APP}-${PGS_STACK}"
+else
+    echo "No PGS_APP found, running without plangrid-settings."
+    export PGS=""
+fi
+
+case $SERVER in
+    cmd ) if test -z "$COMMAND" ; then
+            echo "ERROR: no \$COMMAND specified in Dockerfile"
+            exit 1
+          fi
+          exec ${PGS} -- ${COMMAND} ;;
+    env ) exec ${PGS} -- /usr/bin/env ;;
+    node ) exec npm-runner ;;
+    gunicorn3 ) exec gunicorn-wrapper ;;
+    unicorn3 ) exec unicorn-wrapper ;;
+    *) export SERVER=gunicorn ; exec gunicorn-wrapper ;;
+esac

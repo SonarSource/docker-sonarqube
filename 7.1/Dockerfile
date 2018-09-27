@@ -44,6 +44,33 @@ RUN set -x \
 
 VOLUME "$SONARQUBE_HOME/data"
 
+# Plangrid Specific Options
+COPY run-server /bin/
+RUN mkdir -p /opt/plangrid/settings/bin
+COPY pgs /opt/plangrid/settings/bin/
+ENV PGS_APP="sonarqube"
+
+# Download and vendor in the plugins
+RUN mkdir -p $SONARQUBE_HOME/extensions/plugins \
+    && cd $SONARQUBE_HOME/extensions/plugins \
+    # Free standard
+    && wget "https://sonarsource.bintray.com/Distribution/sonar-python-plugin/sonar-python-plugin-1.8.0.1496.jar" \
+    && wget "https://sonarsource.bintray.com/Distribution/sonar-scm-git-plugin/sonar-scm-git-plugin-1.2.jar" \
+    && wget "https://sonarsource.bintray.com/Distribution/sonar-csharp-plugin/sonar-csharp-plugin-6.5.0.3766.jar" \
+    && wget "https://sonarsource.bintray.com/Distribution/sonar-java-plugin/sonar-java-plugin-4.15.0.12310.jar" \
+    && wget "https://sonarsource.bintray.com/Distribution/sonar-javascript-plugin/sonar-javascript-plugin-3.2.0.5506.jar" \
+    && wget "https://sonarsource.bintray.com/Distribution/sonar-web-plugin/sonar-web-plugin-2.5.0.476.jar" \
+    && wget "https://sonarsource.bintray.com/Distribution/sonar-xml-plugin/sonar-xml-plugin-1.4.3.1027.jar" \
+    # Commercial (free but need to accept terms&conditions?)
+    && wget "https://sonarsource.bintray.com/CommercialDistribution/sonar-cfamily-plugin/sonar-cfamily-plugin-4.14.0.9331.jar" \
+    && wget "https://sonarsource.bintray.com/CommercialDistribution/sonar-plsql-plugin/sonar-plsql-plugin-3.0.1.1427.jar" \
+    && wget "https://sonarsource.bintray.com/CommercialDistribution/sonar-swift-plugin/sonar-swift-plugin-3.0.0.1969.jar" \
+    # Other Plugins
+    && wget "https://github.com/uartois/sonar-golang/releases/download/v1.2.11-rc3/sonar-golang-plugin-1.2.11-rc3.jar" \
+    && wget "https://github.com/kogitant/sonar-slack-notifier-plugin/releases/download/2.1.2/cks-slack-notifier-2.1.2.jar"
+
+# End Plangrid Specific Options
+
 WORKDIR $SONARQUBE_HOME
 COPY run.sh $SONARQUBE_HOME/bin/
 ENTRYPOINT ["./bin/run.sh"]
