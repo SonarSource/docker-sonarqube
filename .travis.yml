@@ -14,6 +14,8 @@ env:
   - VERSION=7.1 VARIANT=alpine
   - VERSION=7.3
   - VERSION=7.3 VARIANT=alpine
+  - VERSION=7.4
+  - VERSION=7.4 VARIANT=alpine
 
 script:
   - v="${VERSION}${VARIANT:+-$VARIANT}"
