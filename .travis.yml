@@ -18,6 +18,7 @@ script:
   - cd "$v"
   - docker build -t "sonarqube-$v" .
   - docker images
+  - if [ "$TRAVIS_BRANCH" = "master" ]; then docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD" && docker push "sonarqube-$v"; fi
 
 notifications:
   email: false
