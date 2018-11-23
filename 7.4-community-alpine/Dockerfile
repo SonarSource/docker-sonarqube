@@ -4,6 +4,8 @@ ENV SONAR_VERSION=7.4 \
     SONARQUBE_HOME=/opt/sonarqube \
     # Database configuration
     # Defaults to using H2
+    # DEPRECATED. Use -v sonar.jdbc.username=... instead
+    # Drop these in the next release, also in the run script
     SONARQUBE_JDBC_USERNAME=sonar \
     SONARQUBE_JDBC_PASSWORD=sonar \
     SONARQUBE_JDBC_URL=
