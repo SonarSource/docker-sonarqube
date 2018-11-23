@@ -1,6 +1,6 @@
 FROM openjdk:8-alpine
 
-ENV SONAR_VERSION=5.6.7 \
+ENV SONAR_VERSION=7.4 \
     SONARQUBE_HOME=/opt/sonarqube \
     # Database configuration
     # Defaults to using H2
@@ -18,14 +18,12 @@ RUN set -x \
     && apk add --no-cache libressl wget \
     && apk add --no-cache su-exec \
     && apk add --no-cache bash \
-
     # pub   2048R/D26468DE 2015-05-25
     #       Key fingerprint = F118 2E81 C792 9289 21DB  CAB4 CFCA 4A29 D264 68DE
     # uid                  sonarsource_deployer (Sonarsource Deployer) <infra@sonarsource.com>
     # sub   2048R/06855C1D 2015-05-25
     && (gpg --keyserver ha.pool.sks-keyservers.net --recv-keys F1182E81C792928921DBCAB4CFCA4A29D26468DE \
 	    || gpg --keyserver ipv4.pool.sks-keyservers.net --recv-keys F1182E81C792928921DBCAB4CFCA4A29D26468DE) \
-
     && mkdir /opt \
     && cd /opt \
     && wget -O sonarqube.zip --no-verbose https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-$SONAR_VERSION.zip \
