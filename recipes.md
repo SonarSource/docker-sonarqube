@@ -20,7 +20,7 @@ services:
     networks:
       - sonarnet
     environment:
-      - SONARQUBE_JDBC_URL=jdbc:postgresql://db:5432/sonar
+      - sonar.jdbc.url=jdbc:postgresql://db:5432/sonar
     volumes:
       - sonarqube_conf:/opt/sonarqube/conf
       - sonarqube_data:/opt/sonarqube/data
@@ -68,8 +68,7 @@ Analyse a project:
 
 ```bash
 mvn sonar:sonar \
-  -Dsonar.host.url=http://$(boot2docker ip):9000 \
-  -Dsonar.jdbc.url=jdbc:postgresql://$(boot2docker ip)/sonar
+  -Dsonar.host.url=http://$(boot2docker ip):9000
 ```
 
 ## To be improved
