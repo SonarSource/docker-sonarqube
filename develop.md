@@ -27,16 +27,15 @@ Update the public repositories for [Docker Hub][hub]:
 
 3. Wait for the Pull Requests to get merged, and verify the updated page on [Docker Hub][hub]
 
-Other notes
------------
+Known issues
+------------
 
 The `-alpine` images are not listed on [Docker Hub][hub] because they don't run well on Linux. See [this issue reported for openjdk-alpine](https://github.com/docker-library/openjdk/issues/250), vote for it, or contribute potential solutions or even just solution ideas. We left the recipes for these images in `master`, for easy testing and troubleshooting. You can verify your experiments by modifying an image, say `7.4-community-alpine`, and then run `./build-and-run.sh 7.4-community-alpine` on Linux. If the service doesn't crash, your fix is probably good, and we'll be happy to see it, and make these images official.
 
----
+Other notes
+-----------
 
 To control the generated content of the Docker Hub page, look around in the files in `.template-helpers` of the [`docs` repository][docs]. For example, the "Where to get help" section is customized by a copy of `.template-helpers/get-help.md` in `sonarqube/get-help.md`.
-
----
 
 For more details on the release process, see the documentation in these repositories:
 
