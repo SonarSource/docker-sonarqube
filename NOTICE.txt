@@ -1,0 +1,6 @@
+docker-sonarqube
+Copyright (C) 2015-2018 SonarSource SA
+mailto:info AT sonarsource DOT com
+
+This product includes software developed at
+SonarSource (http://www.sonarsource.com/).
