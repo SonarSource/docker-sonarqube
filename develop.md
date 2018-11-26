@@ -32,6 +32,10 @@ Other notes
 
 To control the generated content of the Docker Hub page, look around in the files in `.template-helpers` of the [`docs` repository][docs]. For example, the "Where to get help" section is customized by a copy of `.template-helpers/get-help.md` in `sonarqube/get-help.md`.
 
+For more details on the release process, see the documentation in these repositories:
+
+- https://github.com/docker-library/docs
+- https://github.com/docker-library/official-images
 
 [hub]: https://hub.docker.com/_/sonarqube/
 [docs]: https://github.com/docker-library/docs
