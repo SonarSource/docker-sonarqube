@@ -97,7 +97,7 @@ for arg; do
 done
 
 if [[ $# = 0 ]]; then
-    images=(*-community)
+    images=(*-community *-community-alpine)
 else
     images=("$@")
 fi
