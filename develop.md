@@ -27,10 +27,12 @@ Update the public repositories for [Docker Hub][hub]:
 
 3. Wait for the Pull Requests to get merged, and verify the updated page on [Docker Hub][hub]
 
-Known issues
-------------
+FAQ
+---
 
-If you build custom images on top the alpine-based (`openjdk:8-alpine`) SonarQube images (`*-community-alpine`), be aware that Java on Alpine is pretty experimental to begin with (to put it lightly). If you experience strange issues, give a try to using the non-alpine based (`openjdk:8`) SonarQube images instead (`*-community`).
+Q: Why don't you provide Alpine-based images?
+
+A: As of today, OpenJDK 8 does not officially support Alpine. As such, we don't know a good base image to build on. We did try the unsupported `openjdk:8-alpine` image as base, and we saw seen nonsense problems with nonsense workarounds. We've left the recipes for Alpine-based images in the branch named `alpine`, build and use at your own risk.
 
 Other notes
 -----------
