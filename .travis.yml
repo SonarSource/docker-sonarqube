@@ -8,8 +8,8 @@ services:
 env:
   - VERSION=6.7.6-community
   - VERSION=6.7.6-community-alpine
-  - VERSION=7.4-community
-  - VERSION=7.4-community-alpine
+  - VERSION=7.5-community
+  - VERSION=7.5-community-alpine
 
 script:
   - v="${VERSION}"
