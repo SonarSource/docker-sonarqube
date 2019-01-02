@@ -12,8 +12,7 @@ usage: $0 [IMAGE...]
 
 examples:
        $0
-       $0 7.4-community
-       $0 7.4-community-alpine
+       $0 7.5-community
 EOF
 }
 
