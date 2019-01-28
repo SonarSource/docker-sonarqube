@@ -8,6 +8,6 @@ The full readme is generated over in [docker-library/docs](https://github.com/do
 
 ### License
 
-Copyright 2015-2018 SonarSource.
+Copyright 2015-2019 SonarSource.
 
 Licensed under the [GNU Lesser General Public License, Version 3.0](http://www.gnu.org/licenses/lgpl.txt)
