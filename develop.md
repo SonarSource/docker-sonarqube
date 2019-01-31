@@ -8,10 +8,10 @@ Releasing a new version of an image
 
 Create the new image for the new version:
 
-1. Rename the last version's directory, for example `7.4-community` to `7.5-community`
+1. Rename the last version's directory, for example `7.6-community` to `7.7-community` and `7.6-developer` to `7.7-developer`
 2. Update the version in `Dockerfile`, and make any other necessary changes (usually none)
 3. Update the version in `.travis.yml'
-4. Run tests, for example: `./run-tests.sh 7.5-community`
+4. Run tests, for example: `./run-tests.sh 7.7-community 7.7-developer`
 5. Create a Pull Request, confirm Travis build passes, get it reviewed and merged
 
 Update the public repositories for [Docker Hub][hub]:
