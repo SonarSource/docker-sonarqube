@@ -14,6 +14,12 @@ fi
 
 declare -a sq_opts
 
+# Update UID:GID for sonarqube user.
+usermod -u $PUID sonarqube && \
+groupmod -g $PGID sonarqube && \
+chown -R -h $PUID:$PGID $SONARQUBE_HOME && \
+usermod -g $PUID sonarqube
+
 while IFS='=' read -r envvar_key envvar_value
 do
     if [[ "$envvar_key" =~ sonar.* ]]; then
@@ -21,7 +27,8 @@ do
     fi
 done < <(env)
 
-exec java -jar lib/sonar-application-$SONAR_VERSION.jar \
+# Add call to gosu to drop from root user to sonarqube user.
+gosu sonarqube java -jar lib/sonar-application-$SONAR_VERSION.jar \
   -Dsonar.log.console=true \
   -Dsonar.jdbc.username="$SONARQUBE_JDBC_USERNAME" \
   -Dsonar.jdbc.password="$SONARQUBE_JDBC_PASSWORD" \

@@ -1,6 +1,8 @@
 FROM openjdk:8
 
 ENV SONAR_VERSION=7.6 \
+    PUID=999 \
+    PGID=999 \
     SONARQUBE_HOME=/opt/sonarqube \
     # Database configuration
     # Defaults to using H2
@@ -13,7 +15,7 @@ ENV SONAR_VERSION=7.6 \
 # Http port
 EXPOSE 9000
 
-RUN groupadd -r sonarqube && useradd -r -g sonarqube sonarqube
+RUN groupadd -g $PGID -r sonarqube && useradd -u $PUID -r -g sonarqube sonarqube
 
 # grab gosu for easy step-down from root
 RUN set -x \
@@ -48,5 +50,4 @@ VOLUME "$SONARQUBE_HOME/data"
 
 WORKDIR $SONARQUBE_HOME
 COPY run.sh $SONARQUBE_HOME/bin/
-USER sonarqube
 ENTRYPOINT ["./bin/run.sh"]
