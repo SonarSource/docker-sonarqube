@@ -50,3 +50,4 @@ WORKDIR $SONARQUBE_HOME
 COPY run.sh $SONARQUBE_HOME/bin/
 USER sonarqube
 ENTRYPOINT ["./bin/run.sh"]
+HEALTHCHECK --start-period=30s --interval=2m --timeout=3s --retries=3 CMD curl -f http://localhost:9000/ || exit 1
