@@ -16,7 +16,7 @@ declare -a sq_opts
 
 while IFS='=' read -r envvar_key envvar_value
 do
-    if [[ "$envvar_key" =~ sonar.* ]]; then
+    if [[ "$envvar_key" =~ sonar.* ]] || [[ "$envvar_key" =~ ldap.* ]]; then
         sq_opts+=("-D${envvar_key}=${envvar_value}")
     fi
 done < <(env)
