@@ -7,7 +7,7 @@ services:
 
 env:
   - VERSION=6.7.7-community
-  - VERSION=7.7-community
+  - VERSION=7.8-community
 
 script:
   - ./run-tests.sh "${VERSION}"
