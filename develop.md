@@ -8,7 +8,7 @@ Releasing a new version of an image
 
 Create the new image for the new version:
 
-1. Rename the last version's directory, for example `7.7-community` to `7.8-community`
+1. Rename the last version's directory, for example `7.8-community` to `7.9-community`
 2. Update the version in `Dockerfile`, and make any other necessary changes (usually none)
 3. Update the version in `.travis.yml`
 4. Run tests, for example: `./run-tests.sh 7.8-community`
