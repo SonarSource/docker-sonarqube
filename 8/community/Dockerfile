@@ -60,4 +60,3 @@ WORKDIR $SONARQUBE_HOME
 COPY run.sh $SONARQUBE_HOME/bin/
 USER sonarqube
 ENTRYPOINT ["./bin/run.sh"]
-HEALTHCHECK --start-period=10s --interval=10s --timeout=10s --retries=3 CMD curl -Ss http://localhost:9000/api/system/status | grep -q '"status":"UP"' || exit 1
