@@ -6,7 +6,7 @@ services:
   - docker
 
 env:
-  - VERSION=7.9.1-community
+  - VERSION=7/community
 
 script:
   - ./run-tests.sh "${VERSION}"
