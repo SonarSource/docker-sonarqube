@@ -10,6 +10,9 @@ env:
 
 script:
   - ./run-tests.sh "${VERSION}"
+  - 'if [ "$TRAVIS_EVENT_TYPE" == "cron" ]; then
+        ./run-public-image-tests.sh;
+    fi'
 
 notifications:
   email: false
