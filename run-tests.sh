@@ -60,7 +60,7 @@ wait_for_sonarqube() {
             sonarqube_up=yes
             break
         fi
-        sleep 7
+        sleep 10
     done
 
     [[ "$sonarqube_up" = yes ]]
@@ -96,7 +96,7 @@ for arg; do
 done
 
 if [[ $# = 0 ]]; then
-    images=(*-community *-community-alpine)
+    images=(*/community)
 else
     images=("$@")
 fi
