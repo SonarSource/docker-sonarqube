@@ -1,6 +1,8 @@
 FROM openjdk:11-jre-slim
 
-RUN apt-get update && apt-get install -y curl gnupg2 unzip
+RUN apt-get update \
+    && apt-get install -y curl gnupg2 unzip \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV SONAR_VERSION=7.9.1 \
     SONARQUBE_HOME=/opt/sonarqube \
