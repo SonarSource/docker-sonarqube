@@ -34,7 +34,7 @@ require() {
         fi
     done
 
-    [[ ${#missing[@]} = 0 ]] || fatal "could not find reqired programs on the path: ${missing[@]}"
+    [[ ${#missing[@]} = 0 ]] || fatal "could not find required programs on the path: ${missing[@]}"
 }
 
 require docker
