@@ -6,16 +6,6 @@ cd "$(dirname "$0")"
 
 port=9000
 
-print_usage() {
-    cat << EOF
-usage: $0 [IMAGE...]
-
-examples:
-       $0
-       $0 7.6-community
-EOF
-}
-
 info() {
     echo "[info] $@"
 }
@@ -69,7 +59,9 @@ wait_for_sonarqube() {
 sanity_check_image() {
     local image=$1 id result
 
-    id=$(docker run -d -p $port:9000 "$image")
+    docker system prune -fa
+    docker pull ${image}
+    id=$(docker run -d -p ${port}:9000 "$image")
     info "$image: container started: $id"
 
     if wait_for_sonarqube "$image"; then
@@ -88,46 +80,24 @@ sanity_check_image() {
 
 require curl docker
 
-for arg; do
-    if [[ $arg == "-h" ]] || [[ $arg == "--help" ]]; then
-        print_usage
-        exit
-    fi
-done
-
-if [[ $# = 0 ]]; then
-    images=(*/community)
-else
-    images=("$@")
-fi
 
 results=()
 
-for image in "${images[@]}"; do
-    image=${image%/}
-    if ! [[ -d "$image" ]]; then
-        warn "not a valid image, directory does not exist: $image"
-        results+=("error")
-        continue
-    fi
-    name=sqtest:$image
-    docker build -t "$name" -f "$image/Dockerfile" "$PWD/$image"
+if sanity_check_image "sonarqube"; then
+    results+=("success")
+else
+    results+=("failure")
+fi
 
-    if sanity_check_image "$name"; then
-        results+=("success")
-    else
-        results+=("failure")
-    fi
-done
 
 echo
 
 failures=0
-for ((i = 0; i < ${#images[@]}; i++)); do
-    echo "${images[i]} => ${results[i]}"
-    if [[ ${results[i]} != success ]]; then
-        ((failures++)) || :
-    fi
-done
 
-[[ $failures = 0 ]]
+echo "sonarqube => ${results[0]}"
+if [[ ${results[0]} != success ]]; then
+    ((failures++)) || :
+fi
+
+
+[[ ${failures} = 0 ]]

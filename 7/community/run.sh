@@ -62,6 +62,7 @@ create_prop_from_secret "sonar.jdbc.password" "SONAR_JDBC_PASSWORD_FILE"
 create_prop_from_secret "ldap.bindPassword" "LDAP_BINDPASSWORD_FILE"
 create_prop_from_secret "http.proxyPassword" "HTTP_PROXYPASSWORD_FILE"
 
+exec tail -F ./logs/es.log & # this tail on the elasticsearch logs is a temporary workaround, see https://github.com/docker-library/official-images/pull/6361#issuecomment-516184762
 exec java -jar lib/sonar-application-$SONAR_VERSION.jar \
   -Dsonar.log.console=true \
   -Dsonar.web.javaAdditionalOpts="$SONARQUBE_WEB_JVM_OPTS -Djava.security.egd=file:/dev/./urandom" \
