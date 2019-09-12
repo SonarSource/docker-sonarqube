@@ -1,0 +1,52 @@
+# content of service-account-credentials.json, used to access to Google Cloud Platform
+gcp_credentials: ENCRYPTED[!1fcffe5cc2de4fbbda5befae835ca275a47c1148dabbbb7b5d21334604efba3ef8730d8bc5820952e575c7dd5177e433!]
+
+env:
+  ARTIFACTORY_PRIVATE_USERNAME: private-reader
+  ARTIFACTORY_PRIVATE_PASSWORD: ENCRYPTED[!921e2792ce1fc164aaea1146ab2478e7aefd8aaa87022ca745adccee4deaa470bb883ad3066738fceb37622f239296a7!]
+  SONARQUBE_BUILD_NUMBER: 8.0.0.28769
+
+sq7_ce_docker_builder:
+  name: build_sq7_ce
+  build_script:
+    - docker build "7/community" --tag sonarqube:7
+    - ./test/run-tests.sh "sonarqube:7"
+
+sq8_ce_docker_builder:
+  name: build_sq8_ce
+  build_script:
+    - >-
+      docker build 8/community
+      --build-arg SONARQUBE_VERSION="$SONARQUBE_BUILD_NUMBER"
+      --build-arg SONARQUBE_ZIP_SERVER="repox.jfrog.io"
+      --build-arg SONARQUBE_ZIP_URL="https://repox.jfrog.io/repox/sonarsource-public-qa/org/sonarsource/sonarqube/sonar-application/$SONARQUBE_BUILD_NUMBER/sonar-application-$SONARQUBE_BUILD_NUMBER.zip"
+      --build-arg SONARQUBE_ZIP_USERNAME="$ARTIFACTORY_PRIVATE_USERNAME"
+      --build-arg SONARQUBE_ZIP_PASSWORD="$ARTIFACTORY_PRIVATE_PASSWORD"
+      --tag sonarqube:8
+    - ./test/run-tests.sh "sonarqube:8"
+
+sq8_de_docker_builder:
+  name: build_sq8_de
+  build_script:
+    - >-
+      docker build 8/developer
+      --build-arg SONARQUBE_VERSION="$SONARQUBE_BUILD_NUMBER"
+      --build-arg SONARQUBE_ZIP_SERVER="repox.jfrog.io"
+      --build-arg SONARQUBE_ZIP_URL="https://repox.jfrog.io/repox/sonarsource-private-qa/com/sonarsource/sonarqube/sonarqube-developer/$SONARQUBE_BUILD_NUMBER/sonarqube-developer-$SONARQUBE_BUILD_NUMBER.zip"
+      --build-arg SONARQUBE_ZIP_USERNAME="$ARTIFACTORY_PRIVATE_USERNAME"
+      --build-arg SONARQUBE_ZIP_PASSWORD="$ARTIFACTORY_PRIVATE_PASSWORD"
+      --tag sonarqube:8-de
+    - ./test/run-tests.sh "sonarqube:8-de"
+
+sq8_ee_docker_builder:
+  name: build_sq8_ee
+  build_script:
+    - >-
+      docker build 8/enterprise
+      --build-arg SONARQUBE_VERSION="$SONARQUBE_BUILD_NUMBER"
+      --build-arg SONARQUBE_ZIP_SERVER="repox.jfrog.io"
+      --build-arg SONARQUBE_ZIP_URL="https://repox.jfrog.io/repox/sonarsource-private-qa/com/sonarsource/sonarqube/sonarqube-enterprise/$SONARQUBE_BUILD_NUMBER/sonarqube-enterprise-$SONARQUBE_BUILD_NUMBER.zip"
+      --build-arg SONARQUBE_ZIP_USERNAME="$ARTIFACTORY_PRIVATE_USERNAME"
+      --build-arg SONARQUBE_ZIP_PASSWORD="$ARTIFACTORY_PRIVATE_PASSWORD"
+      --tag sonarqube:8-ee
+    - ./test/run-tests.sh "sonarqube:8-ee"

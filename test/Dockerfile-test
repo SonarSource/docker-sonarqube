@@ -1,0 +1,2 @@
+FROM docker:18-dind
+RUN apk add --update bash curl && rm -rf /var/cache/apk/*

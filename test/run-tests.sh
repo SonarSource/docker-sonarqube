@@ -104,16 +104,16 @@ fi
 results=()
 
 for image in "${images[@]}"; do
-    image=${image%/}
-    if ! [[ -d "$image" ]]; then
-        warn "not a valid image, directory does not exist: $image"
-        results+=("error")
-        continue
-    fi
-    name=sqtest:$image
-    docker build -t "$name" -f "$image/Dockerfile" "$PWD/$image"
+#    image=${image%/}
+#    if ! [[ -d "$image" ]]; then
+#        warn "not a valid image, directory does not exist: $image"
+#        results+=("error")
+#        continue
+#    fi
+#    name=sqtest:$image
+#    docker build -t "$name" -f "$image/Dockerfile" "$PWD/$image"
 
-    if sanity_check_image "$name"; then
+    if sanity_check_image "$image"; then
         results+=("success")
     else
         results+=("failure")
