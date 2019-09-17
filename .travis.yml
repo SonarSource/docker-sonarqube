@@ -6,14 +6,43 @@ services:
   - docker
 
 env:
-  - VERSION=7/community
+  global:
+    - ARTIFACTORY_PRIVATE_USERNAME=private-reader
+    - SONARQUBE_BUILD_NUMBER=8.0.0.28769
 
 script:
-  - ./run-tests.sh "${VERSION}"
   - 'if [ "$TRAVIS_EVENT_TYPE" == "cron" ]; then
         ./run-public-image-tests.sh;
     fi'
-
+  - docker build "7/community" --tag sonarqube:7
+  - ./run-tests.sh "sonarqube:7"
+  - >-
+    docker build 8/community
+    --build-arg SONARQUBE_VERSION="$SONARQUBE_BUILD_NUMBER"
+    --build-arg SONARQUBE_ZIP_SERVER="repox.jfrog.io"
+    --build-arg SONARQUBE_ZIP_URL="https://repox.jfrog.io/repox/sonarsource-public-qa/org/sonarsource/sonarqube/sonar-application/$SONARQUBE_BUILD_NUMBER/sonar-application-$SONARQUBE_BUILD_NUMBER.zip"
+    --build-arg SONARQUBE_ZIP_USERNAME="$ARTIFACTORY_PRIVATE_USERNAME"
+    --build-arg SONARQUBE_ZIP_PASSWORD="$ARTIFACTORY_PRIVATE_PASSWORD"
+    --tag sonarqube:8
+  - ./run-tests.sh "sonarqube:8"
+  - >-
+    docker build 8/developer
+    --build-arg SONARQUBE_VERSION="$SONARQUBE_BUILD_NUMBER"
+    --build-arg SONARQUBE_ZIP_SERVER="repox.jfrog.io"
+    --build-arg SONARQUBE_ZIP_URL="https://repox.jfrog.io/repox/sonarsource-private-qa/com/sonarsource/sonarqube/sonarqube-developer/$SONARQUBE_BUILD_NUMBER/sonarqube-developer-$SONARQUBE_BUILD_NUMBER.zip"
+    --build-arg SONARQUBE_ZIP_USERNAME="$ARTIFACTORY_PRIVATE_USERNAME"
+    --build-arg SONARQUBE_ZIP_PASSWORD="$ARTIFACTORY_PRIVATE_PASSWORD"
+    --tag sonarqube:8-de
+  - ./run-tests.sh "sonarqube:8-de"
+  - >-
+    docker build 8/enterprise
+    --build-arg SONARQUBE_VERSION="$SONARQUBE_BUILD_NUMBER"
+    --build-arg SONARQUBE_ZIP_SERVER="repox.jfrog.io"
+    --build-arg SONARQUBE_ZIP_URL="https://repox.jfrog.io/repox/sonarsource-private-qa/com/sonarsource/sonarqube/sonarqube-enterprise/$SONARQUBE_BUILD_NUMBER/sonarqube-enterprise-$SONARQUBE_BUILD_NUMBER.zip"
+    --build-arg SONARQUBE_ZIP_USERNAME="$ARTIFACTORY_PRIVATE_USERNAME"
+    --build-arg SONARQUBE_ZIP_PASSWORD="$ARTIFACTORY_PRIVATE_PASSWORD"
+    --tag sonarqube:8-ee
+  - ./run-tests.sh "sonarqube:8-ee"
 notifications:
   email: false
   webhooks:
