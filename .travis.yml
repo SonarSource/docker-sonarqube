@@ -20,7 +20,7 @@ script:
     docker build 8/community
     --build-arg SONARQUBE_VERSION="$SONARQUBE_BUILD_NUMBER"
     --build-arg SONARQUBE_ZIP_SERVER="repox.jfrog.io"
-    --build-arg SONARQUBE_ZIP_URL="https://repox.jfrog.io/repox/sonarsource-public-qa/org/sonarsource/sonarqube/sonar-application/$SONARQUBE_BUILD_NUMBER/sonar-application-$SONARQUBE_BUILD_NUMBER.zip"
+    --build-arg SONARQUBE_ZIP_URL="https://repox.jfrog.io/repox/sonarsource-builds/org/sonarsource/sonarqube/sonar-application/$SONARQUBE_BUILD_NUMBER/sonar-application-$SONARQUBE_BUILD_NUMBER.zip"
     --build-arg SONARQUBE_ZIP_USERNAME="$ARTIFACTORY_PRIVATE_USERNAME"
     --build-arg SONARQUBE_ZIP_PASSWORD="$ARTIFACTORY_PRIVATE_PASSWORD"
     --tag sonarqube:8
@@ -29,7 +29,7 @@ script:
     docker build 8/developer
     --build-arg SONARQUBE_VERSION="$SONARQUBE_BUILD_NUMBER"
     --build-arg SONARQUBE_ZIP_SERVER="repox.jfrog.io"
-    --build-arg SONARQUBE_ZIP_URL="https://repox.jfrog.io/repox/sonarsource-private-qa/com/sonarsource/sonarqube/sonarqube-developer/$SONARQUBE_BUILD_NUMBER/sonarqube-developer-$SONARQUBE_BUILD_NUMBER.zip"
+    --build-arg SONARQUBE_ZIP_URL="https://repox.jfrog.io/repox/sonarsource-builds/com/sonarsource/sonarqube/sonarqube-developer/$SONARQUBE_BUILD_NUMBER/sonarqube-developer-$SONARQUBE_BUILD_NUMBER.zip"
     --build-arg SONARQUBE_ZIP_USERNAME="$ARTIFACTORY_PRIVATE_USERNAME"
     --build-arg SONARQUBE_ZIP_PASSWORD="$ARTIFACTORY_PRIVATE_PASSWORD"
     --tag sonarqube:8-de
@@ -38,7 +38,7 @@ script:
     docker build 8/enterprise
     --build-arg SONARQUBE_VERSION="$SONARQUBE_BUILD_NUMBER"
     --build-arg SONARQUBE_ZIP_SERVER="repox.jfrog.io"
-    --build-arg SONARQUBE_ZIP_URL="https://repox.jfrog.io/repox/sonarsource-private-qa/com/sonarsource/sonarqube/sonarqube-enterprise/$SONARQUBE_BUILD_NUMBER/sonarqube-enterprise-$SONARQUBE_BUILD_NUMBER.zip"
+    --build-arg SONARQUBE_ZIP_URL="https://repox.jfrog.io/repox/sonarsource-builds/com/sonarsource/sonarqube/sonarqube-enterprise/$SONARQUBE_BUILD_NUMBER/sonarqube-enterprise-$SONARQUBE_BUILD_NUMBER.zip"
     --build-arg SONARQUBE_ZIP_USERNAME="$ARTIFACTORY_PRIVATE_USERNAME"
     --build-arg SONARQUBE_ZIP_PASSWORD="$ARTIFACTORY_PRIVATE_PASSWORD"
     --tag sonarqube:8-ee
