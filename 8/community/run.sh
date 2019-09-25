@@ -2,6 +2,8 @@
 
 set -e
 
+SONARQUBE_HOME=/opt/sq 
+
 if [ "${1:0:1}" != '-' ]; then
   exec "$@"
 fi
@@ -20,6 +22,26 @@ do
         sq_opts+=("-D${envvar_key}=${envvar_value}")
     fi
 done < <(env)
+
+is_empty_dir() {
+  [ -z "$(ls -A "$1")" ]
+}
+
+initialize_sq_sub_dir() {
+  local sub_dir="$1"
+
+  if is_empty_dir "$SONARQUBE_HOME/${sub_dir}"; then
+    cp --recursive "$SONARQUBE_HOME/${sub_dir}_save/." "$SONARQUBE_HOME/${sub_dir}/" \
+      && echo "Initialized content of $SONARQUBE_HOME/${sub_dir}" \
+      || echo "Failed to initialize content of $SONARQUBE_HOME/${sub_dir}"
+  fi
+}
+
+# Initialize conf and extensions dir in case they have been bound to a Docker Daemon host's filesystem directory
+# or to an empty volumne which has been created prior to the 'docker run' command call
+# Initialization only occurs if directory is totally empty
+initialize_sq_sub_dir "conf"
+initialize_sq_sub_dir "extensions"
 
 exec tail -F ./logs/es.log & # this tail on the elasticsearch logs is a temporary workaround, see https://github.com/docker-library/official-images/pull/6361#issuecomment-516184762
 exec java -jar lib/sonar-application-$SONAR_VERSION.jar \
