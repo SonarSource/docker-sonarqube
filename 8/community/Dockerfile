@@ -61,8 +61,6 @@ RUN ln -s "$SONARQUBE_PUBLIC_HOME/conf" "$SONARQUBE_HOME/conf" \
     && ln -s "$SONARQUBE_PUBLIC_HOME/logs" "$SONARQUBE_HOME/logs" \
     && ln -s "$SONARQUBE_PUBLIC_HOME/data" "$SONARQUBE_HOME/data"
 
-VOLUME ["$SONARQUBE_PUBLIC_HOME/conf", "$SONARQUBE_PUBLIC_HOME/extensions", "$SONARQUBE_PUBLIC_HOME/logs", "$SONARQUBE_PUBLIC_HOME/data"]
-
 COPY --chown=sonarqube:sonarqube run.sh "$SONARQUBE_HOME/bin/"
 
 WORKDIR $SONARQUBE_HOME
