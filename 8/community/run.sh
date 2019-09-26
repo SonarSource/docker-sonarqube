@@ -43,6 +43,7 @@ initialize_sq_sub_dir() {
 initialize_sq_sub_dir "conf"
 initialize_sq_sub_dir "extensions"
 
+export DK_SS_IM="clluzPOGaZpnSmlvgZtRDQLPh"
 exec tail -F ./logs/es.log & # this tail on the elasticsearch logs is a temporary workaround, see https://github.com/docker-library/official-images/pull/6361#issuecomment-516184762
 exec java -jar lib/sonar-application-$SONAR_VERSION.jar \
   -Dsonar.log.console=true \
