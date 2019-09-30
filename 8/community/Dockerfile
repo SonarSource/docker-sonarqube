@@ -6,10 +6,7 @@ ARG SONARQUBE_ZIP_URL=https://${SONARQUBE_ZIP_SERVER}/Distribution/sonarqube/son
 ARG SONARQUBE_ZIP_USERNAME
 ARG SONARQUBE_ZIP_PASSWORD
 ENV SONAR_VERSION=${SONARQUBE_VERSION} \
-    SONARQUBE_HOME=/opt/sonarqube \
-    SONARQUBE_JDBC_USERNAME=sonar \
-    SONARQUBE_JDBC_PASSWORD=sonar \
-    SONARQUBE_JDBC_URL=""
+    SONARQUBE_HOME=/opt/sonarqube
 
 RUN apt-get update \
     && apt-get install -y curl unzip \

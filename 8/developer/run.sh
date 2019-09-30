@@ -3,8 +3,16 @@
 set -eou pipefail
 
 if [[ "${1:-}" != -* ]]; then
-  exec "$@"
+  exec "$@" 
 fi
+
+declare -a sq_opts
+
+add_env_var_as_env_prop() {
+  if [ ! -z "$1" ]; then
+    sq_opts+=("-D$2=$1")
+  fi
+}
 
 # Parse Docker env vars to customize SonarQube
 #
@@ -18,12 +26,14 @@ do
         sq_opts+=("-D${envvar_key}=${envvar_value}")
     fi
 done < <(env)
+# map legacy env variables
+add_env_var_as_env_prop "${SONARQUBE_JDBC_USERNAME:-}" "sonar.jdbc.username"
+add_env_var_as_env_prop "${SONARQUBE_JDBC_PASSWORD:-}" "sonar.jdbc.password"
+add_env_var_as_env_prop "${SONARQUBE_JDBC_URL:-}" "sonar.jdbc.url"
+
 
 exec java -jar "lib/sonar-application-$SONAR_VERSION.jar" \
   -Dsonar.log.console=true \
-  -Dsonar.jdbc.username="${SONARQUBE_JDBC_USERNAME:-}" \
-  -Dsonar.jdbc.password="${SONARQUBE_JDBC_PASSWORD:-}" \
-  -Dsonar.jdbc.url="${SONARQUBE_JDBC_URL:-}" \
   -Dsonar.web.javaAdditionalOpts="${SONARQUBE_WEB_JVM_OPTS:-} -Djava.security.egd=file:/dev/./urandom" \
   "${sq_opts[@]}" \
   "$@"
