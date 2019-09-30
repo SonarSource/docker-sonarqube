@@ -30,10 +30,9 @@ done < <(env)
 add_env_var_as_env_prop "${SONARQUBE_JDBC_USERNAME:-}" "sonar.jdbc.username"
 add_env_var_as_env_prop "${SONARQUBE_JDBC_PASSWORD:-}" "sonar.jdbc.password"
 add_env_var_as_env_prop "${SONARQUBE_JDBC_URL:-}" "sonar.jdbc.url"
-
+add_env_var_as_env_prop "${SONARQUBE_WEB_JVM_OPTS:-}" "sonar.web.javaAdditionalOpts"
 
 exec java -jar "lib/sonar-application-$SONAR_VERSION.jar" \
   -Dsonar.log.console=true \
-  -Dsonar.web.javaAdditionalOpts="${SONARQUBE_WEB_JVM_OPTS:-} -Djava.security.egd=file:/dev/./urandom" \
   "${sq_opts[@]}" \
   "$@"

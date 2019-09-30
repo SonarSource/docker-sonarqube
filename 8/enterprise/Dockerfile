@@ -18,6 +18,8 @@ EXPOSE 9000
 RUN groupadd -r sonarqube && useradd -r -g sonarqube sonarqube
 
 SHELL ["/bin/bash", "-c"]
+RUN sed -i -e "s/securerandom.source=file:\/dev\/random/securerandom.source=file:\/dev\/urandom/g" \
+  $JAVA_HOME/conf/security/java.security
 RUN set -x \
     && cd /opt \
     && if [ "x$SONARQUBE_ZIP_USERNAME" = "x" ] ; \
