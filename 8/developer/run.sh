@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eou pipefail
+set -euo pipefail
 
 if [[ "${1:-}" != -* ]]; then
   exec "$@" 
@@ -9,7 +9,7 @@ fi
 declare -a sq_opts
 
 add_env_var_as_env_prop() {
-  if [ ! -z "$1" ]; then
+  if [ "$1" ]; then
     sq_opts+=("-D$2=$1")
   fi
 }
@@ -36,3 +36,4 @@ exec java -jar "lib/sonar-application-$SONAR_VERSION.jar" \
   -Dsonar.log.console=true \
   "${sq_opts[@]}" \
   "$@"
+
