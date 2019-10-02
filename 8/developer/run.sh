@@ -15,9 +15,9 @@ fi
 
 declare -a sq_opts
 
-add_env_var_as_env_prop() {
-  if [ "$1" ]; then
-    sq_opts+=("-D$2=$1")
+set_prop_from_env_var() {
+  if [ "$2" ]; then
+    sq_opts+=("-D$1=$2")
   fi
 }
 
@@ -34,10 +34,10 @@ do
     fi
 done < <(env)
 # map legacy env variables
-add_env_var_as_env_prop "${SONARQUBE_JDBC_USERNAME:-}" "sonar.jdbc.username"
-add_env_var_as_env_prop "${SONARQUBE_JDBC_PASSWORD:-}" "sonar.jdbc.password"
-add_env_var_as_env_prop "${SONARQUBE_JDBC_URL:-}" "sonar.jdbc.url"
-add_env_var_as_env_prop "${SONARQUBE_WEB_JVM_OPTS:-}" "sonar.web.javaAdditionalOpts"
+set_prop_from_env_var "sonar.jdbc.username" "${SONARQUBE_JDBC_USERNAME:-}"
+set_prop_from_env_var "sonar.jdbc.password" "${SONARQUBE_JDBC_PASSWORD:-}"
+set_prop_from_env_var "sonar.jdbc.url" "${SONARQUBE_JDBC_URL:-}"
+set_prop_from_env_var "sonar.web.javaAdditionalOpts" "${SONARQUBE_WEB_JVM_OPTS:-}"
 
 is_empty_dir() {
   [ -z "$(ls -A "$1")" ]
