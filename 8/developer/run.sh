@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
 init_only=false
 SONARQUBE_HOME=/opt/sq
 
-if [ "${1:0:1}" != '-' ]; then
+if [[ "${1:-}" != -* ]]; then
   exec "$@"
 fi
 
@@ -13,20 +13,31 @@ if [ "${1:-}" = "--init" ]; then
   init_only=true
 fi
 
+declare -a sq_opts
+
+set_prop_from_env_var() {
+  if [ "$2" ]; then
+    sq_opts+=("-D$1=$2")
+  fi
+}
+
 # Parse Docker env vars to customize SonarQube
 #
 # e.g. Setting the env var sonar.jdbc.username=foo
 #
 # will cause SonarQube to be invoked with -Dsonar.jdbc.username=foo
-
 declare -a sq_opts
-
 while IFS='=' read -r envvar_key envvar_value
 do
     if [[ "$envvar_key" =~ sonar.* ]] || [[ "$envvar_key" =~ ldap.* ]]; then
         sq_opts+=("-D${envvar_key}=${envvar_value}")
     fi
 done < <(env)
+# map legacy env variables
+set_prop_from_env_var "sonar.jdbc.username" "${SONARQUBE_JDBC_USERNAME:-}"
+set_prop_from_env_var "sonar.jdbc.password" "${SONARQUBE_JDBC_PASSWORD:-}"
+set_prop_from_env_var "sonar.jdbc.url" "${SONARQUBE_JDBC_URL:-}"
+set_prop_from_env_var "sonar.web.javaAdditionalOpts" "${SONARQUBE_WEB_JVM_OPTS:-}"
 
 is_empty_dir() {
   [ -z "$(ls -A "$1")" ]
@@ -48,13 +59,10 @@ initialize_sq_sub_dir() {
 initialize_sq_sub_dir "conf"
 initialize_sq_sub_dir "extensions"
 
+
 if [ "$init_only" = false ]; then
-  exec java -jar lib/sonar-application-$SONAR_VERSION.jar \
+  exec java -jar "lib/sonar-application-$SONAR_VERSION.jar" \
     -Dsonar.log.console=true \
-    -Dsonar.jdbc.username="$SONARQUBE_JDBC_USERNAME" \
-    -Dsonar.jdbc.password="$SONARQUBE_JDBC_PASSWORD" \
-    -Dsonar.jdbc.url="$SONARQUBE_JDBC_URL" \
-    -Dsonar.web.javaAdditionalOpts="$SONARQUBE_WEB_JVM_OPTS -Djava.security.egd=file:/dev/./urandom" \
     "${sq_opts[@]}" \
     "$@"
 fi

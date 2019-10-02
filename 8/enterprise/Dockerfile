@@ -7,10 +7,7 @@ ARG SONARQUBE_ZIP_USERNAME
 ARG SONARQUBE_ZIP_PASSWORD
 ENV SONAR_VERSION=${SONARQUBE_VERSION} \
     SONARQUBE_HOME=/opt/sq \
-    SONARQUBE_PUBLIC_HOME=/opt/sonarqube \
-    SONARQUBE_JDBC_USERNAME=sonar \
-    SONARQUBE_JDBC_PASSWORD=sonar \
-    SONARQUBE_JDBC_URL=""
+    SONARQUBE_PUBLIC_HOME=/opt/sonarqube
 
 RUN apt-get update \
     && apt-get install -y curl unzip \
@@ -22,6 +19,8 @@ EXPOSE 9000
 RUN groupadd -r sonarqube && useradd -r -g sonarqube sonarqube
 
 SHELL ["/bin/bash", "-c"]
+RUN sed -i -e "s?securerandom.source=file:/dev/random?securerandom.source=file:/dev/urandom?g" \
+  "$JAVA_HOME/conf/security/java.security"
 # download and unzip SQ
 RUN set -x \
     && cd /opt \
