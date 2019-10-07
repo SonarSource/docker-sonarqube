@@ -1,10 +1,9 @@
 FROM openjdk:11-jre-slim
 
 ARG SONARQUBE_VERSION=8.0
-ARG SONARQUBE_ZIP_SERVER=binaries.sonarsource.com
-ARG SONARQUBE_ZIP_URL=https://${SONARQUBE_ZIP_SERVER}/CommercialDistribution/sonarqube-developer/sonarqube-developer-${SONARQUBE_VERSION}.zip
-ARG SONARQUBE_ZIP_USERNAME
-ARG SONARQUBE_ZIP_PASSWORD
+ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/CommercialDistribution/sonarqube-developer/sonarqube-developer-${SONARQUBE_VERSION}.zip
+ARG SONARQUBE_ZIP_DIR=/tmp/zip
+ARG SONARQUBE_ZIP_LOCATION=$SONARQUBE_ZIP_DIR/sonarqube-${SONARQUBE_VERSION}.zip
 ENV SONAR_VERSION=${SONARQUBE_VERSION} \
     SONARQUBE_HOME=/opt/sq \
     SONARQUBE_PUBLIC_HOME=/opt/sonarqube
@@ -18,16 +17,19 @@ EXPOSE 9000
 
 RUN groupadd -r sonarqube && useradd -r -g sonarqube sonarqube
 
+COPY zip/* "$SONARQUBE_ZIP_DIR"/
+
 SHELL ["/bin/bash", "-c"]
 RUN sed -i -e "s?securerandom.source=file:/dev/random?securerandom.source=file:/dev/urandom?g" \
   "$JAVA_HOME/conf/security/java.security"
 # download and unzip SQ
 RUN set -x \
     && cd /opt \
-    && if [ "x$SONARQUBE_ZIP_USERNAME" = "x" ] ; \
-        then curl -o sonarqube.zip -fsSL "$SONARQUBE_ZIP_URL" ; \
-        else curl -o sonarqube.zip -fsSL --netrc-file <(cat <<<"machine $SONARQUBE_ZIP_SERVER login $SONARQUBE_ZIP_USERNAME password $SONARQUBE_ZIP_PASSWORD") "$SONARQUBE_ZIP_URL" ; \
+    && if [ -f "$SONARQUBE_ZIP_LOCATION" ] ; \
+        then cp "$SONARQUBE_ZIP_LOCATION" sonarqube.zip; \
+        else curl -o sonarqube.zip -fsSL "$SONARQUBE_ZIP_URL" ; \
         fi \
+    && rm -Rf "${SONARQUBE_ZIP_DIR}" \
     && unzip -q sonarqube.zip \
     && mv "sonarqube-${SONARQUBE_VERSION}" sq \
     && rm sonarqube.zip*
