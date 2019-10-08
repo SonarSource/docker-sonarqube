@@ -8,7 +8,7 @@ services:
 env:
   global:
     - ARTIFACTORY_PRIVATE_USERNAME=private-reader
-    - SONARQUBE_BUILD_NUMBER=8.0.0.29057
+    - SONARQUBE_BUILD_NUMBER=8.0.0.29231
 
 script:
   - 'if [ "$TRAVIS_EVENT_TYPE" == "cron" ]; then
