@@ -4,6 +4,7 @@ set -euo pipefail
 
 init_only=false
 SONARQUBE_HOME=/opt/sq
+SONARQUBE_PUBLIC_HOME=/opt/sonarqube
 
 if [[ "${1:-}" != -* ]]; then
   exec "$@"
@@ -45,11 +46,14 @@ is_empty_dir() {
 
 initialize_sq_sub_dir() {
   local sub_dir="$1"
+  local dir="$SONARQUBE_PUBLIC_HOME/${sub_dir}"
 
-  if is_empty_dir "$SONARQUBE_HOME/${sub_dir}"; then
-    cp --recursive "$SONARQUBE_HOME/${sub_dir}_save/." "$SONARQUBE_HOME/${sub_dir}/" \
-      && echo "Initialized content of $SONARQUBE_HOME/${sub_dir}" \
-      || echo "Failed to initialize content of $SONARQUBE_HOME/${sub_dir}"
+  if is_empty_dir "${dir}"; then
+    cp --recursive "$SONARQUBE_HOME/${sub_dir}_save/." "${dir}/" \
+      && echo "Initialized content of ${dir}" \
+      || echo "Failed to initialize content of ${dir}"
+  elif [ "$init_only" = true ]; then
+    echo "${dir} already has content, leaving it untouched"
   fi
 }
 
