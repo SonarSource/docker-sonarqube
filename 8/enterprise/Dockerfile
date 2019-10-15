@@ -1,13 +1,5 @@
 FROM openjdk:11-jre-slim
 
-ARG SONARQUBE_VERSION=8.0
-ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/CommercialDistribution/sonarqube-enterprise/sonarqube-enterprise-${SONARQUBE_VERSION}.zip
-ARG SONARQUBE_ZIP_DIR=/tmp/zip
-ARG SONARQUBE_ZIP_LOCATION=$SONARQUBE_ZIP_DIR/sonarqube-${SONARQUBE_VERSION}.zip
-ENV SONAR_VERSION=${SONARQUBE_VERSION} \
-    SONARQUBE_HOME=/opt/sq \
-    SONARQUBE_PUBLIC_HOME=/opt/sonarqube
-
 RUN apt-get update \
     && apt-get install -y curl unzip \
     && rm -rf /var/lib/apt/lists/*
@@ -16,6 +8,14 @@ RUN apt-get update \
 EXPOSE 9000
 
 RUN groupadd -r sonarqube && useradd -r -g sonarqube sonarqube
+
+ARG SONARQUBE_VERSION=8.0
+ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/CommercialDistribution/sonarqube-enterprise/sonarqube-enterprise-${SONARQUBE_VERSION}.zip
+ARG SONARQUBE_ZIP_DIR=/tmp/zip
+ARG SONARQUBE_ZIP_LOCATION=$SONARQUBE_ZIP_DIR/sonarqube-${SONARQUBE_VERSION}.zip
+ENV SONAR_VERSION=${SONARQUBE_VERSION} \
+    SONARQUBE_HOME=/opt/sq \
+    SONARQUBE_PUBLIC_HOME=/opt/sonarqube
 
 COPY zip/* "$SONARQUBE_ZIP_DIR"/
 
