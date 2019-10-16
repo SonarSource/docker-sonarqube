@@ -5,44 +5,19 @@ language: bash
 services:
   - docker
 
-env:
-  global:
-    - ARTIFACTORY_PRIVATE_USERNAME=private-reader
-    - SONARQUBE_BUILD_NUMBER=8.0
-
 script:
   - 'if [ "$TRAVIS_EVENT_TYPE" == "cron" ]; then
         ./run-public-image-tests.sh;
     fi'
   - docker build "7/community" --tag sonarqube:7
   - ./run-tests.sh "sonarqube:7"
-  - >-
-    SQ_VERSION="$SONARQUBE_BUILD_NUMBER"
-    ZIP_SERVER="repox.jfrog.io"
-    ZIP_URL="https://repox.jfrog.io/repox/sonarsource/org/sonarsource/sonarqube/sonar-application/$SONARQUBE_BUILD_NUMBER/sonar-application-$SONARQUBE_BUILD_NUMBER.zip"
-    ZIP_USERNAME="$ARTIFACTORY_PRIVATE_USERNAME"
-    ZIP_PASSWORD="$ARTIFACTORY_PRIVATE_PASSWORD"
-    ./8/build-docker-from-private-repo.sh community
-    --tag sonarqube:8
+  - docker build 8/community --tag sonarqube:8
   - ./run-tests.sh "sonarqube:8"
-  - >-
-    SQ_VERSION="$SONARQUBE_BUILD_NUMBER"
-    ZIP_SERVER="repox.jfrog.io"
-    ZIP_URL="https://repox.jfrog.io/repox/sonarsource/com/sonarsource/sonarqube/sonarqube-developer/$SONARQUBE_BUILD_NUMBER/sonarqube-developer-$SONARQUBE_BUILD_NUMBER.zip"
-    ZIP_USERNAME="$ARTIFACTORY_PRIVATE_USERNAME"
-    ZIP_PASSWORD="$ARTIFACTORY_PRIVATE_PASSWORD"
-    ./8/build-docker-from-private-repo.sh developer
-    --tag sonarqube:8-de
+  - docker build 8/developer --tag sonarqube:8-de
   - ./run-tests.sh "sonarqube:8-de"
-  - >-
-    SQ_VERSION="$SONARQUBE_BUILD_NUMBER"
-    ZIP_SERVER="repox.jfrog.io"
-    ZIP_URL="https://repox.jfrog.io/repox/sonarsource/com/sonarsource/sonarqube/sonarqube-enterprise/$SONARQUBE_BUILD_NUMBER/sonarqube-enterprise-$SONARQUBE_BUILD_NUMBER.zip"
-    ZIP_USERNAME="$ARTIFACTORY_PRIVATE_USERNAME"
-    ZIP_PASSWORD="$ARTIFACTORY_PRIVATE_PASSWORD"
-    ./8/build-docker-from-private-repo.sh enterprise
-    --tag sonarqube:8-ee
+  - docker build 8/enterprise --tag sonarqube:8-ee
   - ./run-tests.sh "sonarqube:8-ee"
+
 notifications:
   email: false
   webhooks:

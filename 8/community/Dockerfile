@@ -11,13 +11,9 @@ RUN groupadd -r sonarqube && useradd -r -g sonarqube sonarqube
 
 ARG SONARQUBE_VERSION=8.0
 ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-${SONARQUBE_VERSION}.zip
-ARG SONARQUBE_ZIP_DIR=/tmp/zip
-ARG SONARQUBE_ZIP_LOCATION=$SONARQUBE_ZIP_DIR/sonarqube-${SONARQUBE_VERSION}.zip
 ENV SONAR_VERSION=${SONARQUBE_VERSION} \
     SONARQUBE_HOME=/opt/sq \
     SONARQUBE_PUBLIC_HOME=/opt/sonarqube
-
-COPY zip/* "$SONARQUBE_ZIP_DIR"/
 
 SHELL ["/bin/bash", "-c"]
 RUN sed -i -e "s?securerandom.source=file:/dev/random?securerandom.source=file:/dev/urandom?g" \
@@ -26,11 +22,7 @@ RUN sed -i -e "s?securerandom.source=file:/dev/random?securerandom.source=file:/
 RUN set -x \
     && cd /opt \
 # download and unzip SQ
-    && if [ -f "$SONARQUBE_ZIP_LOCATION" ] ; \
-        then cp "$SONARQUBE_ZIP_LOCATION" sonarqube.zip; \
-        else curl -o sonarqube.zip -fsSL "$SONARQUBE_ZIP_URL" ; \
-        fi \
-    && rm -Rf "${SONARQUBE_ZIP_DIR}" \
+    && curl -o sonarqube.zip -fsSL "$SONARQUBE_ZIP_URL" \
     && unzip -q sonarqube.zip \
     && mv "sonarqube-${SONARQUBE_VERSION}" sq \
     && rm sonarqube.zip* \
