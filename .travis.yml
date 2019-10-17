@@ -19,7 +19,7 @@ script:
   - >-
     SQ_VERSION="$SONARQUBE_BUILD_NUMBER"
     ZIP_SERVER="repox.jfrog.io"
-    ZIP_URL="https://repox.jfrog.io/repox/sonarsource-builds/org/sonarsource/sonarqube/sonar-application/$SONARQUBE_BUILD_NUMBER/sonar-application-$SONARQUBE_BUILD_NUMBER.zip"
+    ZIP_URL="https://repox.jfrog.io/repox/sonarsource/org/sonarsource/sonarqube/sonar-application/$SONARQUBE_BUILD_NUMBER/sonar-application-$SONARQUBE_BUILD_NUMBER.zip"
     ZIP_USERNAME="$ARTIFACTORY_PRIVATE_USERNAME"
     ZIP_PASSWORD="$ARTIFACTORY_PRIVATE_PASSWORD"
     ./8/build-docker-from-private-repo.sh community
@@ -28,7 +28,7 @@ script:
   - >-
     SQ_VERSION="$SONARQUBE_BUILD_NUMBER"
     ZIP_SERVER="repox.jfrog.io"
-    ZIP_URL="https://repox.jfrog.io/repox/sonarsource-builds/com/sonarsource/sonarqube/sonarqube-developer/$SONARQUBE_BUILD_NUMBER/sonarqube-developer-$SONARQUBE_BUILD_NUMBER.zip"
+    ZIP_URL="https://repox.jfrog.io/repox/sonarsource/com/sonarsource/sonarqube/sonarqube-developer/$SONARQUBE_BUILD_NUMBER/sonarqube-developer-$SONARQUBE_BUILD_NUMBER.zip"
     ZIP_USERNAME="$ARTIFACTORY_PRIVATE_USERNAME"
     ZIP_PASSWORD="$ARTIFACTORY_PRIVATE_PASSWORD"
     ./8/build-docker-from-private-repo.sh developer
@@ -37,7 +37,7 @@ script:
   - >-
     SQ_VERSION="$SONARQUBE_BUILD_NUMBER"
     ZIP_SERVER="repox.jfrog.io"
-    ZIP_URL="https://repox.jfrog.io/repox/sonarsource-builds/com/sonarsource/sonarqube/sonarqube-enterprise/$SONARQUBE_BUILD_NUMBER/sonarqube-enterprise-$SONARQUBE_BUILD_NUMBER.zip"
+    ZIP_URL="https://repox.jfrog.io/repox/sonarsource/com/sonarsource/sonarqube/sonarqube-enterprise/$SONARQUBE_BUILD_NUMBER/sonarqube-enterprise-$SONARQUBE_BUILD_NUMBER.zip"
     ZIP_USERNAME="$ARTIFACTORY_PRIVATE_USERNAME"
     ZIP_PASSWORD="$ARTIFACTORY_PRIVATE_PASSWORD"
     ./8/build-docker-from-private-repo.sh enterprise
