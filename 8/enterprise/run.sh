@@ -16,6 +16,8 @@ fi
 
 declare -a sq_opts
 
+chown -R -h $PUID:$PGID $SONARQUBE_HOME || true
+
 set_prop_from_env_var() {
   if [ "$2" ]; then
     sq_opts+=("-D$1=$2")

@@ -14,6 +14,8 @@ fi
 
 declare -a sq_opts
 
+chown -R -h $PUID:$PGID $SONARQUBE_HOME || true
+
 while IFS='=' read -r envvar_key envvar_value
 do
     if [[ "$envvar_key" =~ sonar.* ]] || [[ "$envvar_key" =~ ldap.* ]]; then
@@ -22,7 +24,8 @@ do
 done < <(env)
 
 exec tail -F ./logs/es.log & # this tail on the elasticsearch logs is a temporary workaround, see https://github.com/docker-library/official-images/pull/6361#issuecomment-516184762
-exec java -jar lib/sonar-application-$SONAR_VERSION.jar \
+# Add call to gosu to drop from root user to sonarqube user.
+exec java -jar "lib/sonar-application-$SONAR_VERSION.jar" \
   -Dsonar.log.console=true \
   -Dsonar.jdbc.username="$SONARQUBE_JDBC_USERNAME" \
   -Dsonar.jdbc.password="$SONARQUBE_JDBC_PASSWORD" \

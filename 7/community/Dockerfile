@@ -4,16 +4,21 @@ RUN apt-get update \
     && apt-get install -y curl gnupg2 unzip \
     && rm -rf /var/lib/apt/lists/*
 
+ARG PUID=999
+ARG PGID=999
+
 ENV SONAR_VERSION=7.9.1 \
     SONARQUBE_HOME=/opt/sonarqube \
     SONARQUBE_JDBC_USERNAME=sonar \
     SONARQUBE_JDBC_PASSWORD=sonar \
-    SONARQUBE_JDBC_URL=""
+    SONARQUBE_JDBC_URL="" \
+    PUID=$PUID \
+    PGID=$PGID
 
 # Http port
 EXPOSE 9000
 
-RUN groupadd -r sonarqube && useradd -r -g sonarqube sonarqube
+RUN groupadd -g $PGID -r sonarqube && useradd -u $PUID -r -g sonarqube sonarqube -d $SONARQUBE_HOME
 
 # pub   2048R/D26468DE 2015-05-25
 #       Key fingerprint = F118 2E81 C792 9289 21DB  CAB4 CFCA 4A29 D264 68DE
@@ -38,9 +43,12 @@ RUN set -x \
     && rm sonarqube.zip* \
     && rm -rf $SONARQUBE_HOME/bin/*
 
-VOLUME "$SONARQUBE_HOME/data"
+VOLUME $SONARQUBE_HOME/data
+VOLUME $SONARQUBE_HOME/conf
+VOLUME $SONARQUBE_HOME/logs
+VOLUME $SONARQUBE_HOME/extensions
 
 WORKDIR $SONARQUBE_HOME
-COPY run.sh $SONARQUBE_HOME/bin/
+COPY --chown=sonarqube:sonarqube run.sh $SONARQUBE_HOME/bin/
 USER sonarqube
 ENTRYPOINT ["./bin/run.sh"]

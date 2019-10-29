@@ -7,7 +7,11 @@ RUN apt-get update \
 # Http port
 EXPOSE 9000
 
-RUN groupadd -r sonarqube && useradd -r -g sonarqube sonarqube
+ARG PUID=999
+ARG PGID=999
+ENV PUID=$PUID \
+    PGID=$PGID
+RUN groupadd -g $PGID -r sonarqube && useradd -u $PUID -r -g sonarqube sonarqube
 
 ARG SONARQUBE_VERSION=8.0
 ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/CommercialDistribution/sonarqube-developer/sonarqube-developer-${SONARQUBE_VERSION}.zip
