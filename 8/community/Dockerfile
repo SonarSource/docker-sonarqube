@@ -2,7 +2,8 @@ FROM openjdk:11-jre-slim
 
 RUN apt-get update \
     && apt-get install -y curl unzip \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get autoclean
 
 # Http port
 EXPOSE 9000
@@ -12,7 +13,6 @@ ARG PGID=999
 ENV PUID=$PUID \
     PGID=$PGID
 RUN groupadd -g $PGID -r sonarqube && useradd -u $PUID -r -g sonarqube sonarqube
-
 
 ARG SONARQUBE_VERSION=8.0
 ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-${SONARQUBE_VERSION}.zip
