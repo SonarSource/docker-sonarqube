@@ -1,7 +1,7 @@
 FROM openjdk:11-jre-slim
 
 RUN apt-get update \
-    && apt-get install -y curl unzip \
+    && apt-get install -y curl unzip libfreetype6 libfontconfig1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Http port
