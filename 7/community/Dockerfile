@@ -1,7 +1,9 @@
 FROM openjdk:11-jre-slim
 
 RUN apt-get update \
-    && apt-get install -y curl gnupg2 unzip \
+    && apt-get install -y --no-install-recommends curl gnupg2 unzip \
+    && curl -sL https://deb.nodesource.com/setup_12.x | bash \
+    && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 ENV SONAR_VERSION=7.9.1 \
@@ -42,5 +44,7 @@ VOLUME "$SONARQUBE_HOME/data"
 
 WORKDIR $SONARQUBE_HOME
 COPY run.sh $SONARQUBE_HOME/bin/
+COPY sonarqube-community-branch-plugin-1.2.0.jar $SONARQUBE_HOME/extensions/plugins/
+COPY sonarqube-community-branch-plugin-1.2.0.jar $SONARQUBE_HOME/lib/common/
 USER sonarqube
 ENTRYPOINT ["./bin/run.sh"]
