@@ -58,7 +58,7 @@ initialize_sq_sub_dir() {
 }
 
 # Initialize conf and extensions dir in case they have been bound to a Docker Daemon host's filesystem directory
-# or to an empty volumne which has been created prior to the 'docker run' command call
+# or to an empty volume which has been created prior to the 'docker run' command call
 # Initialization only occurs if directory is totally empty
 initialize_sq_sub_dir "conf"
 initialize_sq_sub_dir "extensions"
