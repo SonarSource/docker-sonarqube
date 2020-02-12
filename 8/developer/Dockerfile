@@ -2,7 +2,7 @@ FROM openjdk:11-jre-slim
 
 ARG SONARQUBE_VERSION=8.0
 ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/CommercialDistribution/sonarqube-developer/sonarqube-developer-${SONARQUBE_VERSION}.zip
-ARG SONARQUBE_ASC_URL=${SONARQUBE_ZIP_URL}.zip.asc
+ARG SONARQUBE_ASC_URL=${SONARQUBE_ZIP_URL}.asc
 ARG SONARQUBE_ZIP_DIR=/tmp/zip
 ARG SONARQUBE_ZIP_LOCATION=$SONARQUBE_ZIP_DIR/sonarqube-${SONARQUBE_VERSION}.zip
 ARG SONARQUBE_KEY=F1182E81C792928921DBCAB4CFCA4A29D26468DE
@@ -32,7 +32,7 @@ RUN apt-get update \
         then cp "${SONARQUBE_ZIP_LOCATION}" sonarqube.zip; \
         else curl -o sonarqube.zip -fsSL "${SONARQUBE_ZIP_URL}" ; \
         fi \
-    && curl -o sonarqube.zip.asc "${SONARQUBE_ASC_URL}" \
+    && curl -o sonarqube.zip.asc -fsSL "${SONARQUBE_ASC_URL}" \
     && curl -o "${SONAR_SOURCE_KEY}.key" -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x${SONARQUBE_KEY}" \
     && gpg --import "${SONAR_SOURCE_KEY}.key" \
     && gpg --no-default-keyring --verify sonarqube.zip.asc || exit 1 \
