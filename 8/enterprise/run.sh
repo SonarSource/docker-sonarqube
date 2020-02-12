@@ -36,7 +36,14 @@ do
 done < <(env)
 # map legacy env variables
 set_prop_from_env_var "sonar.jdbc.username" "${SONARQUBE_JDBC_USERNAME:-}"
-set_prop_from_env_var "sonar.jdbc.password" "${SONARQUBE_JDBC_PASSWORD:-}"
+
+if [[ -f /run/secrets/sonarqube_jdbc_password ]] && [[ -r /run/secrets/sonarqube_jdbc_password ]]; then
+  DOCKER_SECRETS_PASSWORD=$(cat /run/secrets/sonarqube_jdbc_password)
+  set_prop_from_env_var "sonar.jdbc.password" "${DOCKER_SECRETS_PASSWORD}"
+else
+  set_prop_from_env_var "sonar.jdbc.password" "${SONARQUBE_JDBC_PASSWORD:-}"
+fi
+
 set_prop_from_env_var "sonar.jdbc.url" "${SONARQUBE_JDBC_URL:-}"
 set_prop_from_env_var "sonar.web.javaAdditionalOpts" "${SONARQUBE_WEB_JVM_OPTS:-}"
 
