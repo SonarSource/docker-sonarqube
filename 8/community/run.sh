@@ -57,12 +57,10 @@ initialize_sq_sub_dir() {
   fi
 }
 
-# Initialize conf and extensions dir in case they have been bound to a Docker Daemon host's filesystem directory
+# Initialize extensions dir in case it has been bound to a Docker Daemon host filesystem directory
 # or to an empty volume which has been created prior to the 'docker run' command call
-# Initialization only occurs if directory is totally empty
-initialize_sq_sub_dir "conf"
+# Initialization only occurs if directory is empty
 initialize_sq_sub_dir "extensions"
-
 
 if [ "$init_only" = false ]; then
   exec java -jar "lib/sonar-application-$SONAR_VERSION.jar" \

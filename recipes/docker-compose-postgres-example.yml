@@ -10,7 +10,6 @@ services:
     environment:
       - sonar.jdbc.url=jdbc:postgresql://db:5432/sonar
     volumes:
-      - sonarqube_conf:/opt/sonarqube/conf
       - sonarqube_data:/opt/sonarqube/data
       - sonarqube_extensions:/opt/sonarqube/extensions
 
@@ -31,7 +30,6 @@ networks:
     driver: bridge
 
 volumes:
-  sonarqube_conf:
   sonarqube_data:
   sonarqube_extensions:
   postgresql:

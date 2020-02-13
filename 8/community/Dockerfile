@@ -29,7 +29,6 @@ RUN set -x \
 # empty bin directory from useless scripts
 # create copies or delete directories allowed to be mounted as volumes, original directories will be recreated below as symlinks
     && rm --recursive --force "$SONARQUBE_HOME/bin"/* \
-    && mv "$SONARQUBE_HOME/conf" "$SONARQUBE_HOME/conf_save" \
     && mv "$SONARQUBE_HOME/extensions" "$SONARQUBE_HOME/extensions_save" \
     && rm --recursive --force "$SONARQUBE_HOME/logs" \
     && rm --recursive --force "$SONARQUBE_HOME/data" \
@@ -37,14 +36,11 @@ RUN set -x \
 # copy into them to ensure they are initialized by 'docker run' when new volume is created
 # 'docker run' initialization will not work if volume is bound to the host's filesystem or when volume already exists
 # initialization is implemented in 'run.sh' for these cases
-    && mkdir --parents "$SONARQUBE_PUBLIC_HOME/conf" \
     && mkdir --parents "$SONARQUBE_PUBLIC_HOME/extensions" \
     && mkdir --parents "$SONARQUBE_PUBLIC_HOME/logs" \
     && mkdir --parents "$SONARQUBE_PUBLIC_HOME/data" \
-    && cp --recursive "$SONARQUBE_HOME/conf_save"/* "$SONARQUBE_PUBLIC_HOME/conf/" \
     && cp --recursive "$SONARQUBE_HOME/extensions_save"/* "$SONARQUBE_PUBLIC_HOME/extensions/" \
 # create symlinks to volume directories
-    && ln -s "$SONARQUBE_PUBLIC_HOME/conf" "$SONARQUBE_HOME/conf" \
     && ln -s "$SONARQUBE_PUBLIC_HOME/extensions" "$SONARQUBE_HOME/extensions" \
     && ln -s "$SONARQUBE_PUBLIC_HOME/logs" "$SONARQUBE_HOME/logs" \
     && ln -s "$SONARQUBE_PUBLIC_HOME/data" "$SONARQUBE_HOME/data" \
