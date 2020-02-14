@@ -16,6 +16,7 @@ services:
     volumes:
       - sonarqube_data:/opt/sonarqube/data
       - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
 
   db:
     image: postgres
@@ -36,5 +37,6 @@ networks:
 volumes:
   sonarqube_data:
   sonarqube_extensions:
+  sonarqube_logs:
   postgresql:
   postgresql_data:

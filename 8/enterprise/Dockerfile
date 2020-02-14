@@ -12,8 +12,7 @@ RUN groupadd -r sonarqube && useradd -r -g sonarqube sonarqube
 ARG SONARQUBE_VERSION=8.2
 ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/CommercialDistribution/sonarqube-enterprise/sonarqube-enterprise-${SONARQUBE_VERSION}.zip
 ENV SONAR_VERSION=${SONARQUBE_VERSION} \
-    SONARQUBE_HOME=/opt/sq \
-    SONARQUBE_PUBLIC_HOME=/opt/sonarqube
+    SONARQUBE_HOME=/opt/sonarqube
 
 SHELL ["/bin/bash", "-c"]
 RUN sed -i -e "s?securerandom.source=file:/dev/random?securerandom.source=file:/dev/urandom?g" \
@@ -21,30 +20,11 @@ RUN sed -i -e "s?securerandom.source=file:/dev/random?securerandom.source=file:/
 
 RUN set -x \
     && cd /opt \
-# download and unzip SQ
     && curl -o sonarqube.zip -fsSL "$SONARQUBE_ZIP_URL" \
     && unzip -q sonarqube.zip \
-    && mv "sonarqube-${SONARQUBE_VERSION}" sq \
+    && mv "sonarqube-${SONARQUBE_VERSION}" sonarqube \
     && rm sonarqube.zip* \
-# empty bin directory from useless scripts
-# create copies or delete directories allowed to be mounted as volumes, original directories will be recreated below as symlinks
-    && rm --recursive --force "$SONARQUBE_HOME/bin"/* \
-    && mv "$SONARQUBE_HOME/extensions" "$SONARQUBE_HOME/extensions_save" \
-    && rm --recursive --force "$SONARQUBE_HOME/logs" \
-    && rm --recursive --force "$SONARQUBE_HOME/data" \
-# create directories to be declared as volumes
-# copy into them to ensure they are initialized by 'docker run' when new volume is created
-# 'docker run' initialization will not work if volume is bound to the host's filesystem or when volume already exists
-# initialization is implemented in 'run.sh' for these cases
-    && mkdir --parents "$SONARQUBE_PUBLIC_HOME/extensions" \
-    && mkdir --parents "$SONARQUBE_PUBLIC_HOME/logs" \
-    && mkdir --parents "$SONARQUBE_PUBLIC_HOME/data" \
-    && cp --recursive "$SONARQUBE_HOME/extensions_save"/* "$SONARQUBE_PUBLIC_HOME/extensions/" \
-# create symlinks to volume directories
-    && ln -s "$SONARQUBE_PUBLIC_HOME/extensions" "$SONARQUBE_HOME/extensions" \
-    && ln -s "$SONARQUBE_PUBLIC_HOME/logs" "$SONARQUBE_HOME/logs" \
-    && ln -s "$SONARQUBE_PUBLIC_HOME/data" "$SONARQUBE_HOME/data" \
-    && chown --recursive sonarqube:sonarqube "$SONARQUBE_HOME" "$SONARQUBE_PUBLIC_HOME"
+    && chown --recursive sonarqube:sonarqube "$SONARQUBE_HOME"
 
 COPY --chown=sonarqube:sonarqube run.sh "$SONARQUBE_HOME/bin/"
 
