@@ -11,21 +11,11 @@ script:
     fi'
   - docker build "7/community" --tag sonarqube:7
   - ./run-tests.sh "sonarqube:7"
-  - >-
-    docker build "8/community"
-    --build-arg SONARQUBE_VERSION="8.2.0.32529"
-    --build-arg SONARQUBE_ZIP_URL="https://repox.jfrog.io/repox/sonarsource-public-dev/org/sonarsource/sonarqube/sonar-application/8.2.0.32529/sonar-application-8.2.0.32529.zip"
-    --tag "sonarqube:8"
+  - docker build "8/community" --tag "sonarqube:8"
   - ./run-tests.sh "sonarqube:8"
-  - >-
-    docker build "8/developer"
-    --build-arg SONARQUBE_VERSION="8.1.0.31237"
-    --tag "sonarqube:8-de"
+  - docker build "8/developer" --tag "sonarqube:8-de"
   - ./run-tests.sh "sonarqube:8-de"
-  - >-
-    docker build "8/enterprise"
-    --build-arg SONARQUBE_VERSION="8.1.0.31237"
-    --tag "sonarqube:8-ee"
+  - docker build "8/enterprise" --tag "sonarqube:8-ee"
   - ./run-tests.sh "sonarqube:8-ee"
 notifications:
   email: false
