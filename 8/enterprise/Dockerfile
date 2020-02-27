@@ -28,9 +28,8 @@ RUN for server in $(shuf -e ha.pool.sks-keyservers.net \
                           hkp://keyserver.ubuntu.com:80 \
                           pgp.mit.edu) ; do \
       gpg --batch --keyserver "$server" --recv-keys F1182E81C792928921DBCAB4CFCA4A29D26468DE && break || : ; \
-  done
-
-RUN set -x \
+  done \
+    && set -x \
     && cd /opt \
     && curl -o sonarqube.zip -fsSL "${SONARQUBE_ZIP_URL}" \
     && curl -o sonarqube.zip.asc -fSL "${SONARQUBE_ZIP_URL}.asc" \
