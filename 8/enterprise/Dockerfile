@@ -1,4 +1,4 @@
-FROM openjdk:11-jre-slim
+FROM openjdk:11-jre-slim as build
 
 RUN apt-get update \
     && apt-get install -y curl unzip gnupg2 libfreetype6 libfontconfig1 \
@@ -42,6 +42,11 @@ RUN set -x \
 
 COPY --chown=sonarqube:sonarqube run.sh "$SONARQUBE_HOME/bin/"
 
-USER sonarqube
-WORKDIR $SONARQUBE_HOME
-ENTRYPOINT ["./bin/run.sh"]
+#USER sonarqube
+#WORKDIR $SONARQUBE_HOME
+#ENTRYPOINT ["./bin/run.sh"]
+
+# Now copy it into our base image.
+FROM gcr.io/distroless/java:11
+COPY --from=build /opt/sonarqube /
+CMD ["/bin/run.sh"]
