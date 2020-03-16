@@ -1,0 +1,80 @@
+name: QA
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+
+  public_image_build_and_test:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run Public Image test
+        run: ./run-public-image-tests.sh
+
+  build_and_test:
+    strategy:
+      fail-fast: false
+      matrix:
+        version: [7/community, 8/community, 8/developer, 8/enterprise]
+        include:
+          - version: 7/community
+            tag: 7-community
+          - version: 8/community
+            tag: 8-community
+          - version: 8/developer
+            tag: 8-developer
+          - version: 8/enterprise
+            tag: 8-enterprise
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build image
+        run: docker build -t "sonarqube:${{ matrix.tag }}" "${{ matrix.version }}"
+      - name: Test image
+        run: ./run-tests.sh "sonarqube:${{ matrix.tag }}"
+      - name: Run Snyk Monitor
+        if: github.event_name != 'pull_request'
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{secrets.SNYK_TOKEN}}
+        with:
+          command: monitor
+          image: sonarqube:${{ matrix.tag }}
+          args: --project-name=docker-sonarqube-${{ matrix.tag }} --file=${{ matrix.version }}/Dockerfile
+
+  snyk_on_pr:
+    if: github.event_name == 'pull_request'
+    strategy:
+      fail-fast: false
+      matrix:
+        version: [7/community, 8/community, 8/developer, 8/enterprise]
+        include:
+          - version: 7/community
+            tag: 7-community
+          - version: 8/community
+            tag: 8-community
+          - version: 8/developer
+            tag: 8-developer
+          - version: 8/enterprise
+            tag: 8-enterprise
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build image
+        run: docker build -t "sonarqube:${{ matrix.tag }}" "${{ matrix.version }}"
+      - name: Run Snyk test
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{secrets.SNYK_TOKEN}}
+        with:
+          command: test
+          image: sonarqube:${{ matrix.tag }}
+          args: --project-name=docker-sonarqube-${{ matrix.tag }} --file=${{ matrix.version }}/Dockerfile --fail-on=all
+
