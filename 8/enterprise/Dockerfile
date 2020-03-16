@@ -38,7 +38,8 @@ RUN set -x \
     && unzip -q sonarqube.zip \
     && mv "sonarqube-${SONARQUBE_VERSION}" sonarqube \
     && rm sonarqube.zip* \
-    && chown --recursive sonarqube:sonarqube "$SONARQUBE_HOME"
+    && chown --recursive sonarqube:sonarqube "$SONARQUBE_HOME" \
+    && chmod +x /opt/sonarqube/elasticsearch/bin/elasticsearch
 
 COPY --chown=sonarqube:sonarqube run.sh "$SONARQUBE_HOME/bin/"
 
@@ -47,6 +48,10 @@ COPY --chown=sonarqube:sonarqube run.sh "$SONARQUBE_HOME/bin/"
 #ENTRYPOINT ["./bin/run.sh"]
 
 # Now copy it into our base image.
-FROM gcr.io/distroless/java:11
-COPY --from=build /opt/sonarqube /
-CMD ["/bin/run.sh"]
+FROM gcr.io/distroless/java:11-debug
+COPY --from=build /opt/sonarqube /app
+WORKDIR /app
+SHELL ["/busybox/sh", "-c"]
+#RUN ls /app/elasticsearch
+#RUN ls /app/elasticsearch/bin
+CMD ["/app/lib/sonar-application-8.2.0.32929.jar"]
