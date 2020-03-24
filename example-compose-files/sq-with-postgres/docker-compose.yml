@@ -2,7 +2,6 @@ version: "2"
 
 services:
   sonarqube:
-    # adjust image as required
     image: sonarqube:8.2-community
     depends_on:
       - db
