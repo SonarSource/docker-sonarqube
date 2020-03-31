@@ -11,7 +11,7 @@ on:
 jobs:
 
   public_image_build_and_test:
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' && github.repository == 'sonarsource/docker-sonarqube'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -40,7 +40,7 @@ jobs:
       - name: Test image
         run: ./run-tests.sh "sonarqube:${{ matrix.tag }}"
       - name: Run Snyk Monitor
-        if: github.event_name != 'pull_request'
+        if: github.actor == 'sonarsource' && github.event_name != 'pull_request'
         uses: snyk/actions/docker@master
         env:
           SNYK_TOKEN: ${{secrets.SNYK_TOKEN}}
@@ -50,7 +50,7 @@ jobs:
           args: --project-name=docker-sonarqube-${{ matrix.tag }} --file=${{ matrix.version }}/Dockerfile
 
   snyk_on_pr:
-    if: github.event_name == 'pull_request'
+    if: github.actor == 'sonarsource' && github.event_name == 'pull_request'
     strategy:
       fail-fast: false
       matrix:
