@@ -2,8 +2,7 @@
 
 set -euo pipefail
 
-
-declare -a sq_opts
+declare -a sq_opts=()
 set_prop_from_env_var() {
   if [ "$2" ]; then
     sq_opts+=("-D$1=$2")
@@ -30,7 +29,6 @@ if [[ "$1" = 'bin/sonar.sh' ]]; then
     do
         if [[ "$envvar_key" =~ sonar.* ]] || [[ "$envvar_key" =~ ldap.* ]]; then
             sq_opts+=("-D${envvar_key}=${envvar_value}")
-            echo "read entry: ${sq_opts[*]}"
         fi
     done < <(env)
 
@@ -39,7 +37,9 @@ if [[ "$1" = 'bin/sonar.sh' ]]; then
     set_prop_from_env_var "sonar.jdbc.password" "${SONARQUBE_JDBC_PASSWORD:-}"
     set_prop_from_env_var "sonar.jdbc.url" "${SONARQUBE_JDBC_URL:-}"
     set_prop_from_env_var "sonar.web.javaAdditionalOpts" "${SONARQUBE_WEB_JVM_OPTS:-}"
-    set -- "$@" "${sq_opts[*]}"
+    if [ ${#sq_opts[@]} -ne 0 ]; then
+        set -- "$@" "${sq_opts[@]}"
+    fi
 fi
 
 exec "$@"
