@@ -89,7 +89,8 @@ ENV JAVA_HOME=/opt/java/openjdk \
     SQ_DATA_DIR="/opt/sonarqube/data" \
     SQ_EXTENSIONS_DIR="/opt/sonarqube/extensions" \
     SQ_LOGS_DIR="/opt/sonarqube/logs" \
-    SQ_TEMP_DIR="/opt/sonarqube/temp"
+    SQ_TEMP_DIR="/opt/sonarqube/temp" \
+    SQ_EXTENSIONS_COPY_DIR="/opt/sonarqube/extensions_save"
 
 RUN set -ex \
     && addgroup -S -g 1000 sonarqube \
@@ -117,11 +118,13 @@ RUN set -ex \
     && mv "sonarqube-${SONARQUBE_VERSION}" sonarqube \
     && rm sonarqube.zip* \
     && rm -rf ${SONARQUBE_HOME}/bin/* \
+    && mv "${SQ_EXTENSIONS_DIR}" "${SQ_EXTENSIONS_COPY_DIR}" \
+    && mkdir --parents "${SQ_EXTENSIONS_DIR}" \
     && chown -R sonarqube:sonarqube ${SONARQUBE_HOME} \
-    # this 777 will be replaced by 700 at runtime (allows semi-arbitrary "--user" values)
-    && chmod -R 777 "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}" \
+    # this 777 will be replaced at runtime (allows semi-arbitrary "--user" values)
+    && chmod -R 777 "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}" "${SQ_EXTENSIONS_COPY_DIR}" \
     && apk del --purge build-dependencies
-    
+
 COPY --chown=sonarqube:sonarqube run.sh sonar.sh ${SONARQUBE_HOME}/bin/
 
 WORKDIR ${SONARQUBE_HOME}

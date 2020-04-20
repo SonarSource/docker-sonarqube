@@ -2,6 +2,16 @@
 
 set -euo pipefail
 
+initialize_extension_directory_if_empty() {
+  mkdir -p "${SQ_EXTENSIONS_DIR}"
+  if ! [ "$(ls -A "${SQ_EXTENSIONS_DIR}")" ]; then
+    echo "Initializing extensions directory..."
+    cp -R "${SQ_EXTENSIONS_COPY_DIR}/." "${SQ_EXTENSIONS_DIR}/"
+  else
+    echo "Skipping initalization of extensions directory since it already has content."
+  fi
+}
+
 declare -a sq_opts=()
 set_prop_from_env_var() {
   if [ "$2" ]; then
@@ -15,12 +25,13 @@ if [ "${1:0:1}" = '-' ]; then
 fi
 
 if [[ "$1" = 'bin/sonar.sh' ]]; then
-    chown -R "$(id -u):$(id -g)" "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}" 2>/dev/null || :
-    chmod -R 700 "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}" 2>/dev/null || :
+    chown -R "$(id -u):$(id -g)" "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_EXTENSIONS_COPY_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}" 2>/dev/null || :
+    initialize_extension_directory_if_empty
+    chmod -R 755 "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_EXTENSIONS_COPY_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}" 2>/dev/null || :
 
     # Allow the container to be started with `--user`
     if [[ "$(id -u)" = '0' ]]; then
-        chown -R sonarqube:sonarqube "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}"
+        chown -R sonarqube:sonarqube "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_EXTENSIONS_COPY_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}"
         exec su-exec sonarqube "$0" "$@"
     fi
 
