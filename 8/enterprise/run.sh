@@ -3,7 +3,7 @@
 set -euo pipefail
 
 declare -a sq_opts=()
-set_prop_from_env_var() {
+set_prop_from_deprecated_env_var() {
   if [ "$2" ]; then
     sq_opts+=("-D$1=$2")
   fi
@@ -29,7 +29,11 @@ if [[ "$1" = 'bin/sonar.sh' ]]; then
         exec su-exec sonarqube "$0" "$@"
     fi
 
-    # Legacy setting parsing to customize SonarQube. Please use environment variables instead.
+    #
+    # Deprecated way to pass settings to SonarQube that will be removed in future versions.
+    # Please use environment variables (https://docs.sonarqube.org/latest/setup/environment-variables/)
+    # instead to customize SonarQube.
+    #
     while IFS='=' read -r envvar_key envvar_value
     do
         if [[ "$envvar_key" =~ sonar.* ]] || [[ "$envvar_key" =~ ldap.* ]]; then
@@ -37,11 +41,15 @@ if [[ "$1" = 'bin/sonar.sh' ]]; then
         fi
     done < <(env)
 
-    # map legacy env variables
-    set_prop_from_env_var "sonar.jdbc.username" "${SONARQUBE_JDBC_USERNAME:-}"
-    set_prop_from_env_var "sonar.jdbc.password" "${SONARQUBE_JDBC_PASSWORD:-}"
-    set_prop_from_env_var "sonar.jdbc.url" "${SONARQUBE_JDBC_URL:-}"
-    set_prop_from_env_var "sonar.web.javaAdditionalOpts" "${SONARQUBE_WEB_JVM_OPTS:-}"
+    #
+    # Deprecated environment variable mapping that will be removed in future versions.
+    # Please use environment variables from https://docs.sonarqube.org/latest/setup/environment-variables/
+    # instead of using these 4 environment variables below.
+    #
+    set_prop_from_deprecated_env_var "sonar.jdbc.username" "${SONARQUBE_JDBC_USERNAME:-}"
+    set_prop_from_deprecated_env_var "sonar.jdbc.password" "${SONARQUBE_JDBC_PASSWORD:-}"
+    set_prop_from_deprecated_env_var "sonar.jdbc.url" "${SONARQUBE_JDBC_URL:-}"
+    set_prop_from_deprecated_env_var "sonar.web.javaAdditionalOpts" "${SONARQUBE_WEB_JVM_OPTS:-}"
     if [ ${#sq_opts[@]} -ne 0 ]; then
         set -- "$@" "${sq_opts[@]}"
     fi
