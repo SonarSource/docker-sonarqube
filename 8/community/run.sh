@@ -9,7 +9,12 @@ set_prop_from_env_var() {
   fi
 }
 
-# if first arg looks like a flag, assume we want to run sonarqube server
+# if nothing is passed, assume we want to run sonarqube server
+if [ "$#" == 0 ]; then
+  set -- bin/sonar.sh
+fi
+
+# if first arg looks like a flag, assume we want to run sonarqube server with flags
 if [ "${1:0:1}" = '-' ]; then
     set -- bin/sonar.sh "$@"
 fi
