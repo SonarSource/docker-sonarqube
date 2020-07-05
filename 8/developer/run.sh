@@ -36,7 +36,7 @@ if [[ "$1" = 'bin/sonar.sh' ]]; then
     #
     while IFS='=' read -r envvar_key envvar_value
     do
-        if [[ "$envvar_key" =~ sonar.* ]] || [[ "$envvar_key" =~ ldap.* ]]; then
+        if [[ "$envvar_key" =~ sonar.* ]] || [[ "$envvar_key" =~ ldap.* ]] || [[ "$envvar_key" =~ email.* ]]; then
             sq_opts+=("-D${envvar_key}=${envvar_value}")
         fi
     done < <(env)
