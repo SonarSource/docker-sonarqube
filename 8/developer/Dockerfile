@@ -126,5 +126,6 @@ COPY --chown=sonarqube:sonarqube run.sh sonar.sh ${SONARQUBE_HOME}/bin/
 
 WORKDIR ${SONARQUBE_HOME}
 EXPOSE 9000
+RUN chmod +x bin/run.sh bin/sonar.sh
 ENTRYPOINT ["bin/run.sh"]
 CMD ["bin/sonar.sh"]

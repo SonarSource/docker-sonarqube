@@ -121,10 +121,11 @@ RUN set -ex \
     # this 777 will be replaced by 700 at runtime (allows semi-arbitrary "--user" values)
     && chmod -R 777 "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}" \
     && apk del --purge build-dependencies
-    
+
 COPY --chown=sonarqube:sonarqube run.sh sonar.sh ${SONARQUBE_HOME}/bin/
 
 WORKDIR ${SONARQUBE_HOME}
 EXPOSE 9000
+RUN chmod +x bin/run.sh bin/sonar.sh
 ENTRYPOINT ["bin/run.sh"]
 CMD ["bin/sonar.sh"]
