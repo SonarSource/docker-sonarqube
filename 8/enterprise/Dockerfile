@@ -1,5 +1,5 @@
 FROM alpine:3.11
-ENV JAVA_VERSION="jdk-11.0.6+10" \
+ENV JAVA_VERSION="jdk-11.0.8+10" \
     LANG='en_US.UTF-8' \
     LANGUAGE='en_US:en' \
     LC_ALL='en_US.UTF-8'
@@ -22,19 +22,19 @@ RUN set -eux; \
     apk add --no-cache /tmp/glibc-${GLIBC_VER}.apk; \
     curl -LfsS ${ALPINE_GLIBC_REPO}/${GLIBC_VER}/glibc-bin-${GLIBC_VER}.apk > /tmp/glibc-bin-${GLIBC_VER}.apk; \
     apk add --no-cache /tmp/glibc-bin-${GLIBC_VER}.apk; \
-    curl -Ls ${ALPINE_GLIBC_REPO}/${GLIBC_VER}/glibc-i18n-${GLIBC_VER}.apk > /tmp/glibc-i18n-${GLIBC_VER}.apk; \
+    curl -LfsS ${ALPINE_GLIBC_REPO}/${GLIBC_VER}/glibc-i18n-${GLIBC_VER}.apk > /tmp/glibc-i18n-${GLIBC_VER}.apk; \
     apk add --no-cache /tmp/glibc-i18n-${GLIBC_VER}.apk; \
     /usr/glibc-compat/bin/localedef --force --inputfile POSIX --charmap UTF-8 "$LANG" || true; \
     echo "export LANG=$LANG" > /etc/profile.d/locale.sh; \
     curl -LfsS ${GCC_LIBS_URL} -o /tmp/gcc-libs.tar.zst; \
-    echo "${GCC_LIBS_SHA256} */tmp/gcc-libs.tar.zst" | sha256sum -c - ; \
+    echo "${GCC_LIBS_SHA256} */tmp/gcc-libs.tar.zst" | sha256sum -c -; \
     mkdir /tmp/gcc; \
     zstd -d /tmp/gcc-libs.tar.zst --output-dir-flat /tmp; \
     tar -xf /tmp/gcc-libs.tar -C /tmp/gcc; \
     mv /tmp/gcc/usr/lib/libgcc* /tmp/gcc/usr/lib/libstdc++* /usr/glibc-compat/lib; \
     strip /usr/glibc-compat/lib/libgcc_s.so.* /usr/glibc-compat/lib/libstdc++.so*; \
     curl -LfsS ${ZLIB_URL} -o /tmp/libz.tar.xz; \
-    echo "${ZLIB_SHA256} */tmp/libz.tar.xz" | sha256sum -c - ; \
+    echo "${ZLIB_SHA256} */tmp/libz.tar.xz" | sha256sum -c -; \
     mkdir /tmp/libz; \
     tar -xf /tmp/libz.tar.xz -C /tmp/libz; \
     mv /tmp/libz/usr/lib/libz.so* /usr/glibc-compat/lib; \
