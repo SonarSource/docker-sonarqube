@@ -79,10 +79,6 @@ RUN set -eux; \
     cd /opt/java/openjdk; \
     tar -xf /tmp/openjdk.tar.gz --strip-components=1; \
     export PATH="/opt/java/openjdk/bin:$PATH"; \
-    apk add --no-cache --virtual .build-deps bash binutils; \
-    apk del --purge .build-deps; \
-    rm -rf /var/cache/apk/*; \
-    apk del --purge .fetch-deps; \
     rm -rf /var/cache/apk/*; \
     rm -rf /tmp/openjdk.tar.gz;
 
