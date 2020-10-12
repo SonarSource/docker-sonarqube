@@ -17,7 +17,7 @@ Bump the version of SonarQube in Dockerfiles
 The version of SQ is hardcoded in each Dockerfile and must be updated in master branch.
 
 
-Update Docker Hub image
+Update Docker Hub's SonarQube images
 -----------------------
 
 Update the SonarSource [fork](https://github.com/SonarSource/official-images) of the [official-images](https://github.com/docker-library/official-images) to ensure that the `sonarqube` library is the latest version.
