@@ -53,7 +53,7 @@ Until SonarQube is released and the public artifacts are available, keep your PR
 
 For more and up to date documentation, see https://github.com/docker-library/docs.
 
-Create a GIT tag
+Add a GIT tag for the new version 
 ----------------
 
 The commit referenced in the DockerHub Pull Request must be tagged with the (marketing) version of SQ: eg. `8.0`, `8.0.1`, `8.1`.
