@@ -11,7 +11,7 @@ Release of a new version of the official SonarQube Docker images is made of seve
 4. add a GIT tag for the new version 
 
 
-Bump the version of SonarQube
+Bump the version of SonarQube in Dockerfiles
 -----------------------------
 
 The version of SQ is hardcoded in each Dockerfile and must be updated in master branch.
