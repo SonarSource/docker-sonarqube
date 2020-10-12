@@ -47,7 +47,7 @@ jobs:
         with:
           command: monitor
           image: sonarqube:${{ matrix.tag }}
-          args: --project-name=docker-sonarqube-${{ matrix.tag }} --file=${{ matrix.version }}/Dockerfile
+          args: --project-name=docker-sonarqube-${{ matrix.tag }} --file=${{ matrix.version }}/Dockerfile --org=sonarsource-x46
 
   snyk_on_pr:
     if: github.event_name == 'pull_request'
@@ -76,5 +76,5 @@ jobs:
         with:
           command: test
           image: sonarqube:${{ matrix.tag }}
-          args: --project-name=docker-sonarqube-${{ matrix.tag }} --file=${{ matrix.version }}/Dockerfile --fail-on=all
+          args: --project-name=docker-sonarqube-${{ matrix.tag }} --file=${{ matrix.version }}/Dockerfile --fail-on=all --org=sonarsource-x46
 
