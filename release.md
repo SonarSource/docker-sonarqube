@@ -7,7 +7,7 @@ Release of a new version of the official SonarQube Docker images is made of seve
 
 1. bump the version of SonarQube in Dockerfiles
 2. Update Docker Hub's SonarQube images
-3. (update documentation)
+3. Update the docker hub SonarQube's documentation (if applicable)
 4. add a GIT tag for the new version 
 
 
