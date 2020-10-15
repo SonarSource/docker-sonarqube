@@ -35,7 +35,7 @@ Until SonarQube is released and the public artifacts are available, keep your PR
 For more and up to date documentation, see https://github.com/docker-library/official-images.
 
 
-Update Docker Hub documentation
+Update the docker hub SonarQube's documentation (if applicable)
 -------------------------------
 
 If needed, prepare PR of Docker Hub documentation from SonarSource's fork of [https://github.com/docker-library/docs](https://github.com/docker-library/docs) named [sonarqube-docker-docs](https://github.com/SonarSource/sonarqube-docker-docs)
