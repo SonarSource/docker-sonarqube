@@ -14,13 +14,6 @@ fi
 
 declare -a sq_opts
 
-while IFS='=' read -r envvar_key envvar_value
-do
-    if [[ "$envvar_key" =~ sonar.* ]] || [[ "$envvar_key" =~ ldap.* ]]; then
-        sq_opts+=("-D${envvar_key}=${envvar_value}")
-    fi
-done < <(env)
-
 if [ -n "$SONARQUBE_JDBC_USERNAME" ]
 then
     sq_opts+=("-Dsonar.jdbc.username='$SONARQUBE_JDBC_USERNAME'")
@@ -33,6 +26,13 @@ if [ -n "$SONARQUBE_JDBC_URL" ]
 then
     sq_opts+=("-Dsonar.jdbc.url='$SONARQUBE_JDBC_URL'")
 fi
+
+while IFS='=' read -r envvar_key envvar_value
+do
+    if [[ "$envvar_key" =~ sonar.* ]] || [[ "$envvar_key" =~ ldap.* ]]; then
+        sq_opts+=("-D${envvar_key}=${envvar_value}")
+    fi
+done < <(env)
 
 exec tail -F ./logs/es.log & # this tail on the elasticsearch logs is a temporary workaround, see https://github.com/docker-library/official-images/pull/6361#issuecomment-516184762
 exec java -jar lib/sonar-application-$SONAR_VERSION.jar \
