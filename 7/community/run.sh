@@ -16,15 +16,15 @@ declare -a sq_opts
 
 if [ -n "$SONARQUBE_JDBC_USERNAME" ]
 then
-    sq_opts+=("-Dsonar.jdbc.username='$SONARQUBE_JDBC_USERNAME'")
+    sq_opts+=("-Dsonar.jdbc.username=$SONARQUBE_JDBC_USERNAME")
 fi
 if [ -n "$SONARQUBE_JDBC_PASSWORD" ]
 then
-    sq_opts+=("-Dsonar.jdbc.password='$SONARQUBE_JDBC_PASSWORD'")
+    sq_opts+=("-Dsonar.jdbc.password=$SONARQUBE_JDBC_PASSWORD")
 fi
 if [ -n "$SONARQUBE_JDBC_URL" ]
 then
-    sq_opts+=("-Dsonar.jdbc.url='$SONARQUBE_JDBC_URL'")
+    sq_opts+=("-Dsonar.jdbc.url=$SONARQUBE_JDBC_URL")
 fi
 
 while IFS='=' read -r envvar_key envvar_value
