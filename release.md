@@ -11,20 +11,21 @@ Release of a new version of the official SonarQube Docker images is made of seve
 4. add a GIT tag for the new version 
 
 
-Bump the version of SonarQube in Dockerfiles
+1.Bump the version of SonarQube in Dockerfiles
 -----------------------------
 
 The version of SQ is hardcoded in each Dockerfile and must be updated in master branch.
+For example see this [PR](https://github.com/SonarSource/docker-sonarqube/pull/452) that update from 8.5 to 8.6.
 
 
-Update Docker Hub's SonarQube images
+2.Update Docker Hub's SonarQube images
 -----------------------
 
 Update the SonarSource [fork](https://github.com/SonarSource/official-images) of the [official-images](https://github.com/docker-library/official-images) to ensure that the `sonarqube` library is the latest version.
 
-Create a feature branch on the company fork:
-* `GitCommit` must be updated to the HEAD of the master branch
-* `Tags` and `Directory` must be added/updated appropriatly for each edition
+Create a feature branch on the [fork](https://github.com/SonarSource/official-images):
+* `GitCommit` must be updated to the HEAD of the `master @ SonarSource/docker-sonarqube` repository
+* `Tags` and `Directory` (optional) must be added/updated appropriatly for each edition
 * see https://github.com/docker-library/official-images/pull/8837/files as an example
 
 Until SonarQube is released and the public artifacts are available, keep your PR a draft PR to make it clear it is not ready to be merged yet.
