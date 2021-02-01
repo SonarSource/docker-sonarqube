@@ -79,9 +79,6 @@ RUN set -eux; \
     cd /opt/java/openjdk; \
     tar -xf /tmp/openjdk.tar.gz --strip-components=1; \
     export PATH="/opt/java/openjdk/bin:$PATH"; \
-    apk add --no-cache --virtual .build-deps bash binutils; \
-    apk del --purge .build-deps; \
-    rm -rf /var/cache/apk/*; \
     apk del --purge .fetch-deps; \
     rm -rf /var/cache/apk/*; \
     rm -rf /tmp/openjdk.tar.gz;
@@ -89,7 +86,7 @@ RUN set -eux; \
 #
 # SonarQube setup
 #
-ARG SONARQUBE_VERSION=8.5.0.37579
+ARG SONARQUBE_VERSION=8.6.0.39681
 ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/CommercialDistribution/sonarqube-enterprise/sonarqube-enterprise-${SONARQUBE_VERSION}.zip
 ENV JAVA_HOME=/opt/java/openjdk \
     PATH="/opt/java/openjdk/bin:$PATH" \
