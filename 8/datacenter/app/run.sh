@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -eo pipefail
+
+IP=$(ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
+HOSTNAME=$(hostname)
 
 declare -a sq_opts=()
 set_prop_from_deprecated_env_var() {
@@ -42,6 +45,21 @@ if [[ "$1" = 'bin/sonar.sh' ]]; then
     done < <(env)
 
     #
+    # Change log path to ensure every app node can write in their own directory
+    # This resolves a cluttered log on docker-compose with scale > 1
+    #
+    if [ -z "${SONAR_PATH_LOGS}" ]
+    then
+        SONAR_CLUSTER_PATH_LOGS="logs/${HOSTNAME}"
+        mkdir -p ${SONARQUBE_HOME}/${SONAR_CLUSTER_PATH_LOGS}
+        chown -R sonarqube:sonarqube ${SONARQUBE_HOME}/${SONAR_CLUSTER_PATH_LOGS}
+    else
+        SONAR_CLUSTER_PATH_LOGS="${SONAR_PATH_LOGS}/${HOSTNAME}"
+        mkdir -p ${SONAR_CLUSTER_PATH_LOGS}
+        chown -R sonarqube:sonarqube ${SONAR_CLUSTER_PATH_LOGS}
+    fi
+
+    #
     # Deprecated environment variable mapping that will be removed in future versions.
     # Please use environment variables from https://docs.sonarqube.org/latest/setup/environment-variables/
     # instead of using these 4 environment variables below.
@@ -50,6 +68,8 @@ if [[ "$1" = 'bin/sonar.sh' ]]; then
     set_prop_from_deprecated_env_var "sonar.jdbc.password" "${SONARQUBE_JDBC_PASSWORD:-}"
     set_prop_from_deprecated_env_var "sonar.jdbc.url" "${SONARQUBE_JDBC_URL:-}"
     set_prop_from_deprecated_env_var "sonar.web.javaAdditionalOpts" "${SONARQUBE_WEB_JVM_OPTS:-}"
+    set_prop_from_deprecated_env_var "sonar.cluster.node.host" "${IP:-}"
+    set_prop_from_deprecated_env_var "sonar.path.logs" "${SONAR_CLUSTER_PATH_LOGS:-}"
     if [ ${#sq_opts[@]} -ne 0 ]; then
         set -- "$@" "${sq_opts[@]}"
     fi

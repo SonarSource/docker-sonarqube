@@ -12,14 +12,16 @@ services:
       - sonar-network
     deploy:
       replicas: 2
+    cpus: 0.5
+    mem_limit: 4096M
+    mem_reservation: 1024M
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
       SONAR_WEB_PORT: 9000
       SONAR_CLUSTER_SEARCH_HOSTS: "search-1,search-2,search-3"
-#      SONAR_CLUSTER_HOSTS: "sonarqube"
-      SONAR_CLUSTER_HOSTS: "172.28.2.2,172.28.2.3,172.28.2.4,172.28.2.5,172.28.2.6,172.28.2.7,172.28.2.8,172.28.2.9,172.28.2.10,172.28.2.11,172.28.2.12,172.28.2.13,172.28.2.14,172.28.2.15,172.28.2.16,172.28.2.17,172.28.2.18,172.28.2.19,172.28.2.23,172.28.2.24,172.28.2.25,172.28.2.26,172.28.2.27,172.28.2.28,172.28.2.29,172.28.2.30,172.28.2.31,172.28.2.32,172.28.2.33,172.28.2.34,172.28.2.35,172.28.2.36,172.28.2.37,172.28.2.38,172.28.2.39,172.28.2.40,172.28.2.41,172.28.2.42,172.28.2.43,172.28.2.44,172.28.2.45,172.28.2.46,172.28.2.47,172.28.2.48,172.28.2.49,172.28.2.50,172.28.2.51,172.28.2.52,172.28.2.53,172.28.2.54,172.28.2.55,172.28.2.56,172.28.2.57,172.28.2.58,172.28.2.59,172.28.2.60,172.28.2.61,172.28.2.62,172.28.2.63,172.28.2.64,172.28.2.65,172.28.2.66,172.28.2.67,172.28.2.68,172.28.2.69,172.28.2.70,172.28.2.71,172.28.2.72,172.28.2.73,172.28.2.74,172.28.2.75,172.28.2.76,172.28.2.77,172.28.2.78,172.28.2.79,172.28.2.80,172.28.2.81,172.28.2.82,172.28.2.83,172.28.2.84,172.28.2.85,172.28.2.86,172.28.2.87,172.28.2.88,172.28.2.89,172.28.2.90,172.28.2.91,172.28.2.92,172.28.2.93,172.28.2.94,172.28.2.95,172.28.2.96,172.28.2.97,172.28.2.98,172.28.2.99,172.28.2.100,172.28.2.101,172.28.2.102,172.28.2.103,172.28.2.104,172.28.2.105,172.28.2.106,172.28.2.107,172.28.2.108,172.28.2.109,172.28.2.110,172.28.2.111,172.28.2.112,172.28.2.113,172.28.2.114,172.28.2.115,172.28.2.116,172.28.2.117,172.28.2.118,172.28.2.119,172.28.2.120,172.28.2.121,172.28.2.122,172.28.2.123,172.28.2.124,172.28.2.125,172.28.2.126,172.28.2.127,172.28.2.128,172.28.2.129,172.28.2.130,172.28.2.131,172.28.2.132,172.28.2.133,172.28.2.134,172.28.2.135,172.28.2.136,172.28.2.137,172.28.2.138,172.28.2.139,172.28.2.140,172.28.2.141,172.28.2.142,172.28.2.143,172.28.2.144,172.28.2.145,172.28.2.146,172.28.2.147,172.28.2.148,172.28.2.149,172.28.2.150,172.28.2.151,172.28.2.152,172.28.2.153,172.28.2.154,172.28.2.155,172.28.2.156,172.28.2.157,172.28.2.158,172.28.2.159,172.28.2.160,172.28.2.161,172.28.2.162,172.28.2.163,172.28.2.164,172.28.2.165,172.28.2.166,172.28.2.167,172.28.2.168,172.28.2.169,172.28.2.170,172.28.2.171,172.28.2.172,172.28.2.173,172.28.2.174,172.28.2.175,172.28.2.176,172.28.2.177,172.28.2.178,172.28.2.179,172.28.2.180,172.28.2.181,172.28.2.182,172.28.2.183,172.28.2.184,172.28.2.185,172.28.2.186,172.28.2.187,172.28.2.188,172.28.2.189,172.28.2.190,172.28.2.191,172.28.2.192,172.28.2.193,172.28.2.194,172.28.2.195,172.28.2.196,172.28.2.197,172.28.2.198,172.28.2.199,172.28.2.200,172.28.2.201,172.28.2.202,172.28.2.203,172.28.2.204,172.28.2.205,172.28.2.206,172.28.2.207,172.28.2.208,172.28.2.209,172.28.2.210,172.28.2.211,172.28.2.212,172.28.2.213,172.28.2.214,172.28.2.215,172.28.2.216,172.28.2.217,172.28.2.218,172.28.2.219,172.28.2.220,172.28.2.221,172.28.2.222,172.28.2.223,172.28.2.224,172.28.2.225,172.28.2.226,172.28.2.227,172.28.2.228,172.28.2.229,172.28.2.230,172.28.2.231,172.28.2.232,172.28.2.233,172.28.2.234,172.28.2.235,172.28.2.236,172.28.2.237,172.28.2.238,172.28.2.239,172.28.2.240,172.28.2.241,172.28.2.242,172.28.2.243,172.28.2.244,172.28.2.245,172.28.2.246,172.28.2.247,172.28.2.248,172.28.2.249,172.28.2.250,172.28.2.251,172.28.2.252,172.28.2.253,172.28.2.254"
+      SONAR_CLUSTER_HOSTS: "sonarqube"
       SONAR_AUTH_JWTBASE64HS256SECRET: "dZ0EB0KxnF++nr5+4vfTCaun/eWbv6gOoXodiAMqcFo="
       VIRTUAL_HOST: sonarqube.dev.local
       VIRTUAL_PORT: 9000
@@ -27,54 +29,54 @@ services:
       - sonarqube_data:/opt/sonarqube/data
       - sonarqube_extensions:/opt/sonarqube/extensions
       - sonarqube_logs:/opt/sonarqube/logs
-      - sonarqube_temp:/opt/sonarqube/temp
-#    command: sleep 3600
   search-1:
     image: sonarqube:8.6-datacenter-search
+    hostname: "search-1"
+    cpus: 0.5
+    mem_limit: 4096M
+    mem_reservation: 1024M
     depends_on:
       - db
     networks:
-      sonar-network:
-        ipv4_address: 172.28.2.20
+      - sonar-network
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
-      SONAR_CLUSTER_ES_HOSTS: "172.28.2.20,172.28.2.21,172.28.2.22"
-      SONAR_CLUSTER_NODE_ES_HOSTS: "172.28.2.20,172.28.2.21,172.28.2.22"
-      SONAR_CLUSTER_SEARCH_HOSTS: "172.28.2.20,172.28.2.21,172.28.2.22"
-      SONAR_CLUSTER_APPLICATION_NODES: "sonarqube"
-#    command: sleep 3600
+      SONAR_CLUSTER_ES_HOSTS: "search-1,search-2,search-3"
+      SONAR_CLUSTER_NODE_NAME: "search-1"
   search-2:
     image: sonarqube:8.6-datacenter-search
+    hostname: "search-2"
+    cpus: 0.5
+    mem_limit: 4096M
+    mem_reservation: 1024M
     depends_on:
       - db
     networks:
-      sonar-network:
-        ipv4_address: 172.28.2.21
+      - sonar-network
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
-      SONAR_CLUSTER_ES_HOSTS: "172.28.2.20,172.28.2.21,172.28.2.22"
-      SONAR_CLUSTER_NODE_ES_HOSTS: "172.28.2.20,172.28.2.21,172.28.2.22"
-      SONAR_CLUSTER_SEARCH_HOSTS: "172.28.2.20,172.28.2.21,172.28.2.22"
-      SONAR_CLUSTER_APPLICATION_NODES: "sonarqube"
+      SONAR_CLUSTER_ES_HOSTS: "search-1,search-2,search-3"
+      SONAR_CLUSTER_NODE_NAME: "search-2"
   search-3:
     image: sonarqube:8.6-datacenter-search
+    hostname: "search-3"
+    cpus: 0.5
+    mem_limit: 4096M
+    mem_reservation: 1024M
     depends_on:
       - db
     networks:
-      sonar-network:
-        ipv4_address: 172.28.2.22
+      - sonar-network
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
-      SONAR_CLUSTER_ES_HOSTS: "172.28.2.20,172.28.2.21,172.28.2.22"
-      SONAR_CLUSTER_NODE_ES_HOSTS: "172.28.2.20,172.28.2.21,172.28.2.22"
-      SONAR_CLUSTER_SEARCH_HOSTS: "172.28.2.20,172.28.2.21,172.28.2.22"
-      SONAR_CLUSTER_APPLICATION_NODES: "sonarqube"
+      SONAR_CLUSTER_ES_HOSTS: "search-1,search-2,search-3"
+      SONAR_CLUSTER_NODE_NAME: "search-3"
   db:
     image: postgres:12
     networks:
@@ -109,6 +111,5 @@ volumes:
   sonarqube_data:
   sonarqube_extensions:
   sonarqube_logs:
-  sonarqube_temp:
   postgresql:
   postgresql_data:
