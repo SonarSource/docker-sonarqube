@@ -1,0 +1,115 @@
+version: "3"
+
+services:
+  sonarqube:
+    image: sonarqube:8.7-datacenter-app
+    depends_on:
+      - db
+      - search-1
+      - search-2
+      - search-3
+    networks:
+      - sonar-network
+    deploy:
+      replicas: 2
+    cpus: 0.5
+    mem_limit: 4096M
+    mem_reservation: 1024M
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+      SONAR_WEB_PORT: 9000
+      SONAR_CLUSTER_SEARCH_HOSTS: "search-1,search-2,search-3"
+      SONAR_CLUSTER_HOSTS: "sonarqube"
+      SONAR_AUTH_JWTBASE64HS256SECRET: "dZ0EB0KxnF++nr5+4vfTCaun/eWbv6gOoXodiAMqcFo="
+      VIRTUAL_HOST: sonarqube.dev.local
+      VIRTUAL_PORT: 9000
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+  search-1:
+    image: sonarqube:8.7-datacenter-search
+    hostname: "search-1"
+    cpus: 0.5
+    mem_limit: 4096M
+    mem_reservation: 1024M
+    depends_on:
+      - db
+    networks:
+      - sonar-network
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+      SONAR_CLUSTER_ES_HOSTS: "search-1,search-2,search-3"
+      SONAR_CLUSTER_NODE_NAME: "search-1"
+  search-2:
+    image: sonarqube:8.7-datacenter-search
+    hostname: "search-2"
+    cpus: 0.5
+    mem_limit: 4096M
+    mem_reservation: 1024M
+    depends_on:
+      - db
+    networks:
+      - sonar-network
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+      SONAR_CLUSTER_ES_HOSTS: "search-1,search-2,search-3"
+      SONAR_CLUSTER_NODE_NAME: "search-2"
+  search-3:
+    image: sonarqube:8.7-datacenter-search
+    hostname: "search-3"
+    cpus: 0.5
+    mem_limit: 4096M
+    mem_reservation: 1024M
+    depends_on:
+      - db
+    networks:
+      - sonar-network
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+      SONAR_CLUSTER_ES_HOSTS: "search-1,search-2,search-3"
+      SONAR_CLUSTER_NODE_NAME: "search-3"
+  db:
+    image: postgres:12
+    networks:
+      - sonar-network
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+    volumes:
+      - postgresql:/var/lib/postgresql
+      - postgresql_data:/var/lib/postgresql/data
+  proxy:
+    image: jwilder/nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./unrestricted_client_body_size.conf:/etc/nginx/conf.d/unrestricted_client_body_size.conf:ro
+    networks:
+      - sonar-network
+      - sonar-public
+
+networks:
+  sonar-network:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.2.0/24
+  sonar-public:
+    driver: bridge
+
+volumes:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+  postgresql:
+  postgresql_data:
