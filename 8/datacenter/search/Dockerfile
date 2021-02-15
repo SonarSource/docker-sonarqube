@@ -85,7 +85,7 @@ RUN set -eux; \
 #
 # SonarQube setup
 #
-ARG SONARQUBE_VERSION=8.7-SNAPSHOT
+ARG SONARQUBE_VERSION=8.7.0.41497
 ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/CommercialDistribution/sonarqube-datacenter/sonarqube-datacenter-${SONARQUBE_VERSION}.zip
 ENV JAVA_HOME=/opt/java/openjdk \
     PATH="/opt/java/openjdk/bin:$PATH" \
@@ -121,10 +121,9 @@ RUN set -ex \
     && curl --fail --location --output sonarqube.zip --silent --show-error "${SONARQUBE_ZIP_URL}" \
     && curl --fail --location --output sonarqube.zip.asc --silent --show-error "${SONARQUBE_ZIP_URL}.asc" \
     && gpg --batch --verify sonarqube.zip.asc sonarqube.zip \
-    && unzip -q /sonarqube.zip \
-    && ls -alh && ls -alh / \
+    && unzip -q sonarqube.zip \
     && mv "sonarqube-${SONARQUBE_VERSION}" sonarqube \
-    && rm /sonarqube.zip* \
+    && rm sonarqube.zip* \
     && rm -rf ${SONARQUBE_HOME}/bin/* \
     && chown -R sonarqube:sonarqube ${SONARQUBE_HOME} \
     # this 777 will be replaced by 700 at runtime (allows semi-arbitrary "--user" values)
