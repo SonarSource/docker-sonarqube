@@ -26,7 +26,6 @@ services:
       VIRTUAL_HOST: sonarqube.dev.local
       VIRTUAL_PORT: 9000
     volumes:
-      - sonarqube_data:/opt/sonarqube/data
       - sonarqube_extensions:/opt/sonarqube/extensions
       - sonarqube_logs:/opt/sonarqube/logs
   search-1:
@@ -45,6 +44,8 @@ services:
       SONAR_JDBC_PASSWORD: sonar
       SONAR_CLUSTER_ES_HOSTS: "search-1,search-2,search-3"
       SONAR_CLUSTER_NODE_NAME: "search-1"
+    volumes:
+      - search-data-1:/opt/sonarqube/data
   search-2:
     image: sonarqube:8.7-datacenter-search
     hostname: "search-2"
@@ -61,6 +62,8 @@ services:
       SONAR_JDBC_PASSWORD: sonar
       SONAR_CLUSTER_ES_HOSTS: "search-1,search-2,search-3"
       SONAR_CLUSTER_NODE_NAME: "search-2"
+    volumes:
+      - search-data-2:/opt/sonarqube/data
   search-3:
     image: sonarqube:8.7-datacenter-search
     hostname: "search-3"
@@ -77,6 +80,8 @@ services:
       SONAR_JDBC_PASSWORD: sonar
       SONAR_CLUSTER_ES_HOSTS: "search-1,search-2,search-3"
       SONAR_CLUSTER_NODE_NAME: "search-3"
+    volumes:
+      - search-data-3:/opt/sonarqube/data
   db:
     image: postgres:12
     networks:
@@ -108,8 +113,10 @@ networks:
     driver: bridge
 
 volumes:
-  sonarqube_data:
   sonarqube_extensions:
   sonarqube_logs:
+  search-data-1:
+  search-data-2:
+  search-data-3:
   postgresql:
   postgresql_data:
