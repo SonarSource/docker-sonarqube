@@ -26,23 +26,29 @@ jobs:
         include:
           - version: 7/community
             tag: 7-community
+            test: docker
           - version: 8/community
             tag: 8-community
+            test: docker
           - version: 8/developer
             tag: 8-developer
+            test: docker
           - version: 8/enterprise
             tag: 8-enterprise
+            test: docker
           - version: 8/datacenter/app
             tag: 8-datacenter-app
+            test: docker-compose
           - version: 8/datacenter/search
             tag: 8-datacenter-search
+            test: docker-compose
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Build image
         run: docker build -t "sonarqube:${{ matrix.tag }}" "${{ matrix.version }}"
       - name: Test image
-        run: ./run-tests.sh "sonarqube:${{ matrix.tag }}"
+        run: ./run-tests.sh "sonarqube:${{ matrix.tag }}" "${{ matrix.test }}"
       - name: Run Snyk Monitor
         if: github.event_name != 'pull_request'
         uses: snyk/actions/docker@master
