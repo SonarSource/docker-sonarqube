@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [7/community, 8/community, 8/developer, 8/enterprise]
+        version: [7/community, 8/community, 8/developer, 8/enterprise, 8/datacenter/app, 8/datacenter/search]
         include:
           - version: 7/community
             tag: 7-community
@@ -32,6 +32,10 @@ jobs:
             tag: 8-developer
           - version: 8/enterprise
             tag: 8-enterprise
+          - version: 8/datacenter/app
+            tag: 8-datacenter-app
+          - version: 8/datacenter/search
+            tag: 8-datacenter-search
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -54,7 +58,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [7/community, 8/community, 8/developer, 8/enterprise]
+        version: [7/community, 8/community, 8/developer, 8/enterprise, 8/datacenter/app, 8/datacenter/search]
         include:
           - version: 7/community
             tag: 7-community
@@ -64,6 +68,10 @@ jobs:
             tag: 8-developer
           - version: 8/enterprise
             tag: 8-enterprise
+          - version: 8/datacenter/app
+            tag: 8-datacenter-app
+          - version: 8/datacenter/search
+            tag: 8-datacenter-search
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
