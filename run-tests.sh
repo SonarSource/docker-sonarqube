@@ -70,7 +70,7 @@ wait_for_sonarqube_dce() {
 
     for ((i = 0; i < 80; i++)); do
         info "$image: waiting for web server to start ..."
-        if curl -sI localhost:9000 | grep '^HTTP/.* 200'; then
+        if curl -sI localhost:$port | grep '^HTTP/.* 200'; then
             web_up=yes
             break
         fi
@@ -81,7 +81,7 @@ wait_for_sonarqube_dce() {
 
     for ((i = 0; i < 80; i++)); do
         info "$image: waiting for sonarqube to be ready ..."
-        if curl -s localhost:9000/api/system/status | grep '"status":"UP"'; then
+        if curl -s localhost:$port/api/system/status | grep '"status":"UP"'; then
             sonarqube_up=yes
             break
         fi
@@ -113,6 +113,7 @@ sanity_check_image() {
         [[ $result == ok ]]
     elif [ $2 == docker-compose ]; then
         cd tests/dce-compose-test
+        sed -i "s/PORT_REPLACEMENT_TOKEN/$port/g" docker-compose.yml
         docker-compose up -d --scale sonarqube=0
         sleep 60
         docker-compose up -d --scale sonarqube=1
