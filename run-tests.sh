@@ -70,7 +70,7 @@ wait_for_sonarqube_dce() {
 
     for ((i = 0; i < 80; i++)); do
         info "$image: waiting for web server to start ..."
-        if curl -sI sonarqube.dev.local | grep '^HTTP/.* 200'; then
+        if curl -sI localhost:9000 | grep '^HTTP/.* 200'; then
             web_up=yes
             break
         fi
@@ -79,9 +79,9 @@ wait_for_sonarqube_dce() {
 
     [[ $web_up = yes ]] || return 1
 
-    for ((i = 0; i < 20; i++)); do
+    for ((i = 0; i < 80; i++)); do
         info "$image: waiting for sonarqube to be ready ..."
-        if curl -s sonarqube.dev.local/api/system/status | grep '"status":"UP"'; then
+        if curl -s localhost:9000/api/system/status | grep '"status":"UP"'; then
             sonarqube_up=yes
             break
         fi
@@ -112,8 +112,7 @@ sanity_check_image() {
 
         [[ $result == ok ]]
     elif [ $2 == docker-compose ]; then
-        echo "127.0.0.1 sonarqube.dev.local" > /etc/hosts
-        cd example-compose-files/sq-dce-postgres
+        cd tests/dce-compose-test
         docker-compose up -d --scale sonarqube=0
         sleep 60
         docker-compose up -d --scale sonarqube=1
