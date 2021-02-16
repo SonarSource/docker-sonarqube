@@ -38,7 +38,7 @@ jobs:
       - name: Build image
         run: docker build -t "sonarqube:${{ matrix.tag }}" "${{ matrix.version }}"
       - name: Test image
-        run: ./run-tests.sh "sonarqube:${{ matrix.tag }}"
+        run: ./run-tests.sh "sonarqube:${{ matrix.tag }}" "docker"
       - name: Run Snyk Monitor
         if: github.event_name != 'pull_request'
         uses: snyk/actions/docker@master
@@ -49,12 +49,23 @@ jobs:
           image: sonarqube:${{ matrix.tag }}
           args: --project-name=docker-sonarqube-${{ matrix.tag }} --file=${{ matrix.version }}/Dockerfile
 
+  build_and_test_dce:
+    strategy:
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build image
+        run: docker build -t "sonarqube:8-datacenter-app" "8/datacenter/app" && docker build -t "sonarqube:8-datacenter-search" "8/datacenter/search"
+      - name: Test image
+        run: ./run-tests.sh "sonarqube:8-datacenter-app" "docker-compose"
+
   snyk_on_pr:
     if: github.event_name == 'pull_request'
     strategy:
       fail-fast: false
       matrix:
-        version: [7/community, 8/community, 8/developer, 8/enterprise]
+        version: [7/community, 8/community, 8/developer, 8/enterprise, 8/datacenter/app, 8/datacenter/search]
         include:
           - version: 7/community
             tag: 7-community
@@ -64,6 +75,10 @@ jobs:
             tag: 8-developer
           - version: 8/enterprise
             tag: 8-enterprise
+          - version: 8/datacenter/app
+            tag: 8-datacenter-app
+          - version: 8/datacenter/search
+            tag: 8-datacenter-search
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
