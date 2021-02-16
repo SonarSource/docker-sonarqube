@@ -113,7 +113,7 @@ sanity_check_image() {
         [[ $result == ok ]]
     elif [ $2 == docker-compose ]; then
         cd tests/dce-compose-test
-        sed -i "s/PORT_REPLACEMENT_TOKEN/$port/g" docker-compose.yml
+        export PORT=$port
         docker-compose up -d --scale sonarqube=0
         sleep 60
         docker-compose up -d --scale sonarqube=1
@@ -157,8 +157,6 @@ if sanity_check_image "$image" "$test_case"; then
 else
     results+=("failure")
 fi
-
-echo
 
 failures=0
 echo "${image} => ${results}"
