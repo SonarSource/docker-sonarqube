@@ -2,8 +2,8 @@
 
 set -eo pipefail
 
-IP=$(ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
 HOSTNAME=$(hostname)
+IP=$(ip -4 address show scope global | grep inet | awk '{ print $2 }' | head -n 1 | cut -d \/ -f 1)
 
 declare -a sq_opts=()
 set_prop_from_deprecated_env_var() {
