@@ -1,6 +1,6 @@
 FROM alpine:3.12
 
-ENV JAVA_VERSION="jdk-11.0.8+10" \
+ENV JAVA_VERSION="jdk-11.0.10+9" \
     LANG='en_US.UTF-8' \
     LANGUAGE='en_US:en' \
     LC_ALL='en_US.UTF-8'
