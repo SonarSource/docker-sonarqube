@@ -10,7 +10,7 @@ ENV JAVA_VERSION="jdk-11.0.10+9" \
 #
 RUN set -eux; \
     apk add --no-cache tzdata --virtual .build-deps curl binutils zstd; \
-    GLIBC_VER="2.31-r0"; \
+    GLIBC_VER="2.32-r0"; \
     ALPINE_GLIBC_REPO="https://github.com/sgerrand/alpine-pkg-glibc/releases/download"; \
     GCC_LIBS_URL="https://archive.archlinux.org/packages/g/gcc-libs/gcc-libs-10.1.0-2-x86_64.pkg.tar.zst"; \
     GCC_LIBS_SHA256="f80320a03ff73e82271064e4f684cd58d7dbdb07aa06a2c4eea8e0f3c507c45c"; \
@@ -25,7 +25,7 @@ RUN set -eux; \
     apk add --no-cache /tmp/glibc-bin-${GLIBC_VER}.apk; \
     curl -Ls ${ALPINE_GLIBC_REPO}/${GLIBC_VER}/glibc-i18n-${GLIBC_VER}.apk > /tmp/glibc-i18n-${GLIBC_VER}.apk; \
     apk add --no-cache /tmp/glibc-i18n-${GLIBC_VER}.apk; \
-    /usr/glibc-compat/bin/localedef --force --inputfile POSIX --charmap UTF-8 "$LANG" || true ;\
+    /usr/glibc-compat/bin/localedef --inputfile en_US --charmap UTF-8 "$LANG" || true ;\
     echo "export LANG=$LANG" > /etc/profile.d/locale.sh; \
     curl -LfsS ${GCC_LIBS_URL} -o /tmp/gcc-libs.tar.zst; \
     echo "${GCC_LIBS_SHA256} */tmp/gcc-libs.tar.zst" | sha256sum -c - ; \
