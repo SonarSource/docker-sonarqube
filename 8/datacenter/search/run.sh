@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eo pipefail
+set -euo pipefail
 
 HOSTNAME=$(hostname)
 IP=$(ip -4 address show scope global | grep inet | awk '{ print $2 }' | head -n 1 | cut -d \/ -f 1)
@@ -48,7 +48,7 @@ if [[ "$1" = 'bin/sonar.sh' ]]; then
     # Change log path to ensure every search node can write in their own directory
     # This resolves a cluttered log on docker-compose with scale > 1
     #
-    if [ -z "${SONAR_PATH_LOGS}" ]
+    if [ -z "${SONAR_PATH_LOGS:-}" ]
     then
         SONAR_CLUSTER_PATH_LOGS="logs/${HOSTNAME}"
         mkdir -p ${SONARQUBE_HOME}/${SONAR_CLUSTER_PATH_LOGS}
