@@ -5,6 +5,11 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 ENV SONAR_VERSION=7.9.6 \
+    SONAR_HOME="" \
+    SONAR_JDBC_USERNAME="" \
+    SONAR_JDBC_PASSWORD="" \
+    SONAR_JDBC_URL="" \
+    # Deprecated
     SONARQUBE_HOME=/opt/sonarqube \
     SONARQUBE_JDBC_USERNAME=sonar \
     SONARQUBE_JDBC_PASSWORD=sonar \

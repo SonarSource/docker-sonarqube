@@ -14,17 +14,17 @@ fi
 
 declare -a sq_opts
 
-if [ -n "$SONARQUBE_JDBC_USERNAME" ]
+if [ -n "$SONAR_JDBC_USERNAME" ] || [ -n "$SONARQUBE_JDBC_USERNAME" ]
 then
-    sq_opts+=("-Dsonar.jdbc.username=$SONARQUBE_JDBC_USERNAME")
+    sq_opts+=("-Dsonar.jdbc.username=${SONAR_JDBC_USERNAME:-$SONARQUBE_JDBC_USERNAME}")
 fi
-if [ -n "$SONARQUBE_JDBC_PASSWORD" ]
+if [ -n "$SONAR_JDBC_PASSWORD" ] || [ -n "$SONARQUBE_JDBC_PASSWORD" ]
 then
-    sq_opts+=("-Dsonar.jdbc.password=$SONARQUBE_JDBC_PASSWORD")
+    sq_opts+=("-Dsonar.jdbc.password=${SONAR_JDBC_PASSWORD:-$SONARQUBE_JDBC_PASSWORD}")
 fi
-if [ -n "$SONARQUBE_JDBC_URL" ]
+if [ -n "$SONAR_JDBC_URL" ] || [ -n "$SONARQUBE_JDBC_URL" ]
 then
-    sq_opts+=("-Dsonar.jdbc.url=$SONARQUBE_JDBC_URL")
+    sq_opts+=("-Dsonar.jdbc.url=${SONAR_JDBC_URL:-$SONARQUBE_JDBC_URL}")
 fi
 
 while IFS='=' read -r envvar_key envvar_value
@@ -37,6 +37,6 @@ done < <(env)
 exec tail -F ./logs/es.log & # this tail on the elasticsearch logs is a temporary workaround, see https://github.com/docker-library/official-images/pull/6361#issuecomment-516184762
 exec java -jar lib/sonar-application-$SONAR_VERSION.jar \
   -Dsonar.log.console=true \
-  -Dsonar.web.javaAdditionalOpts="$SONARQUBE_WEB_JVM_OPTS -Djava.security.egd=file:/dev/./urandom" \
+  -Dsonar.web.javaAdditionalOpts="${SONAR_WEB_JAVAOPTS:-$SONARQUBE_WEB_JVM_OPTS} -Djava.security.egd=file:/dev/./urandom" \
   "${sq_opts[@]}" \
   "$@"
