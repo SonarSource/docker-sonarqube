@@ -21,7 +21,7 @@ For example see this [PR](https://github.com/SonarSource/docker-sonarqube/pull/4
 2.Update Docker Hub's SonarQube images
 -----------------------
 
-Update the SonarSource [fork](https://github.com/SonarSource/official-images) of the [official-images](https://github.com/docker-library/official-images) to ensure that the `sonarqube` library is the latest version.
+Update the SonarSource [fork](https://github.com/SonarSource/official-images) of the [official-images](https://github.com/docker-library/official-images) to ensure that both repositories are aligned.
 
 Create a feature branch on the [fork](https://github.com/SonarSource/official-images):
 * `GitCommit` must be updated to the HEAD of the `master @ SonarSource/docker-sonarqube` repository
