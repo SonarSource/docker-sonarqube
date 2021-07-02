@@ -112,7 +112,12 @@ sanity_check_image() {
 
         [[ $result == ok ]]
     elif [ $2 == docker-compose ]; then
-        cd tests/dce-compose-test
+        if [[ $1 =~ "8" ]]; then
+            _test_compose_path="tests/8/dce-compose-test"
+        elif [[ $1 =~ "9" ]]; then
+            _test_compose_path="tests/9/dce-compose-test"
+        fi
+        cd $_test_compose_path
         export PORT=$port
         docker-compose up -d --scale sonarqube=0
         sleep 60
@@ -151,7 +156,6 @@ image=($1)
 test_case=($2)
 results=()
 
-image=${image%/}
 if sanity_check_image "$image" "$test_case"; then
     results+=("success")
 else
