@@ -85,8 +85,7 @@ RUN set -eux; \
 #
 # SonarQube setup
 #
-ARG SONARQUBE_VERSION=9.0.0.45539
-ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/CommercialDistribution/sonarqube-datacenter/sonarqube-datacenter-${SONARQUBE_VERSION}.zip
+ARG SONARQUBE_VERSION=9.1-SNAPSHOT
 ENV JAVA_HOME=/opt/java/openjdk \
     PATH="/opt/java/openjdk/bin:$PATH" \
     SONARQUBE_HOME=/opt/sonarqube \
@@ -97,6 +96,8 @@ ENV JAVA_HOME=/opt/java/openjdk \
     SQ_TEMP_DIR="/opt/sonarqube/temp" \
     SONAR_CLUSTER_NODE_TYPE="search" \
     SONAR_CLUSTER_ENABLED="true"
+
+COPY sonarqube.zip /tmp
 
 RUN set -eux; \
     addgroup -S -g 1000 sonarqube; \
@@ -118,9 +119,7 @@ RUN set -eux; \
     done; \
     mkdir --parents /opt ;\
     cd /opt; \
-    curl --fail --location --output sonarqube.zip --silent --show-error "${SONARQUBE_ZIP_URL}"; \
-    curl --fail --location --output sonarqube.zip.asc --silent --show-error "${SONARQUBE_ZIP_URL}.asc"; \
-    gpg --batch --verify sonarqube.zip.asc sonarqube.zip; \
+    mv /tmp/sonarqube.zip . ;\
     unzip -q sonarqube.zip; \
     mv "sonarqube-${SONARQUBE_VERSION}" sonarqube; \
     rm sonarqube.zip*; \
