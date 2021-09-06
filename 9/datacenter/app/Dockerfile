@@ -24,7 +24,7 @@ RUN set -eux; \
     addgroup -S -g 1000 sonarqube; \
     adduser -S -D -u 1000 -G sonarqube sonarqube; \
     apk add --no-cache --virtual build-dependencies gnupg unzip curl; \
-    apk add --no-cache bash su-exec ttf-dejavu openjdk11-jre-headless; \
+    apk add --no-cache bash su-exec ttf-dejavu openjdk11-jre; \
     # pub   2048R/D26468DE 2015-05-25
     #       Key fingerprint = F118 2E81 C792 9289 21DB  CAB4 CFCA 4A29 D264 68DE
     # uid                  sonarsource_deployer (Sonarsource Deployer) <infra@sonarsource.com>
