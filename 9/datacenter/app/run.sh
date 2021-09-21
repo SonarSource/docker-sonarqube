@@ -14,21 +14,22 @@ set_prop_from_deprecated_env_var() {
 
 # if nothing is passed, assume we want to run sonarqube server
 if [ "$#" == 0 ]; then
-  set -- bin/sonar.sh
+  set -- /opt/sonarqube/bin/sonar.sh
 fi
 
 # if first arg looks like a flag, assume we want to run sonarqube server with flags
 if [ "${1:0:1}" = '-' ]; then
-    set -- bin/sonar.sh "$@"
+    set -- /opt/sonarqube/bin/sonar.sh "$@"
 fi
 
-if [[ "$1" = 'bin/sonar.sh' ]]; then
+if [[ "$1" = '/opt/sonarqube/bin/sonar.sh' ]]; then
     chown -R "$(id -u):$(id -g)" "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}" 2>/dev/null || :
     chmod -R 700 "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}" 2>/dev/null || :
 
     # Allow the container to be started with `--user`
     if [[ "$(id -u)" = '0' ]]; then
         chown -R sonarqube:sonarqube "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}"
+        echo "Dropping Privileges"
         exec su-exec sonarqube "$0" "$@"
     fi
 
