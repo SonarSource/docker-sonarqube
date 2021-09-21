@@ -55,5 +55,7 @@ COPY --chown=sonarqube:sonarqube run.sh sonar.sh ${SONARQUBE_HOME}/bin/
 WORKDIR ${SONARQUBE_HOME}
 EXPOSE 9000
 
+STOPSIGNAL SIGINT
+
 ENTRYPOINT ["/opt/sonarqube/bin/run.sh"]
 CMD ["/opt/sonarqube/bin/sonar.sh"]
