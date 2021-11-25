@@ -58,5 +58,5 @@ if ! [[ -d "$image" ]]; then
     exit 1
 fi
 name=sqtest:$image
-docker build -t "$name" -f "$image/Dockerfile" "$PWD/$image"
+docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t "$name" -f "$image/Dockerfile" "$PWD/$image"
 docker run -p $port:9000 "$name"
