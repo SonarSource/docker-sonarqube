@@ -4,7 +4,7 @@ RUN apt-get update \
     && apt-get install -y curl gnupg2 unzip \
     && rm -rf /var/lib/apt/lists/*
 
-ENV SONAR_VERSION=7.9.4 \
+ENV SONAR_VERSION=7.9.6 \
     SONARQUBE_HOME=/opt/sonarqube \
     SONARQUBE_JDBC_USERNAME=sonar \
     SONARQUBE_JDBC_PASSWORD=sonar \

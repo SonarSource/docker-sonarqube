@@ -41,7 +41,6 @@ RUN set -eux; \
     mv /tmp/libz/usr/lib/libz.so* /usr/glibc-compat/lib; \
     apk del --purge .build-deps glibc-i18n; \
     rm -rf /tmp/*.apk /tmp/gcc /tmp/gcc-libs.tar* /tmp/libz /tmp/libz.tar.xz /var/cache/apk/*;
-
 #
 # AdoptOpenJDK/openjdk11 setup
 #
@@ -87,7 +86,7 @@ RUN set -eux; \
 # SonarQube setup
 #
 ARG SONARQUBE_VERSION=8.9.3.48735
-ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/CommercialDistribution/sonarqube-enterprise/sonarqube-enterprise-${SONARQUBE_VERSION}.zip
+ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/CommercialDistribution/sonarqube-datacenter/sonarqube-datacenter-${SONARQUBE_VERSION}.zip
 ENV JAVA_HOME=/opt/java/openjdk \
     PATH="/opt/java/openjdk/bin:$PATH" \
     SONARQUBE_HOME=/opt/sonarqube \
@@ -95,7 +94,9 @@ ENV JAVA_HOME=/opt/java/openjdk \
     SQ_DATA_DIR="/opt/sonarqube/data" \
     SQ_EXTENSIONS_DIR="/opt/sonarqube/extensions" \
     SQ_LOGS_DIR="/opt/sonarqube/logs" \
-    SQ_TEMP_DIR="/opt/sonarqube/temp"
+    SQ_TEMP_DIR="/opt/sonarqube/temp" \
+    SONAR_CLUSTER_NODE_TYPE="search" \
+    SONAR_CLUSTER_ENABLED="true"
 
 RUN set -eux; \
     addgroup -S -g 1000 sonarqube; \
@@ -115,7 +116,7 @@ RUN set -eux; \
                             pgp.mit.edu) ; do \
         gpg --batch --keyserver "${server}" --recv-keys 679F1EE92B19609DE816FDE81DB198F93525EC1A && break || : ; \
     done; \
-    mkdir --parents /opt; \
+    mkdir --parents /opt ;\
     cd /opt; \
     curl --fail --location --output sonarqube.zip --silent --show-error "${SONARQUBE_ZIP_URL}"; \
     curl --fail --location --output sonarqube.zip.asc --silent --show-error "${SONARQUBE_ZIP_URL}.asc"; \
@@ -124,11 +125,11 @@ RUN set -eux; \
     mv "sonarqube-${SONARQUBE_VERSION}" sonarqube; \
     rm sonarqube.zip*; \
     rm -rf ${SONARQUBE_HOME}/bin/*; \
-    chown -R sonarqube:sonarqube ${SONARQUBE_HOME}; \
+    chown -R sonarqube:sonarqube ${SONARQUBE_HOME} ; \
     # this 777 will be replaced by 700 at runtime (allows semi-arbitrary "--user" values)
-    chmod -R 777 "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}"; \
+    chmod -R 777 "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}" ; \
     apk del --purge build-dependencies;
-    
+
 COPY --chown=sonarqube:sonarqube run.sh sonar.sh ${SONARQUBE_HOME}/bin/
 
 WORKDIR ${SONARQUBE_HOME}
