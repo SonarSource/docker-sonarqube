@@ -1,0 +1,57 @@
+version: "3"
+
+services:
+  sonarqube:
+    image: sonarqube:9-datacenter-app
+    depends_on:
+      - db
+      - search
+    deploy:
+      replicas: 1
+    cpus: 0.5
+    mem_limit: 4096M
+    mem_reservation: 1024M
+    ports: 
+      - ${PORT}:${PORT}
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+      SONAR_WEB_PORT: ${PORT}
+      SONAR_CLUSTER_SEARCH_HOSTS: "search"
+      SONAR_CLUSTER_HOSTS: "sonarqube"
+      SONAR_AUTH_JWTBASE64HS256SECRET: "dZ0EB0KxnF++nr5+4vfTCaun/eWbv6gOoXodiAMqcFo="
+    volumes:
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+  search:
+    image: sonarqube:9-datacenter-search
+    hostname: "search"
+    cpus: 0.5
+    mem_limit: 4096M
+    mem_reservation: 1024M
+    depends_on:
+      - db
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+      SONAR_CLUSTER_ES_HOSTS: "search"
+      SONAR_CLUSTER_NODE_NAME: "search"
+    volumes:
+      - search-data:/opt/sonarqube/data
+  db:
+    image: postgres:12
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+    volumes:
+      - postgresql:/var/lib/postgresql
+      - postgresql_data:/var/lib/postgresql/data
+
+volumes:
+  sonarqube_extensions:
+  sonarqube_logs:
+  search-data:
+  postgresql:
+  postgresql_data:
