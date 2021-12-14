@@ -42,7 +42,7 @@ Update Docker Hub's SonarQube images
 Update the SonarSource [fork](https://github.com/SonarSource/official-images) of the [official-images](https://github.com/docker-library/official-images) to ensure that the `sonarqube` library is the latest version.
 
 Create a feature branch on the company fork:
-* `GitCommit` must be updated to the HEAD of the master branch
+* `GitCommit` must be updated to this repository master branch's HEAD.
 * `Tags` and `Directory` must be added/updated appropriatly for each edition
 * see https://github.com/docker-library/official-images/pull/8837/files as an example
 
