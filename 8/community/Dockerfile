@@ -43,7 +43,7 @@ RUN set -eux; \
     rm -rf /tmp/*.apk /tmp/gcc /tmp/gcc-libs.tar* /tmp/libz /tmp/libz.tar.xz /var/cache/apk/*;
 
 #
-# AdoptOpenJDK/openjdk11 setup
+# Adoptium openjdk11 setup
 #
 RUN set -eux; \
     apk add --no-cache --virtual .fetch-deps curl; \
@@ -86,7 +86,7 @@ RUN set -eux; \
 #
 # SonarQube setup
 #
-ARG SONARQUBE_VERSION=8.9.6.50800
+ARG SONARQUBE_VERSION=8.9.7.50800
 ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-${SONARQUBE_VERSION}.zip
 ENV JAVA_HOME=/opt/java/openjdk \
     PATH="/opt/java/openjdk/bin:$PATH" \
