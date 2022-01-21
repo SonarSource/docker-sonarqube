@@ -72,10 +72,19 @@ jobs:
         run: docker build -t "sonarqube:${{ matrix.tag }}-app" "${{ matrix.version }}/app" && docker build -t "sonarqube:${{ matrix.tag }}-search" "${{ matrix.version }}/search"
       - name: Test image
         run: ./run-tests.sh "sonarqube:${{ matrix.tag }}-app" "docker-compose"
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy vulnerability scanner for App image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: "sonarqube:${{ matrix.tag }}"
+          image-ref: "sonarqube:${{ matrix.tag }}-app"
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os'
+          severity: 'CRITICAL,HIGH'
+      - name: Run Trivy vulnerability scanner for Search image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "sonarqube:${{ matrix.tag }}-search"
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
