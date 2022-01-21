@@ -52,7 +52,7 @@ jobs:
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
-          vuln-type: 'os,library'
+          vuln-type: 'os'
           severity: 'CRITICAL,HIGH'
 
   build_and_test_dce:
@@ -79,5 +79,5 @@ jobs:
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
-          vuln-type: 'os,library'
+          vuln-type: 'os'
           severity: 'CRITICAL,HIGH'
