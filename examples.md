@@ -21,8 +21,7 @@ $> docker run \
     -v sonarqube_data:/opt/sonarqube/data \
     -v sonarqube_extensions:/opt/sonarqube/extensions \
     -v sonarqube_logs:/opt/sonarqube/logs \
-    -v sonarqube_temp:/opt/sonarqube/temp \
-    --name="sonarqube" -p 9000:9000 sonarqube:8.2
+    --name="sonarqube" -p 9000:9000 sonarqube:community
 ```
 The above command starts SonarQube with an embedded database. We recommend starting the instance with a separate database
 by providing `SONAR_JDBC_URL`, `SONAR_JDBC_USERNAME` and `SONAR_JDBC_PASSWORD` like this:
@@ -31,18 +30,17 @@ $> docker run \
     -v sonarqube_data:/opt/sonarqube/data \
     -v sonarqube_extensions:/opt/sonarqube/extensions \
     -v sonarqube_logs:/opt/sonarqube/logs \
-    -v sonarqube_temp:/opt/sonarqube/temp \
     -e SONAR_JDBC_URL="..." \
     -e SONAR_JDBC_USERNAME="..." \
     -e SONAR_JDBC_PASSWORD="..." \
-    --name="sonarqube" -p 9000:9000 sonarqube:8.2
+    --name="sonarqube" -p 9000:9000 sonarqube:community
 ```
 
 ## Run SonarQube using Docker Compose
 ### Requirements
 
- * Docker Engine 1.10.1+
- * Docker Compose 1.6.0+
+ * Docker Engine 20.10+
+ * Docker Compose 2.0.0+
 
 ### SonarQube with Postgres:
 

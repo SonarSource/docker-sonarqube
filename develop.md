@@ -1,5 +1,10 @@
 Guidelines and documentation for developers of the SonarQube Docker images.
 
+could not find java in ES_JAVA_HOME
+===================================
+
+`could not find java in ES_JAVA_HOME at /usr/lib/jvm/java-11-openjdk/bin/java` is a known error message when the container runtime is too old to be aware of the `faccessat2` syscall.
+This issue is tracked with [SONAR-15167](https://jira.sonarsource.com/browse/SONAR-15167) including some worarounds if a update of the container runtime is not possible. 
 
 Adding images for a new version of SQ
 =====================================
