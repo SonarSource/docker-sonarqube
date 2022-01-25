@@ -1,24 +1,14 @@
-version: "2"
-
+version: "3"
 services:
   sonarqube:
-    image: sonarqube:8.2-community
-    ports:
-      - "9000:9000"
-    networks:
-      - sonarnet
+    image: sonarqube:community
     volumes:
       - sonarqube_data:/opt/sonarqube/data
       - sonarqube_extensions:/opt/sonarqube/extensions
       - sonarqube_logs:/opt/sonarqube/logs
-      - sonarqube_temp:/opt/sonarqube/temp
-
-networks:
-  sonarnet:
-    driver: bridge
-
+    ports:
+      - "9000:9000"
 volumes:
   sonarqube_data:
   sonarqube_extensions:
   sonarqube_logs:
-  sonarqube_temp:

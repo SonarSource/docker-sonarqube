@@ -2,7 +2,7 @@ version: "3"
 
 services:
   sonarqube:
-    image: sonarqube:8.7-datacenter-app
+    image: sonarqube:datacenter-app
     depends_on:
       - db
       - search-1
@@ -29,7 +29,7 @@ services:
       - sonarqube_extensions:/opt/sonarqube/extensions
       - sonarqube_logs:/opt/sonarqube/logs
   search-1:
-    image: sonarqube:8.7-datacenter-search
+    image: sonarqube:datacenter-search
     hostname: "search-1"
     cpus: 0.5
     mem_limit: 4096M
@@ -47,7 +47,7 @@ services:
     volumes:
       - search-data-1:/opt/sonarqube/data
   search-2:
-    image: sonarqube:8.7-datacenter-search
+    image: sonarqube:datacenter-search
     hostname: "search-2"
     cpus: 0.5
     mem_limit: 4096M
@@ -65,7 +65,7 @@ services:
     volumes:
       - search-data-2:/opt/sonarqube/data
   search-3:
-    image: sonarqube:8.7-datacenter-search
+    image: sonarqube:datacenter-search
     hostname: "search-3"
     cpus: 0.5
     mem_limit: 4096M
