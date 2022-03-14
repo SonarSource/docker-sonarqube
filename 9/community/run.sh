@@ -20,6 +20,11 @@ if [ "${1:0:1}" = '-' ]; then
 fi
 
 if [[ "$1" = '/opt/sonarqube/bin/sonar.sh' ]]; then
+    mkdir -p "${SQ_DATA_DIR}"
+    mkdir -p "${SQ_EXTENSIONS_DIR}"
+    mkdir -p "${SQ_LOGS_DIR}"
+    mkdir -p "${SQ_TEMP_DIR}"
+
     chown -R "$(id -u):$(id -g)" "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}" 2>/dev/null || :
     chmod -R 700 "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}" 2>/dev/null || :
 
