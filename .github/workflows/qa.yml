@@ -17,6 +17,13 @@ jobs:
       - uses: actions/checkout@v2
       - name: Run Public Image test
         run: ./run-public-image-tests.sh
+      - name: Notify failures on Slack
+        if: failure()
+        uses: Ilshidur/action-slack@2.0.0
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        with:
+          args: "Public Docker Image Build failed, see the logs at https://github.com/SonarSource/docker-sonarqube/actions"
 
   build_and_test:
     strategy:
@@ -54,6 +61,13 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os'
           severity: 'CRITICAL,HIGH'
+      - name: Notify failures on Slack
+        if: failure()
+        uses: Ilshidur/action-slack@2.0.0
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        with:
+          args: "Docker Image Build failed, see the logs at https://github.com/SonarSource/docker-sonarqube/actions"
 
   build_and_test_dce:
     strategy:
@@ -90,3 +104,10 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os'
           severity: 'CRITICAL,HIGH'
+      - name: Notify failures on Slack
+        if: failure()
+        uses: Ilshidur/action-slack@2.0.0
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        with:
+          args: "Docker DCE Image Build failed, see the logs at https://github.com/SonarSource/docker-sonarqube/actions"
