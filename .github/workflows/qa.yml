@@ -42,7 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build image
-        run: docker build -t "sonarqube:${{ matrix.tag }}" "${{ matrix.version }}"
+        run: docker build --no-cache -t "sonarqube:${{ matrix.tag }}" "${{ matrix.version }}"
       - name: Test image
         run: ./run-tests.sh "sonarqube:${{ matrix.tag }}" "docker"
       - name: Run Trivy vulnerability scanner
