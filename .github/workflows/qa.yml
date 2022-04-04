@@ -22,10 +22,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [7/community, 8/community, 8/developer, 8/enterprise, 9/community, 9/developer, 9/enterprise]
+        version: [8/community, 8/developer, 8/enterprise, 9/community, 9/developer, 9/enterprise]
         include:
-          - version: 7/community
-            tag: 7-community
           - version: 8/community
             tag: 8-community
           - version: 8/developer
