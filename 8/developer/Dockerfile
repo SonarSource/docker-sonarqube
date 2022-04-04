@@ -1,4 +1,4 @@
-FROM alpine:3.13.9
+FROM alpine:3.13
 
 ENV JAVA_VERSION="jdk-11.0.10+9" \
     LANG='en_US.UTF-8' \

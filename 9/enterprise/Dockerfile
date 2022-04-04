@@ -1,4 +1,4 @@
-FROM alpine:3.14.5
+FROM alpine:3.14
 
 ENV LANG='en_US.UTF-8' \
     LANGUAGE='en_US:en' \
