@@ -52,6 +52,26 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os'
           severity: 'CRITICAL,HIGH'
+      - name: Generate CycloneDX SBOM
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/docker/sbom-cli-plugin/v0.6.0/install.sh -o install.sh
+          md5sum -c <(echo "f4f928096f6e7ea099ad61b0879d221a  install.sh")
+          sh ./install.sh v0.6.0 && rm install.sh
+          docker sbom --quiet --format cyclonedx-json --output "${{ matrix.version }}/bom.json" "sonarqube:${{ matrix.tag }}"
+      - name: Sign CycloneDX SBOM
+        env:
+          GPG_PRIVATE_KEY_BASE64: ${{ secrets.GPG_PRIVATE_KEY_BASE64 }}
+          GPG_PRIVATE_KEY_PASSPHRASE: ${{ secrets.GPG_PRIVATE_KEY_PASSPHRASE }}
+        run: |
+          export GNUPGHOMEDIR=gnupg/
+          mkdir --parent "${GNUPGHOMEDIR}"
+          echo "${GPG_PRIVATE_KEY_PASSPHRASE}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --quiet --import <(echo "${GPG_PRIVATE_KEY_BASE64}")
+          echo "${GPG_PRIVATE_KEY_PASSPHRASE}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --quiet --detach-sign --armor "${{ matrix.version }}/bom.json"
+          rm -rf "${GNUPGHOMEDIR}"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "sonarqube-${{ matrix.tag }}-sbom"
+          path: "${{ matrix.version }}/bom.*"
 
   build_and_test_dce:
     strategy:
@@ -88,3 +108,25 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os'
           severity: 'CRITICAL,HIGH'
+      - name: Generate CycloneDX SBOM
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/docker/sbom-cli-plugin/v0.6.0/install.sh -o install.sh
+          md5sum -c <(echo "f4f928096f6e7ea099ad61b0879d221a  install.sh")
+          sh ./install.sh v0.6.0 && rm install.sh
+          docker sbom --quiet --format cyclonedx-json --output "${{ matrix.version }}/app/bom.json" "sonarqube:${{ matrix.tag }}-app"
+          docker sbom --quiet --format cyclonedx-json --output "${{ matrix.version }}/search/bom.json" "sonarqube:${{ matrix.tag }}-search"
+      - name: Sign CycloneDX SBOM
+        env:
+          GPG_PRIVATE_KEY_BASE64: ${{ secrets.GPG_PRIVATE_KEY_BASE64 }}
+          GPG_PRIVATE_KEY_PASSPHRASE: ${{ secrets.GPG_PRIVATE_KEY_PASSPHRASE }}
+        run: |
+          export GNUPGHOMEDIR=gnupg/
+          mkdir --parent "${GNUPGHOMEDIR}"
+          echo "${GPG_PRIVATE_KEY_PASSPHRASE}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --quiet --import <(echo "${GPG_PRIVATE_KEY_BASE64}")
+          echo "${GPG_PRIVATE_KEY_PASSPHRASE}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --quiet --detach-sign --armor "${{ matrix.version }}/app/bom.json"
+          echo "${GPG_PRIVATE_KEY_PASSPHRASE}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --quiet --detach-sign --armor "${{ matrix.version }}/search/bom.json"
+          rm -rf "${GNUPGHOMEDIR}"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "sonarqube-${{ matrix.tag }}-sbom"
+          path: "${{ matrix.version }}/*/bom.*"
