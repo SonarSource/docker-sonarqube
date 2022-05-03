@@ -5,6 +5,9 @@ on:
     types:
       - created
 
+env:
+  SYFT_INSTALLER_SHA256: a6dfabcd60ec8b09a8269d5efda8c797ad9657567cd723306f5cfc3fcb07b79b
+
 jobs:
   release:
     name: Upload Release Asset
@@ -26,10 +29,10 @@ jobs:
     steps:
       - name: Generate CycloneDX SBOM
         run: |
-          curl -sSfL https://raw.githubusercontent.com/docker/sbom-cli-plugin/v0.6.0/install.sh -o install.sh
-          md5sum -c <(echo "f4f928096f6e7ea099ad61b0879d221a  install.sh")
-          sh ./install.sh v0.6.0 && rm install.sh
-          docker-sbom --quiet --format cyclonedx-json --output "sonarqube-${{ matrix.tag }}-bom.json" "sonarqube:${{ matrix.tag }}"
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/v0.45.0/install.sh -o install.sh
+          echo "$SYFT_INSTALLER_SHA256  install.sh"|sha256sum -c
+          sh ./install.sh v0.45.0 && rm install.sh
+          ./bin/syft -o cyclonedx-json="sonarqube-${{ matrix.tag }}-bom.json" "docker:sonarqube:${{ matrix.tag }}"
       - name: Sign CycloneDX SBOM
         env:
           GPG_PRIVATE_KEY_BASE64: ${{ secrets.GPG_PRIVATE_KEY_BASE64 }}
@@ -44,8 +47,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: "sonarqube-${{ matrix.tag }}-sbom"
+          file_glob: true
           file: "sonarqube-${{ matrix.tag }}-bom.json*"
           tag: ${{ github.ref }}
           overwrite: true
-          file_glob: true

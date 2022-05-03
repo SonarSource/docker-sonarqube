@@ -8,6 +8,9 @@ on:
   schedule:
     - cron: '0 0 * * *'
 
+env:
+  SYFT_INSTALLER_SHA256: a6dfabcd60ec8b09a8269d5efda8c797ad9657567cd723306f5cfc3fcb07b79b
+
 jobs:
 
   public_image_build_and_test:
@@ -54,10 +57,10 @@ jobs:
           severity: 'CRITICAL,HIGH'
       - name: Generate CycloneDX SBOM
         run: |
-          curl -sSfL https://raw.githubusercontent.com/docker/sbom-cli-plugin/v0.6.0/install.sh -o install.sh
-          md5sum -c <(echo "f4f928096f6e7ea099ad61b0879d221a  install.sh")
-          sh ./install.sh v0.6.0 && rm install.sh
-          docker sbom --quiet --format cyclonedx-json --output "${{ matrix.version }}/bom.json" "sonarqube:${{ matrix.tag }}"
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/v0.45.0/install.sh -o install.sh
+          echo "$SYFT_INSTALLER_SHA256  install.sh"|sha256sum -c
+          sh ./install.sh v0.45.0 && rm install.sh
+          ./bin/syft -o cyclonedx-json="${{ matrix.version }}/bom.json" "docker:sonarqube:${{ matrix.tag }}"
       - name: Sign CycloneDX SBOM
         env:
           GPG_PRIVATE_KEY_BASE64: ${{ secrets.GPG_PRIVATE_KEY_BASE64 }}
@@ -110,11 +113,11 @@ jobs:
           severity: 'CRITICAL,HIGH'
       - name: Generate CycloneDX SBOM
         run: |
-          curl -sSfL https://raw.githubusercontent.com/docker/sbom-cli-plugin/v0.6.0/install.sh -o install.sh
-          md5sum -c <(echo "f4f928096f6e7ea099ad61b0879d221a  install.sh")
-          sh ./install.sh v0.6.0 && rm install.sh
-          docker sbom --quiet --format cyclonedx-json --output "${{ matrix.version }}/app/bom.json" "sonarqube:${{ matrix.tag }}-app"
-          docker sbom --quiet --format cyclonedx-json --output "${{ matrix.version }}/search/bom.json" "sonarqube:${{ matrix.tag }}-search"
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/v0.45.0/install.sh -o install.sh
+          echo "$SYFT_INSTALLER_SHA256  install.sh"|sha256sum -c
+          sh ./install.sh v0.45.0 && rm install.sh
+          ./bin/syft -o cyclonedx-json="${{ matrix.version }}/app/bom.json" "docker:sonarqube:${{ matrix.tag }}-app"
+          ./bin/syft -o cyclonedx-json="${{ matrix.version }}/search/bom.json" "docker:sonarqube:${{ matrix.tag }}-search"
       - name: Sign CycloneDX SBOM
         env:
           GPG_PRIVATE_KEY_BASE64: ${{ secrets.GPG_PRIVATE_KEY_BASE64 }}
