@@ -5,9 +5,6 @@ on:
     types:
       - created
 
-env:
-  SYFT_INSTALLER_SHA256: a6dfabcd60ec8b09a8269d5efda8c797ad9657567cd723306f5cfc3fcb07b79b
-
 jobs:
   release:
     name: Upload Release Asset
@@ -28,26 +25,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Generate CycloneDX SBOM
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/anchore/syft/v0.45.0/install.sh -o install.sh
-          echo "$SYFT_INSTALLER_SHA256  install.sh"|sha256sum -c
-          sh ./install.sh v0.45.0 && rm install.sh
-          ./bin/syft -o cyclonedx-json="sonarqube-${{ matrix.tag }}-bom.json" "docker:sonarqube:${{ matrix.tag }}"
-      - name: Sign CycloneDX SBOM
-        env:
-          GPG_PRIVATE_KEY_BASE64: ${{ secrets.GPG_PRIVATE_KEY_BASE64 }}
-          GPG_PRIVATE_KEY_PASSPHRASE: ${{ secrets.GPG_PRIVATE_KEY_PASSPHRASE }}
-        run: |
-          export GNUPGHOMEDIR=gnupg/
-          mkdir --parent "${GNUPGHOMEDIR}"
-          echo "${GPG_PRIVATE_KEY_PASSPHRASE}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --quiet --import <(echo "${GPG_PRIVATE_KEY_BASE64}")
-          echo "${GPG_PRIVATE_KEY_PASSPHRASE}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --quiet --detach-sign --armor "sonarqube-${{ matrix.tag }}-bom.json"
-          rm -rf "${GNUPGHOMEDIR}"
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@v2
+        uses: SonarSource/gh-action_sbom@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file_glob: true
-          file: "sonarqube-${{ matrix.tag }}-bom.json*"
-          tag: ${{ github.ref }}
-          overwrite: true
+          image: "sonarqube:${{ matrix.tag }}"
+          filename: "sonarqube-${{ matrix.tag }}-bom.json"
+          upload-artifact: true
+          upload-release-assets: true
+        env:
+          GPG_PRIVATE_KEY_PASSPHRASE: ${{ secrets.GPG_PRIVATE_KEY_PASSPHRASE }}
+          GPG_PRIVATE_KEY_BASE64: ${{ secrets.GPG_PRIVATE_KEY_BASE64 }}
