@@ -8,9 +8,6 @@ on:
   schedule:
     - cron: '0 0 * * *'
 
-env:
-  SYFT_INSTALLER_SHA256: a6dfabcd60ec8b09a8269d5efda8c797ad9657567cd723306f5cfc3fcb07b79b
-
 jobs:
 
   public_image_build_and_test:
@@ -56,26 +53,15 @@ jobs:
           vuln-type: 'os'
           severity: 'CRITICAL,HIGH'
       - name: Generate CycloneDX SBOM
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/anchore/syft/v0.45.0/install.sh -o install.sh
-          echo "$SYFT_INSTALLER_SHA256  install.sh"|sha256sum -c
-          sh ./install.sh v0.45.0 && rm install.sh
-          ./bin/syft -o cyclonedx-json="${{ matrix.version }}/bom.json" "docker:sonarqube:${{ matrix.tag }}"
-      - name: Sign CycloneDX SBOM
-        env:
-          GPG_PRIVATE_KEY_BASE64: ${{ secrets.GPG_PRIVATE_KEY_BASE64 }}
-          GPG_PRIVATE_KEY_PASSPHRASE: ${{ secrets.GPG_PRIVATE_KEY_PASSPHRASE }}
-        run: |
-          export GNUPGHOMEDIR=gnupg/
-          mkdir --parent "${GNUPGHOMEDIR}"
-          echo "${GPG_PRIVATE_KEY_PASSPHRASE}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --quiet --import <(echo "${GPG_PRIVATE_KEY_BASE64}")
-          echo "${GPG_PRIVATE_KEY_PASSPHRASE}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --quiet --detach-sign --armor "${{ matrix.version }}/bom.json"
-          rm -rf "${GNUPGHOMEDIR}"
-      - uses: actions/upload-artifact@v3
+        uses: SonarSource/gh-action_sbom@v1
         with:
-          name: "sonarqube-${{ matrix.tag }}-sbom"
-          path: "${{ matrix.version }}/bom.*"
-
+          image: "sonarqube:${{ matrix.tag }}"
+          filename: "sonarqube-${{ matrix.tag }}-bom.json"
+          upload-artifact: true
+          upload-release-assets: false
+        env:
+          GPG_PRIVATE_KEY_PASSPHRASE: ${{ secrets.GPG_PRIVATE_KEY_PASSPHRASE }}
+          GPG_PRIVATE_KEY_BASE64: ${{ secrets.GPG_PRIVATE_KEY_BASE64 }}
   build_and_test_dce:
     strategy:
       fail-fast: false
@@ -112,24 +98,22 @@ jobs:
           vuln-type: 'os'
           severity: 'CRITICAL,HIGH'
       - name: Generate CycloneDX SBOM
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/anchore/syft/v0.45.0/install.sh -o install.sh
-          echo "$SYFT_INSTALLER_SHA256  install.sh"|sha256sum -c
-          sh ./install.sh v0.45.0 && rm install.sh
-          ./bin/syft -o cyclonedx-json="${{ matrix.version }}/app/bom.json" "docker:sonarqube:${{ matrix.tag }}-app"
-          ./bin/syft -o cyclonedx-json="${{ matrix.version }}/search/bom.json" "docker:sonarqube:${{ matrix.tag }}-search"
-      - name: Sign CycloneDX SBOM
-        env:
-          GPG_PRIVATE_KEY_BASE64: ${{ secrets.GPG_PRIVATE_KEY_BASE64 }}
-          GPG_PRIVATE_KEY_PASSPHRASE: ${{ secrets.GPG_PRIVATE_KEY_PASSPHRASE }}
-        run: |
-          export GNUPGHOMEDIR=gnupg/
-          mkdir --parent "${GNUPGHOMEDIR}"
-          echo "${GPG_PRIVATE_KEY_PASSPHRASE}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --quiet --import <(echo "${GPG_PRIVATE_KEY_BASE64}")
-          echo "${GPG_PRIVATE_KEY_PASSPHRASE}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --quiet --detach-sign --armor "${{ matrix.version }}/app/bom.json"
-          echo "${GPG_PRIVATE_KEY_PASSPHRASE}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --quiet --detach-sign --armor "${{ matrix.version }}/search/bom.json"
-          rm -rf "${GNUPGHOMEDIR}"
-      - uses: actions/upload-artifact@v3
+        uses: SonarSource/gh-action_sbom@v1
         with:
-          name: "sonarqube-${{ matrix.tag }}-sbom"
-          path: "${{ matrix.version }}/*/bom.*"
+          image: "sonarqube:${{ matrix.tag }}-app"
+          filename: "sonarqube-${{ matrix.tag }}-app-bom.json"
+          upload-artifact: true
+          upload-release-assets: false
+        env:
+          GPG_PRIVATE_KEY_PASSPHRASE: ${{ secrets.GPG_PRIVATE_KEY_PASSPHRASE }}
+          GPG_PRIVATE_KEY_BASE64: ${{ secrets.GPG_PRIVATE_KEY_BASE64 }}
+      - name: Generate CycloneDX SBOM
+        uses: SonarSource/gh-action_sbom@v1
+        with:
+          image: "sonarqube:${{ matrix.tag }}-search"
+          filename: "sonarqube-${{ matrix.tag }}-search-bom.json"
+          upload-artifact: true
+          upload-release-assets: false
+        env:
+          GPG_PRIVATE_KEY_PASSPHRASE: ${{ secrets.GPG_PRIVATE_KEY_PASSPHRASE }}
+          GPG_PRIVATE_KEY_BASE64: ${{ secrets.GPG_PRIVATE_KEY_BASE64 }}
