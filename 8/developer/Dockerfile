@@ -1,4 +1,4 @@
-FROM alpine:3.12
+FROM alpine:3.13.10
 
 ENV JAVA_VERSION="jdk-11.0.10+9" \
     LANG='en_US.UTF-8' \
@@ -14,8 +14,8 @@ RUN set -eux; \
     ALPINE_GLIBC_REPO="https://github.com/sgerrand/alpine-pkg-glibc/releases/download"; \
     GCC_LIBS_URL="https://archive.archlinux.org/packages/g/gcc-libs/gcc-libs-10.2.0-6-x86_64.pkg.tar.zst"; \
     GCC_LIBS_SHA256="e33b45e4a10ef26259d6acf8e7b5dd6dc63800641e41eb67fa6588d061f79c1c"; \
-    ZLIB_URL="https://archive.archlinux.org/packages/z/zlib/zlib-1%3A1.2.11-4-x86_64.pkg.tar.xz"; \
-    ZLIB_SHA256=43a17987d348e0b395cb6e28d2ece65fb3b5a0fe433714762780d18c0451c149; \
+    ZLIB_URL="https://archive.archlinux.org/packages/z/zlib/zlib-1%3A1.2.12-1-x86_64.pkg.tar.zst"; \
+    ZLIB_SHA256=2b6d0f4ee6782993ef673aef2d71c3adbc6f7c31aad7b374a12fde43b8c333b0; \
     curl -LfsS https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub; \
     SGERRAND_RSA_SHA256="823b54589c93b02497f1ba4dc622eaef9c813e6b0f0ebbb2f771e32adf9f4ef2"; \
     echo "${SGERRAND_RSA_SHA256} */etc/apk/keys/sgerrand.rsa.pub" | sha256sum -c - ; \
@@ -34,13 +34,14 @@ RUN set -eux; \
     tar -xf /tmp/gcc-libs.tar -C /tmp/gcc; \
     mv /tmp/gcc/usr/lib/libgcc* /tmp/gcc/usr/lib/libstdc++* /usr/glibc-compat/lib; \
     strip /usr/glibc-compat/lib/libgcc_s.so.* /usr/glibc-compat/lib/libstdc++.so*; \
-    curl -LfsS ${ZLIB_URL} -o /tmp/libz.tar.xz; \
-    echo "${ZLIB_SHA256} */tmp/libz.tar.xz" | sha256sum -c - ;\
+    curl -LfsS ${ZLIB_URL} -o /tmp/libz.tar.zst; \
+    echo "${ZLIB_SHA256} */tmp/libz.tar.zst" | sha256sum -c - ;\
     mkdir /tmp/libz; \
-    tar -xf /tmp/libz.tar.xz -C /tmp/libz; \
+    zstd -d /tmp/libz.tar.zst --output-dir-flat /tmp; \
+    tar -xf /tmp/libz.tar -C /tmp/libz; \
     mv /tmp/libz/usr/lib/libz.so* /usr/glibc-compat/lib; \
     apk del --purge .build-deps glibc-i18n; \
-    rm -rf /tmp/*.apk /tmp/gcc /tmp/gcc-libs.tar* /tmp/libz /tmp/libz.tar.xz /var/cache/apk/*;
+    rm -rf /tmp/*.apk /tmp/gcc /tmp/gcc-libs.tar* /tmp/libz /tmp/libz.tar.zst /var/cache/apk/*;
 
 #
 # Adoptium openjdk11 setup
@@ -86,7 +87,7 @@ RUN set -eux; \
 #
 # SonarQube setup
 #
-ARG SONARQUBE_VERSION=8.9.6.50800
+ARG SONARQUBE_VERSION=8.9.8.54436
 ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/CommercialDistribution/sonarqube-developer/sonarqube-developer-${SONARQUBE_VERSION}.zip
 ENV JAVA_HOME=/opt/java/openjdk \
     PATH="/opt/java/openjdk/bin:$PATH" \
@@ -108,11 +109,8 @@ RUN set -eux; \
     # sub   2048R/06855C1D 2015-05-25
     echo "networkaddress.cache.ttl=5" >> "${JAVA_HOME}/conf/security/java.security"; \
     sed --in-place --expression="s?securerandom.source=file:/dev/random?securerandom.source=file:/dev/urandom?g" "${JAVA_HOME}/conf/security/java.security"; \
-    for server in $(shuf -e ha.pool.sks-keyservers.net \
-                            hkp://p80.pool.sks-keyservers.net:80 \
-                            keyserver.ubuntu.com \
-                            hkp://keyserver.ubuntu.com:80 \
-                            pgp.mit.edu) ; do \
+    for server in $(shuf -e hkps://keys.openpgp.org \
+                            hkps://keyserver.ubuntu.com) ; do \
         gpg --batch --keyserver "${server}" --recv-keys 679F1EE92B19609DE816FDE81DB198F93525EC1A && break || : ; \
     done; \
     mkdir --parents /opt; \

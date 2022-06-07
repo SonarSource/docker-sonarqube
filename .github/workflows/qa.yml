@@ -22,10 +22,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [7/community, 8/community, 8/developer, 8/enterprise, 9/community, 9/developer, 9/enterprise]
+        version: [8/community, 8/developer, 8/enterprise, 9/community, 9/developer, 9/enterprise]
         include:
-          - version: 7/community
-            tag: 7-community
           - version: 8/community
             tag: 8-community
           - version: 8/developer
@@ -54,7 +52,16 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os'
           severity: 'CRITICAL,HIGH'
-
+      - name: Generate CycloneDX SBOM
+        uses: SonarSource/gh-action_sbom@v1
+        with:
+          image: "sonarqube:${{ matrix.tag }}"
+          filename: "sonarqube-${{ matrix.tag }}-bom.json"
+          upload-artifact: true
+          upload-release-assets: false
+        env:
+          GPG_PRIVATE_KEY_PASSPHRASE: ${{ secrets.GPG_PRIVATE_KEY_PASSPHRASE }}
+          GPG_PRIVATE_KEY_BASE64: ${{ secrets.GPG_PRIVATE_KEY_BASE64 }}
   build_and_test_dce:
     strategy:
       fail-fast: false
@@ -90,3 +97,23 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os'
           severity: 'CRITICAL,HIGH'
+      - name: Generate CycloneDX SBOM
+        uses: SonarSource/gh-action_sbom@v1
+        with:
+          image: "sonarqube:${{ matrix.tag }}-app"
+          filename: "sonarqube-${{ matrix.tag }}-app-bom.json"
+          upload-artifact: true
+          upload-release-assets: false
+        env:
+          GPG_PRIVATE_KEY_PASSPHRASE: ${{ secrets.GPG_PRIVATE_KEY_PASSPHRASE }}
+          GPG_PRIVATE_KEY_BASE64: ${{ secrets.GPG_PRIVATE_KEY_BASE64 }}
+      - name: Generate CycloneDX SBOM
+        uses: SonarSource/gh-action_sbom@v1
+        with:
+          image: "sonarqube:${{ matrix.tag }}-search"
+          filename: "sonarqube-${{ matrix.tag }}-search-bom.json"
+          upload-artifact: true
+          upload-release-assets: false
+        env:
+          GPG_PRIVATE_KEY_PASSPHRASE: ${{ secrets.GPG_PRIVATE_KEY_PASSPHRASE }}
+          GPG_PRIVATE_KEY_BASE64: ${{ secrets.GPG_PRIVATE_KEY_BASE64 }}

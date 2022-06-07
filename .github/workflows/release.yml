@@ -1,0 +1,36 @@
+name: Release SBOM Assets
+
+on:
+  release:
+    types:
+      - created
+
+jobs:
+  release:
+    name: Upload Release Asset
+    strategy:
+      fail-fast: false
+      matrix:
+        tag:
+          - 8-community
+          - 8-developer
+          - 8-enterprise
+          - 8-datacenter-app
+          - 8-datacenter-search
+          - 9-community
+          - 9-developer
+          - 9-enterprise
+          - 9-datacenter-app
+          - 9-datacenter-search
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate CycloneDX SBOM
+        uses: SonarSource/gh-action_sbom@v1
+        with:
+          image: "sonarqube:${{ matrix.tag }}"
+          filename: "sonarqube-${{ matrix.tag }}-bom.json"
+          upload-artifact: true
+          upload-release-assets: true
+        env:
+          GPG_PRIVATE_KEY_PASSPHRASE: ${{ secrets.GPG_PRIVATE_KEY_PASSPHRASE }}
+          GPG_PRIVATE_KEY_BASE64: ${{ secrets.GPG_PRIVATE_KEY_BASE64 }}
