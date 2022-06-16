@@ -14,8 +14,7 @@ Release of a new version of the official SonarQube Docker images is made of seve
 Bump the version of SonarQube in Dockerfiles
 -----------------------------
 
-The version of SQ is hardcoded in each Dockerfile and must be updated in master branch.
-
+The version of SonarQube is hardcoded in each Dockerfile of this repository and must be updated in master branch.
 
 Update the docker hub SonarQube's documentation (if applicable)
 -------------------------------
