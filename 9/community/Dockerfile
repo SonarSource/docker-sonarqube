@@ -49,8 +49,12 @@ RUN set -eux; \
 
 COPY --chown=sonarqube:sonarqube run.sh sonar.sh ${SONARQUBE_HOME}/bin/
 
+RUN chmod 700 ${SONARQUBE_HOME}/bin/run.sh && chmod 700 ${SONARQUBE_HOME}/bin/sonar.sh
+
 WORKDIR ${SONARQUBE_HOME}
 EXPOSE 9000
+
+USER sonarqube:sonarqube
 
 STOPSIGNAL SIGINT
 
