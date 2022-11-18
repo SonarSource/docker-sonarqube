@@ -1,3 +1,12 @@
+env:
+  # see https://github.com/SonarSource/re-terraform-aws-vault/blob/master/orders/bubble-cfamily.yaml
+  CIRRUS_VAULT_URL: https://vault.sonar.build:8200
+  CIRRUS_VAULT_AUTH_PATH: jwt-cirrusci
+  CIRRUS_VAULT_ROLE: cirrusci-${CIRRUS_REPO_OWNER}-${CIRRUS_REPO_NAME}
+
+  DOCKER_USERNAME: VAULT[development/kv/data/docker/sonardockerrw data.username]
+  DOCKER_PASSWORD: VAULT[development/kv/data/docker/sonardockerrw data.access_token_rwd]
+
 docker_builder:
   arm_container: # use an arm64 container for running our image
     image: docker
