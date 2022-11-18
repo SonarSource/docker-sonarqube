@@ -2,7 +2,7 @@ version: "3"
 
 services:
   sonarqube:
-    image: sonarqube:9-datacenter-app
+    image: ${IMAGE}-app
     depends_on:
       - db
       - search
@@ -25,7 +25,7 @@ services:
       - sonarqube_extensions:/opt/sonarqube/extensions
       - sonarqube_logs:/opt/sonarqube/logs
   search:
-    image: sonarqube:9-datacenter-search
+    image: ${IMAGE}-search
     hostname: "search"
     cpus: 0.5
     mem_limit: 4096M
@@ -38,6 +38,7 @@ services:
       SONAR_JDBC_PASSWORD: sonar
       SONAR_CLUSTER_ES_HOSTS: "search"
       SONAR_CLUSTER_NODE_NAME: "search"
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
     volumes:
       - search-data:/opt/sonarqube/data
   db:

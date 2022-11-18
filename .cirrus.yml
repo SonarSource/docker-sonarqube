@@ -7,16 +7,51 @@ env:
   DOCKER_USERNAME: VAULT[development/kv/data/docker/sonardockerrw data.username]
   DOCKER_PASSWORD: VAULT[development/kv/data/docker/sonardockerrw data.access_token_rwd]
 
-docker_builder:
-  arm_container: # use an arm64 container for running our image
-    image: docker
+multi_arch_build_docker_builder: 
+  env:
+    matrix:
+      - version: 9/community
+        tag: 9-community
+      - version: 9/developer
+        tag: 9-developer
+      - version: 9/enterprise
+        tag: 9-enterprise
+      - version: 9/datacenter/app
+        tag: 9-datacenter-app
+      - version: 9/datacenter/search
+        tag: 9-datacenter-search
+  login_script:
+    - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
   setup_script:
+    - docker run -t --rm --privileged tonistiigi/binfmt --install all
     - docker buildx create --name multibuilder
     - docker buildx use multibuilder
     - docker buildx inspect --bootstrap
-  build_script: 
-    - echo "Build the community image supporting two architectures, amd64 and arm64"
-    - docker buildx build --platform linux/amd64,linux/arm64 --tag sonar/sonarqube:9.7.1-community ./9/community # Need to push this image to a private registry: can we use a repo in our artifactory for that? which one? how can we can login our build to it?
-  run_script:
-    - echo "Test the pull of an arm64-compatible image"
-    - docker pull carminevassallo567/sonarqube:9.7.1-community
+  build_script:
+    - echo "Build the ${tag} image supporting two architectures, amd64 and arm64"
+    - docker buildx build --platform linux/amd64,linux/arm64 --tag "sonarsource/sonarqube:${tag}" --push ${version}
+
+run_tests_docker_builder:
+  matrix:
+    - env:
+        CIRRUS_ARCH: arm64
+    - env:
+        CIRRUS_ARCH: amd64
+  env:
+    matrix:
+      - test_name: docker
+        tag: 9-community
+      - test_name: docker
+        tag: 9-developer
+      - test_name: docker
+        tag: 9-enterprise
+      - test_name: docker-compose
+        tag: 9-datacenter
+  login_script:
+    - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
+  test_script:
+    - sysctl -w vm.max_map_count=524288 # set the recommended memory for ES
+    - ./run-tests.sh "sonarsource/sonarqube:${tag}" "${test_name}"
+  depends_on: multi_arch_build
+
+
