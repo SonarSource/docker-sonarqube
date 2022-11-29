@@ -14,7 +14,7 @@ jobs:
     if: github.event_name == 'schedule' && github.repository == 'sonarsource/docker-sonarqube'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Run Public Image test
         run: ./run-public-image-tests.sh
 
@@ -38,7 +38,7 @@ jobs:
             tag: 9-enterprise
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Build image
         run: docker build --pull -t "sonarqube:${{ matrix.tag }}" "${{ matrix.version }}"
       - name: Test image
@@ -74,7 +74,7 @@ jobs:
             tag: 9-datacenter
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Build image
         run: docker build --pull -t "sonarqube:${{ matrix.tag }}-app" "${{ matrix.version }}/app" && docker build --pull -t "sonarqube:${{ matrix.tag }}-search" "${{ matrix.version }}/search"
       - name: Test image
