@@ -52,3 +52,18 @@ STOPSIGNAL SIGINT
 
 ENTRYPOINT ["/opt/java/openjdk/bin/java","-jar"]
 CMD ["lib/sonar-application-9.7.1.62043.jar","-Dsonar.log.console=true"]
+
+FROM eclipse-temurin:11-jre
+
+
+ENV SONARQUBE_HOME=/opt/sonarqube
+WORKDIR ${SONARQUBE_HOME}
+COPY --from=build ${SONARQUBE_HOME} ${SONARQUBE_HOME}
+
+EXPOSE 9000
+
+USER 1000
+STOPSIGNAL SIGINT
+
+ENTRYPOINT ["/opt/java/openjdk/bin/java","-jar"]
+CMD ["lib/sonar-application-9.7.1.62043.jar","-Dsonar.log.console=true"]
