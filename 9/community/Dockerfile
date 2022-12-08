@@ -1,4 +1,4 @@
-FROM eclipse-temurin:11-jre as build
+FROM ubuntu
 
 ENV LANG='en_US.UTF-8' \
     LANGUAGE='en_US:en' \
@@ -9,8 +9,7 @@ ENV LANG='en_US.UTF-8' \
 #
 ARG SONARQUBE_VERSION=9.7.1.62043
 ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-${SONARQUBE_VERSION}.zip
-ENV JAVA_HOME='/opt/java/openjdk' \
-    SONARQUBE_HOME=/opt/sonarqube \
+ENV SONARQUBE_HOME=/opt/sonarqube \
     SONAR_VERSION="${SONARQUBE_VERSION}" \
     SQ_DATA_DIR="/opt/sonarqube/data" \
     SQ_EXTENSIONS_DIR="/opt/sonarqube/extensions" \
@@ -21,7 +20,7 @@ RUN set -eux; \
     addgroup --gid 1000 sonarqube; \
     adduser --uid 1000 sonarqube --gid 1000; \
     apt-get update; \
-    apt-get install -y gnupg unzip curl bash fonts-dejavu; \
+    apt-get install --no-install-recommends -y gnupg unzip curl bash fonts-dejavu openjdk-11-jre; \
     # pub   2048R/D26468DE 2015-05-25
     #       Key fingerprint = F118 2E81 C792 9289 21DB  CAB4 CFCA 4A29 D264 68DE
     # uid                  sonarsource_deployer (Sonarsource Deployer) <infra@sonarsource.com>
@@ -50,20 +49,5 @@ EXPOSE 9000
 USER 1000
 STOPSIGNAL SIGINT
 
-ENTRYPOINT ["/opt/java/openjdk/bin/java","-jar"]
-CMD ["lib/sonar-application-9.7.1.62043.jar","-Dsonar.log.console=true"]
-
-FROM eclipse-temurin:11-jre
-
-
-ENV SONARQUBE_HOME=/opt/sonarqube
-WORKDIR ${SONARQUBE_HOME}
-COPY --from=build ${SONARQUBE_HOME} ${SONARQUBE_HOME}
-
-EXPOSE 9000
-
-USER 1000
-STOPSIGNAL SIGINT
-
-ENTRYPOINT ["/opt/java/openjdk/bin/java","-jar"]
+ENTRYPOINT ["java","-jar"]
 CMD ["lib/sonar-application-9.7.1.62043.jar","-Dsonar.log.console=true"]
