@@ -3,7 +3,7 @@ env:
   CIRRUS_VAULT_URL: https://vault.sonar.build:8200
   CIRRUS_VAULT_AUTH_PATH: jwt-cirrusci
   CIRRUS_VAULT_ROLE: cirrusci-${CIRRUS_REPO_OWNER}-${CIRRUS_REPO_NAME}
-
+  SUB_TAG: ubuntu
   DOCKER_USERNAME: VAULT[development/kv/data/docker/sonardockerrw data.username]
   DOCKER_PASSWORD: VAULT[development/kv/data/docker/sonardockerrw data.access_token_rwd]
 
@@ -12,14 +12,6 @@ multi_arch_build_docker_builder:
     matrix:
       - version: 9/community
         tag: 9-community
-      - version: 9/developer
-        tag: 9-developer
-      - version: 9/enterprise
-        tag: 9-enterprise
-      - version: 9/datacenter/app
-        tag: 9-datacenter-app
-      - version: 9/datacenter/search
-        tag: 9-datacenter-search
   login_script:
     - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
   setup_script:
@@ -29,7 +21,7 @@ multi_arch_build_docker_builder:
     - docker buildx inspect --bootstrap
   build_script:
     - echo "Build the ${tag} image supporting two architectures, amd64 and arm64"
-    - docker buildx build --platform linux/amd64,linux/arm64 --tag "sonarsource/sonarqube:${tag}" --push ${version}
+    - docker buildx build --platform linux/amd64,linux/arm64 --tag "sonarsource/sonarqube:${tag}-${SUB_TAG}" --push ${version}
 
 run_tests_docker_builder:
   matrix:
@@ -41,17 +33,11 @@ run_tests_docker_builder:
     matrix:
       - test_name: docker
         tag: 9-community
-      - test_name: docker
-        tag: 9-developer
-      - test_name: docker
-        tag: 9-enterprise
-      - test_name: docker-compose
-        tag: 9-datacenter
   login_script:
     - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
   test_script:
     - sysctl -w vm.max_map_count=524288 # set the recommended memory for ES
-    - ./run-tests.sh "sonarsource/sonarqube:${tag}" "${test_name}"
+    - ./run-tests.sh "sonarsource/sonarqube:${tag}-${SUB_TAG}" "${test_name}"
   depends_on: multi_arch_build
 
 
