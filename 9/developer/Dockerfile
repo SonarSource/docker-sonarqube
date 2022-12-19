@@ -7,9 +7,10 @@ ENV LANG='en_US.UTF-8' \
 #
 # SonarQube setup
 #
-ARG SONARQUBE_VERSION=9.7.0.61563
+ARG JAVA_VERSION=17
+ARG SONARQUBE_VERSION=9.8.0.63668
 ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/CommercialDistribution/sonarqube-developer/sonarqube-developer-${SONARQUBE_VERSION}.zip
-ENV JAVA_HOME='/usr/lib/jvm/java-11-openjdk' \
+ENV JAVA_HOME="/usr/lib/jvm/java-${JAVA_VERSION}-openjdk" \
     PATH="/opt/java/openjdk/bin:$PATH" \
     SONARQUBE_HOME=/opt/sonarqube \
     SONAR_VERSION="${SONARQUBE_VERSION}" \
@@ -22,7 +23,7 @@ RUN set -eux; \
     addgroup -S -g 1000 sonarqube; \
     adduser -S -D -u 1000 -G sonarqube sonarqube; \
     apk add --no-cache --virtual build-dependencies gnupg unzip curl; \
-    apk add --no-cache bash su-exec ttf-dejavu openjdk11-jre; \
+    apk add --no-cache bash su-exec ttf-dejavu "openjdk${JAVA_VERSION}-jre"; \
     # pub   2048R/D26468DE 2015-05-25
     #       Key fingerprint = F118 2E81 C792 9289 21DB  CAB4 CFCA 4A29 D264 68DE
     # uid                  sonarsource_deployer (Sonarsource Deployer) <infra@sonarsource.com>

@@ -17,7 +17,7 @@ services:
     ports:
       - "9000:9000"
   db:
-    image: postgres:12
+    image: postgres:13
     hostname: postgresql
     container_name: postgresql
     environment:

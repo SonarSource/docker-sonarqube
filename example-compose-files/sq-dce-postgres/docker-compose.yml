@@ -83,7 +83,7 @@ services:
     volumes:
       - search-data-3:/opt/sonarqube/data
   db:
-    image: postgres:12
+    image: postgres:13
     networks:
       - sonar-network
     environment:
