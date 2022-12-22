@@ -12,12 +12,12 @@ services:
     mem_limit: 4096M
     mem_reservation: 1024M
     ports: 
-      - ${PORT}:${PORT}
+      - 9000:9000
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
-      SONAR_WEB_PORT: ${PORT}
+      SONAR_WEB_PORT: 9000
       SONAR_CLUSTER_SEARCH_HOSTS: "search"
       SONAR_CLUSTER_HOSTS: "sonarqube"
       SONAR_AUTH_JWTBASE64HS256SECRET: "dZ0EB0KxnF++nr5+4vfTCaun/eWbv6gOoXodiAMqcFo="
