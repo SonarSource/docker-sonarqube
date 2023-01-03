@@ -66,7 +66,7 @@ wait_for_sonarqube() {
 }
 
 wait_for_sonarqube_dce() {
-    local image=$1 i web_up=no sonarqube_up=no
+    local image=$1-app i web_up=no sonarqube_up=no
 
     for ((i = 0; i < 80; i++)); do
         info "$image: waiting for web server to start ..."
@@ -119,18 +119,19 @@ sanity_check_image() {
         fi
         cd $_test_compose_path
         export PORT=$port
-        docker-compose up -d --scale sonarqube=0
+        export IMAGE=$1
+        docker-compose up -d db search
         sleep 60
-        docker-compose up -d --scale sonarqube=1
+        docker-compose up -d sonarqube
         if wait_for_sonarqube_dce "$image"; then
-            info "$image: OK !"
+            info "$image-app: OK !"
             result=ok
         else
-            warn "$image: could not confirm service started"
+            warn "$image-app: could not confirm service started"
             result=failure
         fi
 
-        info "$image: stopping container stack"
+        info "$image-app: stopping container stack"
         docker-compose stop
 
         [[ $result == ok ]]

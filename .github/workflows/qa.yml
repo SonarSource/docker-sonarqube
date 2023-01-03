@@ -90,7 +90,7 @@ jobs:
       - name: Build image
         run: docker build --pull -t "sonarqube:${{ matrix.tag }}-app" "${{ matrix.version }}/app" && docker build --pull -t "sonarqube:${{ matrix.tag }}-search" "${{ matrix.version }}/search"
       - name: Test image
-        run: ./run-tests.sh "sonarqube:${{ matrix.tag }}-app" "docker-compose"
+        run: ./run-tests.sh "sonarqube:${{ matrix.tag }}" "docker-compose"
       - name: Run Trivy vulnerability scanner for App image
         uses: aquasecurity/trivy-action@master
         with:
