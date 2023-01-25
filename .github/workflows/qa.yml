@@ -22,14 +22,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [8/community, 8/developer, 8/enterprise, 9/community, 9/developer, 9/enterprise]
+        version: [9/community, 9/developer, 9/enterprise]
         include:
-          - version: 8/community
-            tag: 8-community
-          - version: 8/developer
-            tag: 8-developer
-          - version: 8/enterprise
-            tag: 8-enterprise
           - version: 9/community
             tag: 9-community
           - version: 9/developer
@@ -75,10 +69,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [8/datacenter, 9/datacenter]
+        version: [9/datacenter]
         include:
-          - version: 8/datacenter
-            tag: 8-datacenter
           - version: 9/datacenter
             tag: 9-datacenter
     runs-on: ubuntu-latest

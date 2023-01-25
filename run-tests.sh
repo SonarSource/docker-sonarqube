@@ -112,9 +112,7 @@ sanity_check_image() {
 
         [[ $result == ok ]]
     elif [ $2 == docker-compose ]; then
-        if [[ $1 =~ "8" ]]; then
-            _test_compose_path="tests/8/dce-compose-test"
-        elif [[ $1 =~ "9" ]]; then
+        if [[ $1 =~ "9" ]]; then
             _test_compose_path="tests/9/dce-compose-test"
         fi
         cd $_test_compose_path
