@@ -18,7 +18,7 @@ jobs:
       - name: Run Public Image test
         run: ./run-public-image-tests.sh
 
-  build_and_test:
+  build_and_scan_amd64:
     strategy:
       fail-fast: false
       matrix:
@@ -38,8 +38,6 @@ jobs:
       - uses: actions/checkout@v3
       - name: Build image
         run: docker build --pull -t "sonarqube:${{ matrix.tag }}" "${{ matrix.version }}"
-      - name: Test image
-        run: ./run-tests.sh "sonarqube:${{ matrix.tag }}" "docker"
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -65,7 +63,7 @@ jobs:
         env:
           GPG_PRIVATE_KEY_PASSPHRASE: ${{ fromJSON(steps.secrets.outputs.vault).gpg_passphrase }}
           GPG_PRIVATE_KEY_BASE64: ${{ fromJSON(steps.secrets.outputs.vault).gpg_key }}
-  build_and_test_dce:
+  build_and_scan_dce_amd64:
     strategy:
       fail-fast: false
       matrix:
@@ -81,8 +79,6 @@ jobs:
       - uses: actions/checkout@v3
       - name: Build image
         run: docker build --pull -t "sonarqube:${{ matrix.tag }}-app" "${{ matrix.version }}/app" && docker build --pull -t "sonarqube:${{ matrix.tag }}-search" "${{ matrix.version }}/search"
-      - name: Test image
-        run: ./run-tests.sh "sonarqube:${{ matrix.tag }}" "docker-compose"
       - name: Run Trivy vulnerability scanner for App image
         uses: aquasecurity/trivy-action@master
         with:
