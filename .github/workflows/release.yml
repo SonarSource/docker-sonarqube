@@ -12,11 +12,6 @@ jobs:
       fail-fast: false
       matrix:
         tag:
-          - 8-community
-          - 8-developer
-          - 8-enterprise
-          - 8-datacenter-app
-          - 8-datacenter-search
           - 9-community
           - 9-developer
           - 9-enterprise
