@@ -18,9 +18,8 @@ ENV JAVA_HOME='/opt/java/openjdk' \
     SQ_TEMP_DIR="/opt/sonarqube/temp"
 
 RUN set -eux; \
-    adduser --system --uid 1000 sonarqube; \
-    addgroup --system --gid 1000 sonarqube; \
-    adduser sonarqube sonarqube; \
+    groupadd --system --gid 1000 sonarqube; \
+    useradd --system --uid 1000 --gid sonarqube sonarqube; \
     apt-get update; \
     apt-get install -y gnupg unzip curl bash fonts-dejavu; \
     echo "networkaddress.cache.ttl=5" >> "${JAVA_HOME}/conf/security/java.security"; \
@@ -47,7 +46,10 @@ RUN set -eux; \
     chmod -R ugo+wrX "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}"; \
     apt-get remove -y gnupg unzip curl; \
 	cd "${SONARQUBE_HOME}/elasticsearch/bin" ; \
-	sed -i -e 's/\r$//' elasticsearch elasticsearch-env elasticsearch-env-from-file ;
+	sed -i -e 's/\r$//' elasticsearch elasticsearch-env elasticsearch-env-from-file ; \
+    rm -rf /var/lib/apt/lists/*;
+
+COPY entrypoint.sh ${SONARQUBE_HOME}/docker/
 
 WORKDIR ${SONARQUBE_HOME}
 EXPOSE 9000
@@ -55,4 +57,4 @@ EXPOSE 9000
 USER sonarqube
 STOPSIGNAL SIGINT
 
-ENTRYPOINT ["/opt/java/openjdk/bin/java","-jar","lib/sonarqube.jar","-Dsonar.log.console=true"]
+ENTRYPOINT ["/opt/sonarqube/docker/entrypoint.sh"]
