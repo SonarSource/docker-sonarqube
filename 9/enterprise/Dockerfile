@@ -45,8 +45,6 @@ RUN set -eux; \
     chmod -R 555 ${SONARQUBE_HOME}; \
     chmod -R ugo+wrX "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}"; \
     apt-get remove -y gnupg unzip curl; \
-	cd "${SONARQUBE_HOME}/elasticsearch/bin" ; \
-	sed -i -e 's/\r$//' elasticsearch elasticsearch-env elasticsearch-env-from-file ; \
     rm -rf /var/lib/apt/lists/*;
 
 COPY entrypoint.sh ${SONARQUBE_HOME}/docker/
