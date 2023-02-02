@@ -2,21 +2,7 @@ name: QA
 
 on:
   push:
-    branches:
-      - master
-  pull_request:
-  schedule:
-    - cron: '0 0 * * *'
-
 jobs:
-
-  public_image_build_and_test:
-    if: github.event_name == 'schedule' && github.repository == 'sonarsource/docker-sonarqube'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Run Public Image test
-        run: ./run-public-image-tests.sh
 
   build_and_scan_amd64:
     strategy:
@@ -38,88 +24,22 @@ jobs:
       - uses: actions/checkout@v3
       - name: Build image
         run: docker build --pull -t "sonarqube:${{ matrix.tag }}" "${{ matrix.version }}"
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+      - uses: actions/setup-java@v3
+        name: install JDK
         with:
-          image-ref: "sonarqube:${{ matrix.tag }}"
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: 'os'
-          severity: 'CRITICAL,HIGH'
+          distribution: 'temurin'
+          java-version: '17'
+      - name: grab mend jar
+        run: curl https://unified-agent.s3.amazonaws.com/wss-unified-agent.jar --output wss.jar
       - id: secrets
         uses: SonarSource/vault-action-wrapper@2.4.3-1
         with:
           secrets: |
-            development/kv/data/sign key | gpg_key;
-            development/kv/data/sign passphrase | gpg_passphrase;
-      - name: Generate CycloneDX SBOM
-        uses: SonarSource/gh-action_sbom@v1
-        with:
-          image: "sonarqube:${{ matrix.tag }}"
-          filename: "sonarqube-${{ matrix.tag }}-bom.json"
-          upload-artifact: true
-          upload-release-assets: false
+            development/kv/data/mend apikey | mend_api_key;
+      - name: run wss
+        run: java -jar wss.jar -docker.scanImages true
         env:
-          GPG_PRIVATE_KEY_PASSPHRASE: ${{ fromJSON(steps.secrets.outputs.vault).gpg_passphrase }}
-          GPG_PRIVATE_KEY_BASE64: ${{ fromJSON(steps.secrets.outputs.vault).gpg_key }}
-  build_and_scan_dce_amd64:
-    strategy:
-      fail-fast: false
-      matrix:
-        version: [9/datacenter]
-        include:
-          - version: 9/datacenter
-            tag: 9-datacenter
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v3
-      - name: Build image
-        run: docker build --pull -t "sonarqube:${{ matrix.tag }}-app" "${{ matrix.version }}/app" && docker build --pull -t "sonarqube:${{ matrix.tag }}-search" "${{ matrix.version }}/search"
-      - name: Run Trivy vulnerability scanner for App image
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: "sonarqube:${{ matrix.tag }}-app"
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: 'os'
-          severity: 'CRITICAL,HIGH'
-      - name: Run Trivy vulnerability scanner for Search image
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: "sonarqube:${{ matrix.tag }}-search"
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: 'os'
-          severity: 'CRITICAL,HIGH'
-      - id: secrets
-        uses: SonarSource/vault-action-wrapper@2.4.3-1
-        with:
-          secrets: |
-            development/kv/data/sign key | gpg_key;
-            development/kv/data/sign passphrase | gpg_passphrase;
-      - name: Generate CycloneDX SBOM
-        uses: SonarSource/gh-action_sbom@v1
-        with:
-          image: "sonarqube:${{ matrix.tag }}-app"
-          filename: "sonarqube-${{ matrix.tag }}-app-bom.json"
-          upload-artifact: true
-          upload-release-assets: false
-        env:
-          GPG_PRIVATE_KEY_PASSPHRASE: ${{ fromJSON(steps.secrets.outputs.vault).gpg_passphrase }}
-          GPG_PRIVATE_KEY_BASE64: ${{ fromJSON(steps.secrets.outputs.vault).gpg_key }}
-      - name: Generate CycloneDX SBOM
-        uses: SonarSource/gh-action_sbom@v1
-        with:
-          image: "sonarqube:${{ matrix.tag }}-search"
-          filename: "sonarqube-${{ matrix.tag }}-search-bom.json"
-          upload-artifact: true
-          upload-release-assets: false
-        env:
-          GPG_PRIVATE_KEY_PASSPHRASE: ${{ fromJSON(steps.secrets.outputs.vault).gpg_passphrase }}
-          GPG_PRIVATE_KEY_BASE64: ${{ fromJSON(steps.secrets.outputs.vault).gpg_key }}
+          WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
+          WS_APIKEY: ${{ fromJSON(steps.secrets.outputs.vault).mend_api_key }}
+          WS_PRODUCTNAME: SonarSource/docker-sonarqube
+      
