@@ -20,9 +20,8 @@ ENV JAVA_HOME='/opt/java/openjdk' \
     SONAR_CLUSTER_ENABLED="true"
 
 RUN set -eux; \
-    adduser --system --uid 1000 sonarqube; \
-    addgroup --system --gid 1000 sonarqube; \
-    adduser sonarqube sonarqube; \
+    groupadd --system --gid 1000 sonarqube; \
+    useradd --system --uid 1000 --gid sonarqube sonarqube; \
     apt-get update; \
     apt-get install -y gnupg unzip curl bash fonts-dejavu iproute2; \
     echo "networkaddress.cache.ttl=5" >> "${JAVA_HOME}/conf/security/java.security"; \
@@ -47,9 +46,10 @@ RUN set -eux; \
     ln -s "${SONARQUBE_HOME}/lib/sonar-application-${SONARQUBE_VERSION}.jar" "${SONARQUBE_HOME}/lib/sonarqube.jar"; \
     chmod -R 555 ${SONARQUBE_HOME}; \
     chmod -R ugo+wrX "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}"; \
-    apt-get remove -y gnupg unzip curl;
+    apt-get remove -y gnupg unzip curl; \
+    rm -rf /var/lib/apt/lists/*;
 
-COPY run.sh sonar.sh ${SONARQUBE_HOME}/bin/
+COPY run.sh sonar.sh ${SONARQUBE_HOME}/docker/
 
 WORKDIR ${SONARQUBE_HOME}
 EXPOSE 9000
@@ -57,5 +57,5 @@ EXPOSE 9000
 USER sonarqube
 STOPSIGNAL SIGINT
 
-ENTRYPOINT ["/opt/sonarqube/bin/run.sh"]
-CMD ["/opt/sonarqube/bin/sonar.sh"]
+ENTRYPOINT ["/opt/sonarqube/docker/run.sh"]
+CMD ["/opt/sonarqube/docker/sonar.sh"]
