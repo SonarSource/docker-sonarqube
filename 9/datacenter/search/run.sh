@@ -25,25 +25,10 @@ fi
 if [[ "$1" = '/opt/sonarqube/bin/sonar.sh' ]]; then
 
     #
-    # Change log path to ensure every search node can write in their own directory
-    # This resolves a cluttered log on docker-compose with scale > 1
-    #
-    if [ -z "${SONAR_PATH_LOGS:-}" ]
-    then
-        SONAR_CLUSTER_PATH_LOGS="logs/${HOSTNAME}"
-        mkdir -p ${SONARQUBE_HOME}/${SONAR_CLUSTER_PATH_LOGS}
-    else
-        SONAR_CLUSTER_PATH_LOGS="${SONAR_PATH_LOGS}/${HOSTNAME}"
-        mkdir -p ${SONAR_CLUSTER_PATH_LOGS}
-    fi
-
-    #
     # Set mandatory properties
     #
     set_prop "sonar.cluster.node.search.host" "${IP:-}"
     set_prop "sonar.cluster.node.es.host" "${IP:-}"
-    set_prop "sonar.cluster.node.host" "${IP:-}"
-    set_prop "sonar.path.logs" "${SONAR_CLUSTER_PATH_LOGS:-}"
 
     if [ ${#sq_opts[@]} -ne 0 ]; then
         set -- "$@" "${sq_opts[@]}"
