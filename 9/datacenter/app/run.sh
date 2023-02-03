@@ -14,15 +14,15 @@ set_prop() {
 
 # if nothing is passed, assume we want to run sonarqube server
 if [ "$#" == 0 ]; then
-  set -- /opt/sonarqube/bin/sonar.sh
+  set -- /opt/sonarqube/docker/sonar.sh
 fi
 
 # if first arg looks like a flag, assume we want to run sonarqube server with flags
 if [ "${1:0:1}" = '-' ]; then
-    set -- /opt/sonarqube/bin/sonar.sh "$@"
+    set -- /opt/sonarqube/docker/sonar.sh "$@"
 fi
 
-if [[ "$1" = '/opt/sonarqube/bin/sonar.sh' ]]; then
+if [[ "$1" = '/opt/sonarqube/docker/sonar.sh' ]]; then
 
     #
     # Change log path to ensure every app node can write in their own directory
