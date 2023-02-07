@@ -19,7 +19,7 @@ jobs:
           - 9-datacenter-search
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write
     steps:
       - id: secrets
