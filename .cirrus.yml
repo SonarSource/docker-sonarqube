@@ -7,7 +7,19 @@ env:
   DOCKER_USERNAME: VAULT[development/kv/data/docker/sonardockerrw data.username]
   DOCKER_PASSWORD: VAULT[development/kv/data/docker/sonardockerrw data.access_token_rwd]
 
-multi_arch_build_docker_builder: 
+
+vm_instance_template: &VM_TEMPLATE
+  experimental: true # see https://github.com/cirruslabs/cirrus-ci-docs/issues/1051
+  image: docker-builder-v*
+  type: t2.small
+  region: eu-central-1
+  subnet_id: ${CIRRUS_AWS_SUBNET}
+  disk: 10
+  cpu: 4
+  memory: 16G
+
+
+multi_arch_build_task: 
   env:
     matrix:
       - version: 9/community
@@ -20,6 +32,8 @@ multi_arch_build_docker_builder:
         tag: 9-datacenter-app
       - version: 9/datacenter/search
         tag: 9-datacenter-search
+  ec2_instance:
+    <<: *VM_TEMPLATE
   login_script:
     - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
   setup_script:
@@ -30,6 +44,34 @@ multi_arch_build_docker_builder:
   build_script:
     - echo "Build the ${tag} image supporting two architectures, amd64 and arm64"
     - docker buildx build --platform linux/amd64,linux/arm64 --tag "sonarsource/sonarqube:${tag}" --push ${version}
+
+multi_arch_scan_task: 
+  matrix:
+    - env:
+        platform: arm64
+    - env:
+        platform: amd64
+  env:
+    MEND_API_KEY: VAULT[development/kv/data/mend data.apikey]
+    WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
+    WS_PRODUCTNAME: SonarSource/docker-sonarqube
+    matrix:
+      - tag: 9-enterprise
+      - tag: 9-datacenter-app
+  ec2_instance:
+    <<: *VM_TEMPLATE
+  login_script:
+    - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
+  setup_script:
+    - apt-get update && apt-get install -y --no-install-recommends openjdk-17-jre-headless
+    - curl -sSL https://unified-agent.s3.amazonaws.com/wss-unified-agent.jar -o wss-unified-agent.jar
+    - echo "docker.includes=${tag}-${platform}" >> .cirrus/wss-unified-agent.config
+  scan_script:
+    - echo "Scan the ${tag} image supporting two architectures, amd64 and arm64"
+    - docker pull --platform linux/${platform} "sonarsource/sonarqube:${tag}"
+    - docker tag "sonarsource/sonarqube:${tag}" "sonarsource/sonarqube:${tag}-${platform}"
+    - java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project sonarqube:${tag}-${platform} -wss.url ${WS_WSS_URL} -docker.scanImages true
+  depends_on: multi_arch_build
 
 multi_arch_test_docker_builder:
   matrix:
@@ -53,5 +95,3 @@ multi_arch_test_docker_builder:
     - sysctl -w vm.max_map_count=524288 # set the recommended memory for ES
     - ./run-tests.sh "sonarsource/sonarqube:${tag}" "${test_name}"
   depends_on: multi_arch_build
-
-

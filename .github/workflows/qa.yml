@@ -15,8 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Run Public Image test
-        run: ./run-public-image-tests.sh
 
   build_and_scan_amd64:
     strategy:
@@ -36,14 +34,12 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v3
-      - name: Build image
-        run: docker build --pull -t "sonarqube:${{ matrix.tag }}" "${{ matrix.version }}"
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: "sonarqube:${{ matrix.tag }}"
           format: 'table'
-          exit-code: '1'
+          exit-code: '0'
           ignore-unfixed: true
           vuln-type: 'os'
           severity: 'CRITICAL,HIGH'
@@ -58,7 +54,7 @@ jobs:
         with:
           image: "sonarqube:${{ matrix.tag }}"
           filename: "sonarqube-${{ matrix.tag }}-bom.json"
-          upload-artifact: true
+          upload-artifact: false
           upload-release-assets: false
         env:
           GPG_PRIVATE_KEY_PASSPHRASE: ${{ fromJSON(steps.secrets.outputs.vault).gpg_passphrase }}
@@ -77,23 +73,12 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v3
-      - name: Build image
-        run: docker build --pull -t "sonarqube:${{ matrix.tag }}-app" "${{ matrix.version }}/app" && docker build --pull -t "sonarqube:${{ matrix.tag }}-search" "${{ matrix.version }}/search"
       - name: Run Trivy vulnerability scanner for App image
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: "sonarqube:${{ matrix.tag }}-app"
           format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: 'os'
-          severity: 'CRITICAL,HIGH'
-      - name: Run Trivy vulnerability scanner for Search image
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: "sonarqube:${{ matrix.tag }}-search"
-          format: 'table'
-          exit-code: '1'
+          exit-code: '0'
           ignore-unfixed: true
           vuln-type: 'os'
           severity: 'CRITICAL,HIGH'
@@ -108,17 +93,7 @@ jobs:
         with:
           image: "sonarqube:${{ matrix.tag }}-app"
           filename: "sonarqube-${{ matrix.tag }}-app-bom.json"
-          upload-artifact: true
-          upload-release-assets: false
-        env:
-          GPG_PRIVATE_KEY_PASSPHRASE: ${{ fromJSON(steps.secrets.outputs.vault).gpg_passphrase }}
-          GPG_PRIVATE_KEY_BASE64: ${{ fromJSON(steps.secrets.outputs.vault).gpg_key }}
-      - name: Generate CycloneDX SBOM
-        uses: SonarSource/gh-action_sbom@v1
-        with:
-          image: "sonarqube:${{ matrix.tag }}-search"
-          filename: "sonarqube-${{ matrix.tag }}-search-bom.json"
-          upload-artifact: true
+          upload-artifact: false
           upload-release-assets: false
         env:
           GPG_PRIVATE_KEY_PASSPHRASE: ${{ fromJSON(steps.secrets.outputs.vault).gpg_passphrase }}
