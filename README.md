@@ -1,4 +1,4 @@
-# About this Repo [![QA](https://github.com/SonarSource/docker-sonarqube/actions/workflows/qa.yml/badge.svg)](https://github.com/SonarSource/docker-sonarqube/actions/workflows/qa.yml)
+# About this Repo [![Build Status](https://api.cirrus-ci.com/github/SonarSource/docker-sonarqube.svg)](https://cirrus-ci.com/github/SonarSource/docker-sonarqube)
 
 This is the Git repo of the official Docker image for [SonarQube](https://registry.hub.docker.com/_/sonarqube/). See the Hub page for the full readme on how to use the Docker image and for information regarding contributing and issues.
 

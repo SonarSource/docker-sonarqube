@@ -7,6 +7,8 @@ env:
   DOCKER_USERNAME: VAULT[development/kv/data/docker/sonardockerrw data.username]
   DOCKER_PASSWORD: VAULT[development/kv/data/docker/sonardockerrw data.access_token_rwd]
 
+  STAGING_IMAGE_NAME: sonarsource/sonarqube
+
 
 vm_instance_template: &VM_TEMPLATE
   experimental: true # see https://github.com/cirruslabs/cirrus-ci-docs/issues/1051
@@ -42,8 +44,8 @@ multi_arch_build_task:
     - docker buildx use multibuilder
     - docker buildx inspect --bootstrap
   build_script:
-    - echo "Build the ${tag} image supporting two architectures, amd64 and arm64"
-    - docker buildx build --platform linux/amd64,linux/arm64 --tag "sonarsource/sonarqube:${tag}" --push ${version}
+    - echo "Build the ${STAGING_IMAGE_NAME}:${tag} image supporting two architectures, linux/amd64 and linux/arm64"
+    - docker buildx build --platform linux/amd64,linux/arm64 --tag "${STAGING_IMAGE_NAME}:${tag}" --push ${version}
 
 multi_arch_scan_task: 
   matrix:
@@ -67,10 +69,10 @@ multi_arch_scan_task:
     - curl -sSL https://unified-agent.s3.amazonaws.com/wss-unified-agent.jar -o wss-unified-agent.jar
     - echo "docker.includes=${tag}-${platform}" >> .cirrus/wss-unified-agent.config
   scan_script:
-    - echo "Scan the ${tag} image supporting two architectures, amd64 and arm64"
-    - docker pull --platform linux/${platform} "sonarsource/sonarqube:${tag}"
-    - docker tag "sonarsource/sonarqube:${tag}" "sonarsource/sonarqube:${tag}-${platform}"
-    - java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project sonarqube:${tag}-${platform} -wss.url ${WS_WSS_URL} -docker.scanImages true
+    - echo "Scan the ${STAGING_IMAGE_NAME}:${tag} image supporting linux/${platform}"
+    - docker pull --platform linux/${platform} "${STAGING_IMAGE_NAME}:${tag}"
+    - docker tag "${STAGING_IMAGE_NAME}:${tag}" "${STAGING_IMAGE_NAME}:${tag}-${platform}"
+    - java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${STAGING_IMAGE_NAME}:${tag}-${platform} -wss.url ${WS_WSS_URL} -docker.scanImages true
   depends_on: multi_arch_build
 
 multi_arch_test_docker_builder:
@@ -92,6 +94,7 @@ multi_arch_test_docker_builder:
   login_script:
     - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
   test_script:
+    - echo "Test the ${STAGING_IMAGE_NAME}:${tag} image supporting linux/${CIRRUS_ARCH}"
     - sysctl -w vm.max_map_count=524288 # set the recommended memory for ES
-    - ./run-tests.sh "sonarsource/sonarqube:${tag}" "${test_name}"
+    - ./run-tests.sh "${STAGING_IMAGE_NAME}:${tag}" "${test_name}"
   depends_on: multi_arch_build
