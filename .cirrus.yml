@@ -7,7 +7,9 @@ env:
   DOCKER_USERNAME: VAULT[development/kv/data/docker/sonardockerrw data.username]
   DOCKER_PASSWORD: VAULT[development/kv/data/docker/sonardockerrw data.access_token_rwd]
 
+  WS_PRODUCTNAME: SonarSource/docker-sonarqube
   STAGING_IMAGE_NAME: sonarsource/sonarqube
+  PUBLIC_IMAGE_NAME: sonarqube
 
 
 vm_instance_template: &VM_TEMPLATE
@@ -56,7 +58,6 @@ multi_arch_scan_task:
   env:
     MEND_API_KEY: VAULT[development/kv/data/mend data.apikey]
     WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
-    WS_PRODUCTNAME: SonarSource/docker-sonarqube
     matrix:
       - tag: 9-enterprise
       - tag: 9-datacenter-app
@@ -74,6 +75,25 @@ multi_arch_scan_task:
     - docker tag "${STAGING_IMAGE_NAME}:${tag}" "${STAGING_IMAGE_NAME}:${tag}-${platform}"
     - java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${STAGING_IMAGE_NAME}:${tag}-${platform} -wss.url ${WS_WSS_URL} -docker.scanImages true
   depends_on: multi_arch_build
+
+public_scan_task: 
+  only_if: $CIRRUS_CRON == 'nightly-mend-scan'
+  env:
+    MEND_API_KEY: VAULT[development/kv/data/mend data.apikey]
+    WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
+    matrix:
+      - tag: 9-enterprise
+      - tag: 9-datacenter-app
+  ec2_instance:
+    <<: *VM_TEMPLATE
+  setup_script:
+    - apt-get update && apt-get install -y --no-install-recommends openjdk-17-jre-headless
+    - curl -sSL https://unified-agent.s3.amazonaws.com/wss-unified-agent.jar -o wss-unified-agent.jar
+    - echo "docker.includes=${tag}" >> .cirrus/wss-unified-agent.config
+  scan_script:
+    - echo "Scan the ${PUBLIC_IMAGE_NAME}:${tag} image"
+    - docker pull "${PUBLIC_IMAGE_NAME}:${tag}"
+    - java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${PUBLIC_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
 
 multi_arch_test_docker_builder:
   matrix:
