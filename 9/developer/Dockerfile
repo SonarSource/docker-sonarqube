@@ -1,5 +1,7 @@
 FROM eclipse-temurin:17-jre
 
+LABEL org.opencontainers.image.url=https://github.com/SonarSource/sonar-scanner-cli-docker
+
 ENV LANG='en_US.UTF-8' \
     LANGUAGE='en_US:en' \
     LC_ALL='en_US.UTF-8'
