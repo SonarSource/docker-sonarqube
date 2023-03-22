@@ -1,5 +1,15 @@
 # Releasing
 
+Docker image release cycle and SonarQube product
+---
+We consider the **docker image** as part of the SonarQube **product**, if we patch the Docker image, we patch the SonarQube product (and vice-versa).
+
+This implies that new features in the Docker image **MUST** wait for the minor version release of SonarQube.
+
+If you are looking for releasing **docker image** after a SonarQube **product** upgrade, please follow the usual process detailed bellow.
+
+If you are looking for releasing **docker image** because of a blocker bug or severe bugfix **only** in the **docker image** please carefully read the extra steps [here](#docker-image-blocker-bug-or-severe-security-fixes)
+
 Overview
 --------
 
@@ -58,3 +68,22 @@ Add a GIT tag for the new version
 ----------------
 
 The commit referenced in the DockerHub Pull Request must be tagged with the (marketing) version of SQ: eg. `8.0`, `8.0.1`, `8.1`.
+
+Docker image blocker bug or severe security fixes
+---
+
+If blocker bug or severe security issues are found in our latest and/or LTS **docker image**, we will release a fix outside of the 2 month release cycle.
+
+In order to do so, we will bump the patch version of the image, while not chaning the SQ version inside the **docker image**.
+
+Please take a look at the following example:
+
+|               | Docker tag | SQ version inside docker | SQ version |
+|---------------|------------|--------------------------|:----------:|
+| Release n     | 10.0       | 10.0                     |    10.0    |
+| Docker bugfix | 10.1       | 10.0                     |    10.0    |
+| Release n+1   | 10.2       | 10.2                     |    10.2    |
+
+As per the example above we see that when such a release is performed it should be **cleary communicated** to the SonarQube team that the versioning should be adjusted accordingly.
+
+The technical process for releasing will be exactly the same apart from the versioning described above, we do not need release branches as we only support those fixes for latest and LTS.
