@@ -36,6 +36,16 @@ multi_arch_build_task:
         tag: 9-datacenter-app
       - version: 9/datacenter/search
         tag: 9-datacenter-search
+      - version: 10/community
+        tag: 10-community
+      - version: 10/developer
+        tag: 10-developer
+      - version: 10/enterprise
+        tag: 10-enterprise
+      - version: 10/datacenter/app
+        tag: 10-datacenter-app
+      - version: 10/datacenter/search
+        tag: 10-datacenter-search
   ec2_instance:
     <<: *VM_TEMPLATE
   login_script:
@@ -61,6 +71,8 @@ multi_arch_scan_task:
     matrix:
       - tag: 9-enterprise
       - tag: 9-datacenter-app
+      - tag: 10-enterprise
+      - tag: 10-datacenter-app
   ec2_instance:
     <<: *VM_TEMPLATE
   login_script:
@@ -84,6 +96,8 @@ public_scan_task:
     matrix:
       - tag: 9-enterprise
       - tag: 9-datacenter-app
+      - tag: 10-enterprise
+      - tag: 10-datacenter-app
   ec2_instance:
     <<: *VM_TEMPLATE
   setup_script:
@@ -111,6 +125,14 @@ multi_arch_test_docker_builder:
         tag: 9-enterprise
       - test_name: docker-compose
         tag: 9-datacenter
+      - test_name: docker
+        tag: 10-community
+      - test_name: docker
+        tag: 10-developer
+      - test_name: docker
+        tag: 10-enterprise
+      - test_name: docker-compose
+        tag: 10-datacenter
   login_script:
     - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
   test_script:
