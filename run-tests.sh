@@ -112,10 +112,8 @@ sanity_check_image() {
 
         [[ $result == ok ]]
     elif [ $2 == docker-compose ]; then
-        if [[ $1 =~ "9" ]]; then
-            _test_compose_path="tests/9/dce-compose-test"
-        fi
-        cd $_test_compose_path
+        local test_compose_path="tests/dce-compose-test"
+        cd $test_compose_path
         export PORT=$port
         export IMAGE=$1
         docker-compose up -d db search

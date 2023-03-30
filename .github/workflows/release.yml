@@ -17,6 +17,11 @@ jobs:
           - 9-enterprise
           - 9-datacenter-app
           - 9-datacenter-search
+          - 10-community
+          - 10-developer
+          - 10-enterprise
+          - 10-datacenter-app
+          - 10-datacenter-search
     runs-on: ubuntu-latest
     permissions:
       contents: write
