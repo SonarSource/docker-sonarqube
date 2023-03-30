@@ -10,6 +10,8 @@ env:
   WS_PRODUCTNAME: SonarSource/docker-sonarqube
   STAGING_IMAGE_NAME: sonarsource/sonarqube
   PUBLIC_IMAGE_NAME: sonarqube
+  CURRENT_LTS_VERSION: 9.9.0
+  CURRENT_VERSION: 10.0.0
 
 
 vm_instance_template: &VM_TEMPLATE
@@ -27,25 +29,25 @@ multi_arch_build_task:
   env:
     matrix:
       - version: 9/community
-        tag: 9-community
+        tag: $CURRENT_LTS_VERSION-community
       - version: 9/developer
-        tag: 9-developer
+        tag: $CURRENT_LTS_VERSION-developer
       - version: 9/enterprise
-        tag: 9-enterprise
+        tag: $CURRENT_LTS_VERSION-enterprise
       - version: 9/datacenter/app
-        tag: 9-datacenter-app
+        tag: $CURRENT_LTS_VERSION-datacenter-app
       - version: 9/datacenter/search
-        tag: 9-datacenter-search
+        tag: $CURRENT_LTS_VERSION-datacenter-search
       - version: 10/community
-        tag: 10-community
+        tag: $CURRENT_VERSION-community
       - version: 10/developer
-        tag: 10-developer
+        tag: $CURRENT_VERSION-developer
       - version: 10/enterprise
-        tag: 10-enterprise
+        tag: $CURRENT_VERSION-enterprise
       - version: 10/datacenter/app
-        tag: 10-datacenter-app
+        tag: $CURRENT_VERSION-datacenter-app
       - version: 10/datacenter/search
-        tag: 10-datacenter-search
+        tag: $CURRENT_VERSION-datacenter-search
   ec2_instance:
     <<: *VM_TEMPLATE
   login_script:
@@ -59,20 +61,14 @@ multi_arch_build_task:
     - echo "Build the ${STAGING_IMAGE_NAME}:${tag} image supporting two architectures, linux/amd64 and linux/arm64"
     - docker buildx build --platform linux/amd64,linux/arm64 --tag "${STAGING_IMAGE_NAME}:${tag}" --push ${version}
 
-multi_arch_scan_task: 
-  matrix:
-    - env:
-        platform: arm64
-    - env:
-        platform: amd64
+private_scan_task:    
   env:
+    platform: amd64
     MEND_API_KEY: VAULT[development/kv/data/mend data.apikey]
     WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
     matrix:
-      - tag: 9-enterprise
-      - tag: 9-datacenter-app
-      - tag: 10-enterprise
-      - tag: 10-datacenter-app
+      - tag: $CURRENT_LTS_VERSION-datacenter-app
+      - tag: $CURRENT_VERSION-datacenter-app
   ec2_instance:
     <<: *VM_TEMPLATE
   login_script:
@@ -80,12 +76,11 @@ multi_arch_scan_task:
   setup_script:
     - apt-get update && apt-get install -y --no-install-recommends openjdk-17-jre-headless
     - curl -sSL https://unified-agent.s3.amazonaws.com/wss-unified-agent.jar -o wss-unified-agent.jar
-    - echo "docker.includes=${tag}-${platform}" >> .cirrus/wss-unified-agent.config
+    - echo "docker.includes=${tag}" >> .cirrus/wss-unified-agent.config
   scan_script:
     - echo "Scan the ${STAGING_IMAGE_NAME}:${tag} image supporting linux/${platform}"
     - docker pull --platform linux/${platform} "${STAGING_IMAGE_NAME}:${tag}"
-    - docker tag "${STAGING_IMAGE_NAME}:${tag}" "${STAGING_IMAGE_NAME}:${tag}-${platform}"
-    - java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${STAGING_IMAGE_NAME}:${tag}-${platform} -wss.url ${WS_WSS_URL} -docker.scanImages true
+    - java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${STAGING_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
   depends_on: multi_arch_build
 
 public_scan_task: 
@@ -94,10 +89,8 @@ public_scan_task:
     MEND_API_KEY: VAULT[development/kv/data/mend data.apikey]
     WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
     matrix:
-      - tag: 9-enterprise
-      - tag: 9-datacenter-app
-      - tag: 10-enterprise
-      - tag: 10-datacenter-app
+      - tag: $CURRENT_LTS_VERSION-datacenter-app
+      - tag: $CURRENT_VERSION-datacenter-app
   ec2_instance:
     <<: *VM_TEMPLATE
   setup_script:
@@ -118,21 +111,21 @@ multi_arch_test_docker_builder:
   env:
     matrix:
       - test_name: docker
-        tag: 9-community
+        tag: $CURRENT_LTS_VERSION-community
       - test_name: docker
-        tag: 9-developer
+        tag: $CURRENT_LTS_VERSION-developer
       - test_name: docker
-        tag: 9-enterprise
+        tag: $CURRENT_LTS_VERSION-enterprise
       - test_name: docker-compose
-        tag: 9-datacenter
+        tag: $CURRENT_LTS_VERSION-datacenter
       - test_name: docker
-        tag: 10-community
+        tag: $CURRENT_VERSION-community
       - test_name: docker
-        tag: 10-developer
+        tag: $CURRENT_VERSION-developer
       - test_name: docker
-        tag: 10-enterprise
+        tag: $CURRENT_VERSION-enterprise
       - test_name: docker-compose
-        tag: 10-datacenter
+        tag: $CURRENT_VERSION-datacenter
   login_script:
     - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
   test_script:
