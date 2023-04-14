@@ -1,5 +1,9 @@
 # Releasing
 
+Docker image release cycle and SonarQube product
+---
+We consider the **docker image** as part of the SonarQube **product**. Therefore, it follows the same release process.
+
 Overview
 --------
 
