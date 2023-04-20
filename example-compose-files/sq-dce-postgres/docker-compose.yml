@@ -4,14 +4,14 @@ services:
   sonarqube:
     image: sonarqube:datacenter-app
     depends_on:
-      - db
-      - search-1
-      - search-2
-      - search-3
+      search-1:
+        condition: service_healthy
+      search-2:
+        condition: service_healthy
+      search-3:
+        condition: service_healthy
     networks:
       - sonar-network
-    deploy:
-      replicas: 2
     cpus: 0.5
     mem_limit: 4096M
     mem_reservation: 1024M
@@ -46,6 +46,12 @@ services:
       SONAR_CLUSTER_NODE_NAME: "search-1"
     volumes:
       - search-data-1:/opt/sonarqube/data
+    healthcheck:
+        test: wget --no-proxy -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
+        interval: 25s
+        timeout: 1s
+        retries: 3
+        start_period: 55s
   search-2:
     image: sonarqube:datacenter-search
     hostname: "search-2"
@@ -64,6 +70,12 @@ services:
       SONAR_CLUSTER_NODE_NAME: "search-2"
     volumes:
       - search-data-2:/opt/sonarqube/data
+    healthcheck:
+        test: wget --no-proxy -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
+        interval: 25s
+        timeout: 1s
+        retries: 3
+        start_period: 55s
   search-3:
     image: sonarqube:datacenter-search
     hostname: "search-3"
@@ -82,6 +94,12 @@ services:
       SONAR_CLUSTER_NODE_NAME: "search-3"
     volumes:
       - search-data-3:/opt/sonarqube/data
+    healthcheck:
+        test: wget --no-proxy -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
+        interval: 25s
+        timeout: 1s
+        retries: 3
+        start_period: 55s
   db:
     image: postgres:13
     networks:

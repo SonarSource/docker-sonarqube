@@ -116,8 +116,6 @@ sanity_check_image() {
         cd $test_compose_path
         export PORT=$port
         export IMAGE=$1
-        docker-compose up -d db search
-        sleep 60
         docker-compose up -d sonarqube
         if wait_for_sonarqube_dce "$image"; then
             info "$image-app: OK !"
