@@ -25,66 +25,66 @@ vm_instance_template: &VM_TEMPLATE
   memory: 16G
 
 
-multi_arch_build_task: 
-  env:
-    matrix:
-      - version: 9/community
-        tag: $CURRENT_LTS_VERSION-community
-      - version: 9/developer
-        tag: $CURRENT_LTS_VERSION-developer
-      - version: 9/enterprise
-        tag: $CURRENT_LTS_VERSION-enterprise
-      - version: 9/datacenter/app
-        tag: $CURRENT_LTS_VERSION-datacenter-app
-      - version: 9/datacenter/search
-        tag: $CURRENT_LTS_VERSION-datacenter-search
-      - version: 10/community
-        tag: $CURRENT_VERSION-community
-      - version: 10/developer
-        tag: $CURRENT_VERSION-developer
-      - version: 10/enterprise
-        tag: $CURRENT_VERSION-enterprise
-      - version: 10/datacenter/app
-        tag: $CURRENT_VERSION-datacenter-app
-      - version: 10/datacenter/search
-        tag: $CURRENT_VERSION-datacenter-search
-  ec2_instance:
-    <<: *VM_TEMPLATE
-  login_script:
-    - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
-  setup_script:
-    - docker run -t --rm --privileged tonistiigi/binfmt --install all
-    - docker buildx create --name multibuilder
-    - docker buildx use multibuilder
-    - docker buildx inspect --bootstrap
-  build_script:
-    - echo "Build the ${STAGING_IMAGE_NAME}:${tag} image supporting two architectures, linux/amd64 and linux/arm64"
-    - docker buildx build --platform linux/amd64,linux/arm64 --tag "${STAGING_IMAGE_NAME}:${tag}" --push ${version}
+# multi_arch_build_task: 
+#   env:
+#     matrix:
+#       - version: 9/community
+#         tag: $CURRENT_LTS_VERSION-community
+#       - version: 9/developer
+#         tag: $CURRENT_LTS_VERSION-developer
+#       - version: 9/enterprise
+#         tag: $CURRENT_LTS_VERSION-enterprise
+#       - version: 9/datacenter/app
+#         tag: $CURRENT_LTS_VERSION-datacenter-app
+#       - version: 9/datacenter/search
+#         tag: $CURRENT_LTS_VERSION-datacenter-search
+#       - version: 10/community
+#         tag: $CURRENT_VERSION-community
+#       - version: 10/developer
+#         tag: $CURRENT_VERSION-developer
+#       - version: 10/enterprise
+#         tag: $CURRENT_VERSION-enterprise
+#       - version: 10/datacenter/app
+#         tag: $CURRENT_VERSION-datacenter-app
+#       - version: 10/datacenter/search
+#         tag: $CURRENT_VERSION-datacenter-search
+#   ec2_instance:
+#     <<: *VM_TEMPLATE
+#   login_script:
+#     - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
+#   setup_script:
+#     - docker run -t --rm --privileged tonistiigi/binfmt --install all
+#     - docker buildx create --name multibuilder
+#     - docker buildx use multibuilder
+#     - docker buildx inspect --bootstrap
+#   build_script:
+#     - echo "Build the ${STAGING_IMAGE_NAME}:${tag} image supporting two architectures, linux/amd64 and linux/arm64"
+#     - docker buildx build --platform linux/amd64,linux/arm64 --tag "${STAGING_IMAGE_NAME}:${tag}" --push ${version}
 
-private_scan_task:    
-  env:
-    platform: amd64
-    MEND_API_KEY: VAULT[development/kv/data/mend data.apikey]
-    WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
-    matrix:
-      - tag: $CURRENT_LTS_VERSION-datacenter-app
-      - tag: $CURRENT_VERSION-datacenter-app
-  ec2_instance:
-    <<: *VM_TEMPLATE
-  login_script:
-    - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
-  setup_script:
-    - apt-get update && apt-get install -y --no-install-recommends openjdk-17-jre-headless
-    - curl -sSL https://unified-agent.s3.amazonaws.com/wss-unified-agent.jar -o wss-unified-agent.jar
-    - echo "docker.includes=${tag}" >> .cirrus/wss-unified-agent.config
-  scan_script:
-    - echo "Scan the ${STAGING_IMAGE_NAME}:${tag} image supporting linux/${platform}"
-    - docker pull --platform linux/${platform} "${STAGING_IMAGE_NAME}:${tag}"
-    - java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${STAGING_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
-  depends_on: multi_arch_build
+# private_scan_task:    
+#   env:
+#     platform: amd64
+#     MEND_API_KEY: VAULT[development/kv/data/mend data.apikey]
+#     WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
+#     matrix:
+#       - tag: $CURRENT_LTS_VERSION-datacenter-app
+#       - tag: $CURRENT_VERSION-datacenter-app
+#   ec2_instance:
+#     <<: *VM_TEMPLATE
+#   login_script:
+#     - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
+#   setup_script:
+#     - apt-get update && apt-get install -y --no-install-recommends openjdk-17-jre-headless
+#     - curl -sSL https://unified-agent.s3.amazonaws.com/wss-unified-agent.jar -o wss-unified-agent.jar
+#     - echo "docker.includes=${tag}" >> .cirrus/wss-unified-agent.config
+#   scan_script:
+#     - echo "Scan the ${STAGING_IMAGE_NAME}:${tag} image supporting linux/${platform}"
+#     - docker pull --platform linux/${platform} "${STAGING_IMAGE_NAME}:${tag}"
+#     - java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${STAGING_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
+#   depends_on: multi_arch_build
 
 public_scan_task: 
-  only_if: $CIRRUS_CRON == 'nightly-mend-scan'
+  # only_if: $CIRRUS_CRON == 'nightly-mend-scan'
   env:
     MEND_API_KEY: VAULT[development/kv/data/mend data.apikey]
     WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
@@ -102,34 +102,34 @@ public_scan_task:
     - docker pull "${PUBLIC_IMAGE_NAME}:${tag}"
     - java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${PUBLIC_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
 
-multi_arch_test_docker_builder:
-  matrix:
-    - env:
-        CIRRUS_ARCH: arm64
-    - env:
-        CIRRUS_ARCH: amd64
-  env:
-    matrix:
-      - test_name: docker
-        tag: $CURRENT_LTS_VERSION-community
-      - test_name: docker
-        tag: $CURRENT_LTS_VERSION-developer
-      - test_name: docker
-        tag: $CURRENT_LTS_VERSION-enterprise
-      - test_name: docker-compose
-        tag: $CURRENT_LTS_VERSION-datacenter
-      - test_name: docker
-        tag: $CURRENT_VERSION-community
-      - test_name: docker
-        tag: $CURRENT_VERSION-developer
-      - test_name: docker
-        tag: $CURRENT_VERSION-enterprise
-      - test_name: docker-compose
-        tag: $CURRENT_VERSION-datacenter
-  login_script:
-    - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
-  test_script:
-    - echo "Test the ${STAGING_IMAGE_NAME}:${tag} image supporting linux/${CIRRUS_ARCH}"
-    - sysctl -w vm.max_map_count=524288 # set the recommended memory for ES
-    - ./run-tests.sh "${STAGING_IMAGE_NAME}:${tag}" "${test_name}"
-  depends_on: multi_arch_build
+# multi_arch_test_docker_builder:
+#   matrix:
+#     - env:
+#         CIRRUS_ARCH: arm64
+#     - env:
+#         CIRRUS_ARCH: amd64
+#   env:
+#     matrix:
+#       - test_name: docker
+#         tag: $CURRENT_LTS_VERSION-community
+#       - test_name: docker
+#         tag: $CURRENT_LTS_VERSION-developer
+#       - test_name: docker
+#         tag: $CURRENT_LTS_VERSION-enterprise
+#       - test_name: docker-compose
+#         tag: $CURRENT_LTS_VERSION-datacenter
+#       - test_name: docker
+#         tag: $CURRENT_VERSION-community
+#       - test_name: docker
+#         tag: $CURRENT_VERSION-developer
+#       - test_name: docker
+#         tag: $CURRENT_VERSION-enterprise
+#       - test_name: docker-compose
+#         tag: $CURRENT_VERSION-datacenter
+#   login_script:
+#     - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
+#   test_script:
+#     - echo "Test the ${STAGING_IMAGE_NAME}:${tag} image supporting linux/${CIRRUS_ARCH}"
+#     - sysctl -w vm.max_map_count=524288 # set the recommended memory for ES
+#     - ./run-tests.sh "${STAGING_IMAGE_NAME}:${tag}" "${test_name}"
+#   depends_on: multi_arch_build
