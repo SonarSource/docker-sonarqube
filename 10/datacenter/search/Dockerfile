@@ -11,7 +11,8 @@ ENV LANG='en_US.UTF-8' \
 #
 ARG SONARQUBE_VERSION=10.0.0.68432
 ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/CommercialDistribution/sonarqube-datacenter/sonarqube-datacenter-${SONARQUBE_VERSION}.zip
-ENV JAVA_HOME='/opt/java/openjdk' \
+ENV DOCKER_RUNNING="true" \
+    JAVA_HOME='/opt/java/openjdk' \
     SONARQUBE_HOME=/opt/sonarqube \
     SONAR_VERSION="${SONARQUBE_VERSION}" \
     SQ_DATA_DIR="/opt/sonarqube/data" \
