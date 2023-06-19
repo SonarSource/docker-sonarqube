@@ -30,4 +30,4 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).sq_next_token }}
-        SONAR_HOST_URL: https://next.sonarqube.com
+        SONAR_HOST_URL: https://next.sonarqube.com/sonarqube/
