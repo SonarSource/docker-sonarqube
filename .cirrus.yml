@@ -10,8 +10,8 @@ env:
   WS_PRODUCTNAME: SonarSource/docker-sonarqube
   STAGING_IMAGE_NAME: sonarsource/sonarqube
   PUBLIC_IMAGE_NAME: sonarqube
-  CURRENT_LTS_VERSION: 9.9.1
-  CURRENT_VERSION: 10.1.0
+  CURRENT_LTS_VERSION: 9.9.2
+  CURRENT_VERSION: 10.2.0
 
 
 vm_instance_template: &VM_TEMPLATE
