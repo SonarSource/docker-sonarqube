@@ -99,6 +99,10 @@ public_scan_task:
   ec2_instance:
     <<: *VM_TEMPLATE
   setup_script:
+    - /usr/bin/systemctl stop unattended-upgrades.service
+    - /usr/bin/pgrep apt | xargs kill -SIGINT
+    - /usr/bin/pgrep apt | xargs kill -SIGTERM
+    - /usr/bin/pgrep apt | xargs kill -9 ; /usr/bin/dpkg --configure -a
     - apt-get remove -y unattended-upgrades
     - apt-get update && apt-get install -y --no-install-recommends openjdk-17-jre
     - curl -sSL https://unified-agent.s3.amazonaws.com/wss-unified-agent.jar -o wss-unified-agent.jar
