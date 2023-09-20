@@ -11,7 +11,7 @@ env:
   STAGING_IMAGE_NAME: sonarsource/sonarqube
   PUBLIC_IMAGE_NAME: sonarqube
   CURRENT_LTS_VERSION: 9.9.2
-  CURRENT_VERSION: 10.2.0
+  CURRENT_VERSION: 10.2.1
 
 
 vm_instance_template: &VM_TEMPLATE
