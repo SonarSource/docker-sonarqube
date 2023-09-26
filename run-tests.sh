@@ -116,7 +116,7 @@ sanity_check_image() {
         cd $test_compose_path
         export PORT=$port
         export IMAGE=$1
-        docker-compose up -d sonarqube
+        docker compose up -d sonarqube
         if wait_for_sonarqube_dce "$image"; then
             info "$image-app: OK !"
             result=ok
@@ -126,7 +126,7 @@ sanity_check_image() {
         fi
 
         info "$image-app: stopping container stack"
-        docker-compose stop
+        docker compose stop
 
         [[ $result == ok ]]
     fi
