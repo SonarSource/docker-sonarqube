@@ -54,12 +54,12 @@ multi_arch_build_task:
     - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
   setup_script:
     - docker run -t --rm --privileged tonistiigi/binfmt --install all
-    - docker buildx create --name multibuilder
+    - docker buildx create --name multibuilder --driver docker-container
     - docker buildx use multibuilder
     - docker buildx inspect --bootstrap
   build_script:
     - echo "Build the ${STAGING_IMAGE_NAME}:${tag} image supporting two architectures, linux/amd64 and linux/arm64"
-    - docker buildx build --platform linux/amd64,linux/arm64 --tag "${STAGING_IMAGE_NAME}:${tag}" --push ${version}
+    - .cirrus/multi-arch-build.sh ${STAGING_IMAGE_NAME} ${tag} ${version}
 
 private_scan_task:    
   env:
