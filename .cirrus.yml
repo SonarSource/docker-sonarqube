@@ -74,6 +74,10 @@ private_scan_task:
   login_script:
     - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
   setup_script:
+    - /usr/bin/systemctl stop unattended-upgrades.service
+    - /usr/bin/pgrep apt | xargs -r kill -SIGINT || true
+    - /usr/bin/pgrep apt | xargs -r kill -SIGTERM || true
+    - /usr/bin/pgrep apt | xargs -r kill -SIGKILL || true ; /usr/bin/dpkg --configure -a
     - apt-get remove -y unattended-upgrades
     - apt-get update && apt-get install -y --no-install-recommends openjdk-17-jre
     - curl -sSL https://unified-agent.s3.amazonaws.com/wss-unified-agent.jar -o wss-unified-agent.jar
@@ -95,6 +99,10 @@ public_scan_task:
   ec2_instance:
     <<: *VM_TEMPLATE
   setup_script:
+    - /usr/bin/systemctl stop unattended-upgrades.service
+    - /usr/bin/pgrep apt | xargs -r kill -SIGINT || true
+    - /usr/bin/pgrep apt | xargs -r kill -SIGTERM || true
+    - /usr/bin/pgrep apt | xargs -r kill -SIGKILL || true ; /usr/bin/dpkg --configure -a
     - apt-get remove -y unattended-upgrades
     - apt-get update && apt-get install -y --no-install-recommends openjdk-17-jre
     - curl -sSL https://unified-agent.s3.amazonaws.com/wss-unified-agent.jar -o wss-unified-agent.jar
