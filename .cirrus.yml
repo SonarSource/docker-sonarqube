@@ -15,14 +15,10 @@ env:
 
 
 vm_instance_template: &VM_TEMPLATE
-  experimental: true # see https://github.com/cirruslabs/cirrus-ci-docs/issues/1051
   image: docker-builder-v*
   type: t2.small
   region: eu-central-1
   subnet_id: ${CIRRUS_AWS_SUBNET}
-  disk: 10
-  cpu: 4
-  memory: 16G
 
 
 multi_arch_build_task: 
@@ -112,12 +108,16 @@ public_scan_task:
     - docker pull "${PUBLIC_IMAGE_NAME}:${tag}"
     - java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${PUBLIC_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
 
-multi_arch_test_docker_builder:
+multi_arch_test_task:
   matrix:
     - env:
         CIRRUS_ARCH: arm64
+        INSTANCE_TYPE: t4g.large
+        AMI_NAME: docker-builder-arm64-v*
     - env:
         CIRRUS_ARCH: amd64
+        INSTANCE_TYPE: t3.large
+        AMI_NAME: docker-builder-v*
   env:
     matrix:
       - test_name: docker
@@ -136,10 +136,16 @@ multi_arch_test_docker_builder:
         tag: $CURRENT_VERSION-enterprise
       - test_name: docker-compose
         tag: $CURRENT_VERSION-datacenter
+  ec2_instance:
+    <<: *VM_TEMPLATE
+    image: ${AMI_NAME}
+    type: ${INSTANCE_TYPE}
+    architecture: ${CIRRUS_ARCH}
   login_script:
     - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
   test_script:
     - echo "Test the ${STAGING_IMAGE_NAME}:${tag} image supporting linux/${CIRRUS_ARCH}"
     - sysctl -w vm.max_map_count=524288 # set the recommended memory for ES
+    - ulimit -n 131072 # set the recommended number of opened file descriptors for ES
     - ./run-tests.sh "${STAGING_IMAGE_NAME}:${tag}" "${test_name}"
   depends_on: multi_arch_build
