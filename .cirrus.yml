@@ -79,12 +79,15 @@ private_scan_task:
     - curl -sSL https://unified-agent.s3.amazonaws.com/wss-unified-agent.jar -o wss-unified-agent.jar
     - echo "docker.includes=${tag}" >> .cirrus/wss-unified-agent.config
   scan_script:
-    - .cirrus/private-scan-task.sh "${STAGING_IMAGE_NAME}" "${tag}" "${platform}" "${WS_PRODUCTNAME}" "${WS_WSS_URL}" "${MEND_API_KEY}"
+    - echo "Scan the ${STAGING_IMAGE_NAME}:${tag} image supporting linux/${platform}"
+    - .cirrus/pull.sh ${STAGING_IMAGE_NAME} ${tag} ${platform}
+    - java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${STAGING_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
   depends_on: multi_arch_build
 
 public_scan_task: 
   only_if: $CIRRUS_CRON == 'nightly-mend-scan'
   env:
+    platform: amd64
     MEND_API_KEY: VAULT[development/kv/data/mend data.apikey]
     WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
     matrix:
@@ -102,7 +105,10 @@ public_scan_task:
     - curl -sSL https://unified-agent.s3.amazonaws.com/wss-unified-agent.jar -o wss-unified-agent.jar
     - echo "docker.includes=${tag}" >> .cirrus/wss-unified-agent.config
   scan_script:
-    - .cirrus/public-scan-task.sh "${PUBLIC_IMAGE_NAME}" "${tag}" "${WS_PRODUCTNAME}" "${WS_WSS_URL}" "${MEND_API_KEY}"
+    - echo "Scan the ${PUBLIC_IMAGE_NAME}:${tag} image"
+    - docker pull "${PUBLIC_IMAGE_NAME}:${tag}"
+    - .cirrus/pull.sh ${PUBLIC_IMAGE_NAME} ${tag} ${platform}
+    - java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${PUBLIC_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
 
 multi_arch_test_task:
   matrix:
