@@ -18,7 +18,7 @@ Be aware that this forum is a community, so the standard pleasantries ("Hi", "Th
 Contributing
 ------------
 
-If you would like to see a new feature, please create a new thread in the forum ["Suggest new features"](https://community.sonarsource.com/c/suggestions/features).
+If you would like to see a new feature or report a bug, please create a new thread in our [forum](https://community.sonarsource.com/tags/c/sq/10/none/docker).
 
 Please be aware that we are not actively looking for feature contributions. We typically accept minor improvements and bug fixes.
 
