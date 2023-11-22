@@ -12,6 +12,7 @@ env:
   PUBLIC_IMAGE_NAME: sonarqube
   CURRENT_LTS_VERSION: 9.9.3
   CURRENT_VERSION: 10.3.0
+  NEXT_VERSION: 10.4.0
 
 
 vm_instance_template: &VM_TEMPLATE
@@ -35,15 +36,15 @@ multi_arch_build_task:
       - version: 9/datacenter/search
         tag: $CURRENT_LTS_VERSION-datacenter-search
       - version: 10/community
-        tag: $CURRENT_VERSION-community
+        tag: $NEXT_VERSION-community
       - version: 10/developer
-        tag: $CURRENT_VERSION-developer
+        tag: $NEXT_VERSION-developer
       - version: 10/enterprise
-        tag: $CURRENT_VERSION-enterprise
+        tag: $NEXT_VERSION-enterprise
       - version: 10/datacenter/app
-        tag: $CURRENT_VERSION-datacenter-app
+        tag: $NEXT_VERSION-datacenter-app
       - version: 10/datacenter/search
-        tag: $CURRENT_VERSION-datacenter-search
+        tag: $NEXT_VERSION-datacenter-search
   ec2_instance:
     <<: *VM_TEMPLATE
   login_script:
@@ -64,7 +65,7 @@ private_scan_task:
     WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
     matrix:
       - tag: $CURRENT_LTS_VERSION-datacenter-app
-      - tag: $CURRENT_VERSION-datacenter-app
+      - tag: $NEXT_VERSION-datacenter-app
   ec2_instance:
     <<: *VM_TEMPLATE
   login_script:
@@ -131,13 +132,13 @@ multi_arch_test_task:
       - test_name: docker-compose
         tag: $CURRENT_LTS_VERSION-datacenter
       - test_name: docker
-        tag: $CURRENT_VERSION-community
+        tag: $NEXT_VERSION-community
       - test_name: docker
-        tag: $CURRENT_VERSION-developer
+        tag: $NEXT_VERSION-developer
       - test_name: docker
-        tag: $CURRENT_VERSION-enterprise
+        tag: $NEXT_VERSION-enterprise
       - test_name: docker-compose
-        tag: $CURRENT_VERSION-datacenter
+        tag: $NEXT_VERSION-datacenter
   ec2_instance:
     <<: *VM_TEMPLATE
     image: ${AMI_NAME}
