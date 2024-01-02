@@ -16,13 +16,13 @@ env:
 
 
 vm_instance_template: &VM_TEMPLATE
-  image: docker-builder-v*
+  image: pr-376-docker-builder-v*
   type: t2.small
   region: eu-central-1
   subnet_id: ${CIRRUS_AWS_SUBNET}
 
 
-multi_arch_build_task: 
+multi_arch_build_task:
   env:
     matrix:
       - version: 9/community
@@ -58,7 +58,7 @@ multi_arch_build_task:
     - echo "Build the ${STAGING_IMAGE_NAME}:${tag} image supporting two architectures, linux/amd64 and linux/arm64"
     - .cirrus/multi-arch-build.sh ${STAGING_IMAGE_NAME} ${tag} ${version}
 
-private_scan_task:    
+private_scan_task:
   env:
     platform: amd64
     MEND_API_KEY: VAULT[development/kv/data/mend data.apikey]
@@ -85,7 +85,7 @@ private_scan_task:
     - java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${STAGING_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
   depends_on: multi_arch_build
 
-public_scan_task: 
+public_scan_task:
   only_if: $CIRRUS_CRON == 'nightly-mend-scan'
   env:
     platform: amd64
