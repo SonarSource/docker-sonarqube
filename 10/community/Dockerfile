@@ -25,6 +25,8 @@ RUN set -eux; \
     useradd --system --uid 1000 --gid sonarqube sonarqube; \
     apt-get update; \
     apt-get install -y gnupg unzip curl bash fonts-dejavu; \
+    wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64; \
+    chmod a+x /usr/local/bin/yq; \
     echo "networkaddress.cache.ttl=5" >> "${JAVA_HOME}/conf/security/java.security"; \
     sed --in-place --expression="s?securerandom.source=file:/dev/random?securerandom.source=file:/dev/urandom?g" "${JAVA_HOME}/conf/security/java.security"; \
     # pub   2048R/D26468DE 2015-05-25
