@@ -22,6 +22,9 @@ vm_instance_template: &VM_TEMPLATE
   subnet_id: ${CIRRUS_AWS_SUBNET}
 
 
+ci_instance_scanner: &CI_SCANNER
+  image: base:j17
+
 multi_arch_build_task: 
   env:
     matrix:
@@ -66,20 +69,11 @@ private_scan_task:
     matrix:
       - tag: $CURRENT_LTS_VERSION-datacenter-app
       - tag: $NEXT_VERSION-datacenter-app
-  ec2_instance:
-    <<: *VM_TEMPLATE
-  login_script:
+  container:
+    <<: *CI_SCANNER
+  script:
     - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
-  setup_script:
-    - /usr/bin/systemctl stop unattended-upgrades.service
-    - /usr/bin/pgrep apt | xargs -r kill -SIGINT || true
-    - /usr/bin/pgrep apt | xargs -r kill -SIGTERM || true
-    - /usr/bin/pgrep apt | xargs -r kill -SIGKILL || true ; /usr/bin/dpkg --configure -a
-    - apt-get remove -y unattended-upgrades
-    - apt-get update && apt-get install -y --no-install-recommends openjdk-17-jre
-    - curl -sSL https://unified-agent.s3.amazonaws.com/wss-unified-agent.jar -o wss-unified-agent.jar
     - echo "docker.includes=${tag}" >> .cirrus/wss-unified-agent.config
-  scan_script:
     - echo "Scan the ${STAGING_IMAGE_NAME}:${tag} image supporting linux/${platform}"
     - .cirrus/pull.sh ${STAGING_IMAGE_NAME} ${tag} ${platform}
     - java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${STAGING_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
@@ -94,18 +88,10 @@ public_scan_task:
     matrix:
       - tag: $CURRENT_LTS_VERSION-datacenter-app
       - tag: $CURRENT_VERSION-datacenter-app
-  ec2_instance:
-    <<: *VM_TEMPLATE
-  setup_script:
-    - /usr/bin/systemctl stop unattended-upgrades.service
-    - /usr/bin/pgrep apt | xargs -r kill -SIGINT || true
-    - /usr/bin/pgrep apt | xargs -r kill -SIGTERM || true
-    - /usr/bin/pgrep apt | xargs -r kill -SIGKILL || true ; /usr/bin/dpkg --configure -a
-    - apt-get remove -y unattended-upgrades
-    - apt-get update && apt-get install -y --no-install-recommends openjdk-17-jre
-    - curl -sSL https://unified-agent.s3.amazonaws.com/wss-unified-agent.jar -o wss-unified-agent.jar
+  container:
+    <<: *CI_SCANNER
+  script:
     - echo "docker.includes=${tag}" >> .cirrus/wss-unified-agent.config
-  scan_script:
     - echo "Scan the ${PUBLIC_IMAGE_NAME}:${tag} image"
     - docker pull "${PUBLIC_IMAGE_NAME}:${tag}"
     - .cirrus/pull.sh ${PUBLIC_IMAGE_NAME} ${tag} ${platform}
