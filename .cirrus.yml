@@ -14,19 +14,19 @@ env:
   CURRENT_VERSION: 10.3.0
   NEXT_VERSION: 10.4.0
 
+build_server_hw_template: &BUILD_SERVER_HW_TEMPLATE
+  type: t2.small
+  region: eu-central-1
+  subnet_id: ${CIRRUS_AWS_SUBNET}
 
 vm_instance_template: &VM_TEMPLATE
   image: docker-builder-v*
-  type: t2.small
-  region: eu-central-1
-  subnet_id: ${CIRRUS_AWS_SUBNET}
+  <<: *BUILD_SERVER_HW_TEMPLATE
 
 
 ci_instance_scanner: &CI_SCANNER
-  type: t2.small
-  region: eu-central-1
-  subnet_id: ${CIRRUS_AWS_SUBNET}
-  image: https://eu-central-1.console.aws.amazon.com/ecr/repositories/private/275878209202/base:j17
+  image: 275878209202.dkr.ecr.eu-central-1.amazonaws.com/base:j17
+  <<: *BUILD_SERVER_HW_TEMPLATE
 
 multi_arch_build_task: 
   env:
