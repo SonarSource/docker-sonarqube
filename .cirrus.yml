@@ -23,6 +23,7 @@ vm_instance_template: &VM_TEMPLATE
 
 
 ci_instance_scanner: &CI_SCANNER
+  <<: *VM_TEMPLATE
   image: https://eu-central-1.console.aws.amazon.com/ecr/repositories/private/275878209202/base:j17
 
 multi_arch_build_task: 
@@ -69,7 +70,7 @@ private_scan_task:
     matrix:
       - tag: $CURRENT_LTS_VERSION-datacenter-app
       - tag: $NEXT_VERSION-datacenter-app
-  container:
+  ec2_instance:
     <<: *CI_SCANNER
   script:
     - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
@@ -88,7 +89,7 @@ public_scan_task:
     matrix:
       - tag: $CURRENT_LTS_VERSION-datacenter-app
       - tag: $CURRENT_VERSION-datacenter-app
-  container:
+  ec2_instance:
     <<: *CI_SCANNER
   script:
     - echo "docker.includes=${tag}" >> .cirrus/wss-unified-agent.config
