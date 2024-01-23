@@ -23,7 +23,9 @@ vm_instance_template: &VM_TEMPLATE
 
 
 ci_instance_scanner: &CI_SCANNER
-  <<: *VM_TEMPLATE
+  type: t2.small
+  region: eu-central-1
+  subnet_id: ${CIRRUS_AWS_SUBNET}
   image: https://eu-central-1.console.aws.amazon.com/ecr/repositories/private/275878209202/base:j17
 
 multi_arch_build_task: 
