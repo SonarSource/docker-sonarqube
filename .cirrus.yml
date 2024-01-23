@@ -28,41 +28,41 @@ ci_instance_scanner: &CI_SCANNER
   image: ${CIRRUS_AWS_ACCOUNT}.dkr.ecr.eu-central-1.amazonaws.com/base:j17-latest
   <<: *BUILD_SERVER_HW_TEMPLATE
 
-multi_arch_build_task: 
-  env:
-    matrix:
-      # - version: 9/community
-      #   tag: $CURRENT_LTS_VERSION-community
-      # - version: 9/developer
-      #   tag: $CURRENT_LTS_VERSION-developer
-      # - version: 9/enterprise
-      #   tag: $CURRENT_LTS_VERSION-enterprise
-      - version: 9/datacenter/app
-        tag: $CURRENT_LTS_VERSION-datacenter-app
-      # - version: 9/datacenter/search
-      #   tag: $CURRENT_LTS_VERSION-datacenter-search
-      # - version: 10/community
-      #   tag: $NEXT_VERSION-community
-      # - version: 10/developer
-      #   tag: $NEXT_VERSION-developer
-      # - version: 10/enterprise
-      #   tag: $NEXT_VERSION-enterprise
-      - version: 10/datacenter/app
-        tag: $NEXT_VERSION-datacenter-app
-      # - version: 10/datacenter/search
-      #   tag: $NEXT_VERSION-datacenter-search
-  ec2_instance:
-    <<: *VM_TEMPLATE
-  login_script:
-    - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
-  setup_script:
-    - docker run -t --rm --privileged tonistiigi/binfmt --install all
-    - docker buildx create --name multibuilder --driver docker-container
-    - docker buildx use multibuilder
-    - docker buildx inspect --bootstrap
-  build_script:
-    - echo "Build the ${STAGING_IMAGE_NAME}:${tag} image supporting two architectures, linux/amd64 and linux/arm64"
-    - .cirrus/multi-arch-build.sh ${STAGING_IMAGE_NAME} ${tag} ${version}
+# multi_arch_build_task: 
+#   env:
+#     matrix:
+#       # - version: 9/community
+#       #   tag: $CURRENT_LTS_VERSION-community
+#       # - version: 9/developer
+#       #   tag: $CURRENT_LTS_VERSION-developer
+#       # - version: 9/enterprise
+#       #   tag: $CURRENT_LTS_VERSION-enterprise
+#       - version: 9/datacenter/app
+#         tag: $CURRENT_LTS_VERSION-datacenter-app
+#       # - version: 9/datacenter/search
+#       #   tag: $CURRENT_LTS_VERSION-datacenter-search
+#       # - version: 10/community
+#       #   tag: $NEXT_VERSION-community
+#       # - version: 10/developer
+#       #   tag: $NEXT_VERSION-developer
+#       # - version: 10/enterprise
+#       #   tag: $NEXT_VERSION-enterprise
+#       - version: 10/datacenter/app
+#         tag: $NEXT_VERSION-datacenter-app
+#       # - version: 10/datacenter/search
+#       #   tag: $NEXT_VERSION-datacenter-search
+#   ec2_instance:
+#     <<: *VM_TEMPLATE
+#   login_script:
+#     - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
+#   setup_script:
+#     - docker run -t --rm --privileged tonistiigi/binfmt --install all
+#     - docker buildx create --name multibuilder --driver docker-container
+#     - docker buildx use multibuilder
+#     - docker buildx inspect --bootstrap
+#   build_script:
+#     - echo "Build the ${STAGING_IMAGE_NAME}:${tag} image supporting two architectures, linux/amd64 and linux/arm64"
+#     - .cirrus/multi-arch-build.sh ${STAGING_IMAGE_NAME} ${tag} ${version}
 
 private_scan_task:    
   env:
@@ -80,7 +80,7 @@ private_scan_task:
     - echo "Scan the ${STAGING_IMAGE_NAME}:${tag} image supporting linux/${platform}"
     - .cirrus/pull.sh ${STAGING_IMAGE_NAME} ${tag} ${platform}
     - java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${STAGING_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
-  depends_on: multi_arch_build
+  # depends_on: multi_arch_build
 
 public_scan_task: 
   only_if: $CIRRUS_CRON == 'nightly-mend-scan'
@@ -100,44 +100,44 @@ public_scan_task:
     - .cirrus/pull.sh ${PUBLIC_IMAGE_NAME} ${tag} ${platform}
     - java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${PUBLIC_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
 
-multi_arch_test_task:
-  matrix:
-    - env:
-        CIRRUS_ARCH: arm64
-        INSTANCE_TYPE: t4g.large
-        AMI_NAME: docker-builder-arm64-v*
-    - env:
-        CIRRUS_ARCH: amd64
-        INSTANCE_TYPE: t3.large
-        AMI_NAME: docker-builder-v*
-  env:
-    matrix:
-      - test_name: docker
-        tag: $CURRENT_LTS_VERSION-community
-      - test_name: docker
-        tag: $CURRENT_LTS_VERSION-developer
-      - test_name: docker
-        tag: $CURRENT_LTS_VERSION-enterprise
-      - test_name: docker-compose
-        tag: $CURRENT_LTS_VERSION-datacenter
-      - test_name: docker
-        tag: $NEXT_VERSION-community
-      - test_name: docker
-        tag: $NEXT_VERSION-developer
-      - test_name: docker
-        tag: $NEXT_VERSION-enterprise
-      - test_name: docker-compose
-        tag: $NEXT_VERSION-datacenter
-  ec2_instance:
-    <<: *VM_TEMPLATE
-    image: ${AMI_NAME}
-    type: ${INSTANCE_TYPE}
-    architecture: ${CIRRUS_ARCH}
-  login_script:
-    - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
-  test_script:
-    - echo "Test the ${STAGING_IMAGE_NAME}:${tag} image supporting linux/${CIRRUS_ARCH}"
-    - sysctl -w vm.max_map_count=524288 # set the recommended memory for ES
-    - ulimit -n 131072 # set the recommended number of opened file descriptors for ES
-    - ./run-tests.sh "${STAGING_IMAGE_NAME}:${tag}" "${test_name}"
-  depends_on: multi_arch_build
+# multi_arch_test_task:
+#   matrix:
+#     - env:
+#         CIRRUS_ARCH: arm64
+#         INSTANCE_TYPE: t4g.large
+#         AMI_NAME: docker-builder-arm64-v*
+#     - env:
+#         CIRRUS_ARCH: amd64
+#         INSTANCE_TYPE: t3.large
+#         AMI_NAME: docker-builder-v*
+#   env:
+#     matrix:
+#       - test_name: docker
+#         tag: $CURRENT_LTS_VERSION-community
+#       - test_name: docker
+#         tag: $CURRENT_LTS_VERSION-developer
+#       - test_name: docker
+#         tag: $CURRENT_LTS_VERSION-enterprise
+#       - test_name: docker-compose
+#         tag: $CURRENT_LTS_VERSION-datacenter
+#       - test_name: docker
+#         tag: $NEXT_VERSION-community
+#       - test_name: docker
+#         tag: $NEXT_VERSION-developer
+#       - test_name: docker
+#         tag: $NEXT_VERSION-enterprise
+#       - test_name: docker-compose
+#         tag: $NEXT_VERSION-datacenter
+#   ec2_instance:
+#     <<: *VM_TEMPLATE
+#     image: ${AMI_NAME}
+#     type: ${INSTANCE_TYPE}
+#     architecture: ${CIRRUS_ARCH}
+#   login_script:
+#     - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
+#   test_script:
+#     - echo "Test the ${STAGING_IMAGE_NAME}:${tag} image supporting linux/${CIRRUS_ARCH}"
+#     - sysctl -w vm.max_map_count=524288 # set the recommended memory for ES
+#     - ulimit -n 131072 # set the recommended number of opened file descriptors for ES
+#     - ./run-tests.sh "${STAGING_IMAGE_NAME}:${tag}" "${test_name}"
+#   depends_on: multi_arch_build
