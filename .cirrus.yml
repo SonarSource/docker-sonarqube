@@ -25,32 +25,32 @@ vm_instance_template: &VM_TEMPLATE
 
 
 ci_instance_scanner: &CI_SCANNER
-  image: 275878209202.dkr.ecr.eu-central-1.amazonaws.com/base:j17
+  image: ${CIRRUS_AWS_ACCOUNT}.dkr.ecr.eu-central-1.amazonaws.com/base:j17
   <<: *BUILD_SERVER_HW_TEMPLATE
 
 multi_arch_build_task: 
   env:
     matrix:
-      - version: 9/community
-        tag: $CURRENT_LTS_VERSION-community
-      - version: 9/developer
-        tag: $CURRENT_LTS_VERSION-developer
-      - version: 9/enterprise
-        tag: $CURRENT_LTS_VERSION-enterprise
+      # - version: 9/community
+      #   tag: $CURRENT_LTS_VERSION-community
+      # - version: 9/developer
+      #   tag: $CURRENT_LTS_VERSION-developer
+      # - version: 9/enterprise
+      #   tag: $CURRENT_LTS_VERSION-enterprise
       - version: 9/datacenter/app
         tag: $CURRENT_LTS_VERSION-datacenter-app
-      - version: 9/datacenter/search
-        tag: $CURRENT_LTS_VERSION-datacenter-search
-      - version: 10/community
-        tag: $NEXT_VERSION-community
-      - version: 10/developer
-        tag: $NEXT_VERSION-developer
-      - version: 10/enterprise
-        tag: $NEXT_VERSION-enterprise
+      # - version: 9/datacenter/search
+      #   tag: $CURRENT_LTS_VERSION-datacenter-search
+      # - version: 10/community
+      #   tag: $NEXT_VERSION-community
+      # - version: 10/developer
+      #   tag: $NEXT_VERSION-developer
+      # - version: 10/enterprise
+      #   tag: $NEXT_VERSION-enterprise
       - version: 10/datacenter/app
         tag: $NEXT_VERSION-datacenter-app
-      - version: 10/datacenter/search
-        tag: $NEXT_VERSION-datacenter-search
+      # - version: 10/datacenter/search
+      #   tag: $NEXT_VERSION-datacenter-search
   ec2_instance:
     <<: *VM_TEMPLATE
   login_script:
