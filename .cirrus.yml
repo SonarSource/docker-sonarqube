@@ -25,7 +25,8 @@ vm_instance_template: &VM_TEMPLATE
 
 
 ci_instance_scanner: &CI_SCANNER
-  image: ${CIRRUS_AWS_ACCOUNT}.dkr.ecr.eu-central-1.amazonaws.com/base:j17-latest
+  # image: ${CIRRUS_AWS_ACCOUNT}.dkr.ecr.eu-central-1.amazonaws.com/base:j17-latest
+  image: 275878209202.dkr.ecr.eu-central-1.amazonaws.com/base:j17-latest
   <<: *BUILD_SERVER_HW_TEMPLATE
 
 # multi_arch_build_task: 
