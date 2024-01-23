@@ -23,7 +23,7 @@ vm_instance_template: &VM_TEMPLATE
 
 
 ci_instance_scanner: &CI_SCANNER
-  image: base:j17
+  image: https://eu-central-1.console.aws.amazon.com/ecr/repositories/private/275878209202/base:j17
 
 multi_arch_build_task: 
   env:
