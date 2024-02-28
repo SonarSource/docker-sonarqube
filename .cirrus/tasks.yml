@@ -11,8 +11,8 @@ env:
   WS_PRODUCTNAME: SonarSource/docker-sonarqube
   STAGING_IMAGE_NAME: sonarsource/sonarqube
   PUBLIC_IMAGE_NAME: sonarqube
-  GCLOUD_REGISTRY: gcr.io/sonarqube-marketplace-provider
-  GCLOUD_PRODUCT_NAME: sonarqube-dce
+  GCLOUD_REGISTRY: gcr.io/sonarsource-public
+  GCLOUD_PRODUCT_NAME: official-sonarqube-data-center-edition
   CURRENT_LTS_VERSION: 9.9.4
   CURRENT_VERSION: 10.4.1
   NEXT_VERSION: 10.5.0
@@ -25,7 +25,7 @@ vm_instance_template: &VM_TEMPLATE
   subnet_id: ${CIRRUS_AWS_SUBNET}
 
 multi_arch_build_gcp_task: 
-  only_if: $CIRRUS_CRON == 'nightly-mend-scan'
+  only_if: $CIRRUS_CRON == 'nightly-mend-scan' || $TRIGGER == 'PUSH_GCP_IMAGES'
   ec2_instance:
     <<: *VM_TEMPLATE
   pull_public_images_script:

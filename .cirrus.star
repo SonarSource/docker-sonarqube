@@ -1,4 +1,5 @@
 load("github.com/SonarSource/cirrus-modules@v2", "load_features")
+load("cirrus", "env", "fs", "yaml")
 
 def main(ctx):
-    return load_features(ctx)
+    return yaml.dumps(load_features(ctx)) + fs.read(".cirrus/tasks.yml")
