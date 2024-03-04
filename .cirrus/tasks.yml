@@ -47,6 +47,16 @@ multi_arch_build_gcp_task:
     - docker tag "${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-search" "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_MINOR_VERSION}"
     - docker push "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_VERSION}"
     - docker push "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_MINOR_VERSION}"
+  setup_multi_build_script:
+    - docker run -t --rm --privileged tonistiigi/binfmt --install all
+    - docker buildx create --name multibuilder --driver docker-container
+    - docker buildx use multibuilder
+    - docker buildx inspect --bootstrap
+  build_script:
+    - echo "Build the ${PUBLIC_IMAGE_NAME}:${NEXT_VERSION}-datacenter-app image supporting two architectures, linux/amd64 and linux/arm64 and push it to the GCP registry ${GCLOUD_REGISTRY}"
+    - .cirrus/multi-arch-build.sh ${PUBLIC_IMAGE_NAME} $NEXT_VERSION-datacenter-app 10/datacenter/app
+    - echo "Build the ${PUBLIC_IMAGE_NAME}:${NEXT_VERSION}-datacenter-search image supporting two architectures, linux/amd64 and linux/arm64 and push it to the GCP registry ${GCLOUD_REGISTRY}"
+    - .cirrus/multi-arch-build.sh ${PUBLIC_IMAGE_NAME} $NEXT_VERSION-datacenter-search 10/datacenter/search
 
 multi_arch_build_task: 
   env:
