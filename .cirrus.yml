@@ -100,7 +100,7 @@ public_scan_task:
     - echo "Scan the ${PUBLIC_IMAGE_NAME}:${tag} image"
     - docker pull "${PUBLIC_IMAGE_NAME}:${tag}"
     - .cirrus/pull.sh ${PUBLIC_IMAGE_NAME} ${tag} ${platform}
-    - java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${PUBLIC_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
+    - CLASSPATH=/usr/local/bin:${CLASSPATH} java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${PUBLIC_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
 
 # multi_arch_test_task:
 #   matrix:
