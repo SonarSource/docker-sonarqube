@@ -25,7 +25,7 @@ vm_instance_template: &VM_TEMPLATE
 
 
 ci_instance_scanner: &CI_SCANNER
-  image: ami-01ce09ab4f1818a00
+  image: ami-017d03ead615c34b1
   <<: *BUILD_SERVER_HW_TEMPLATE
 
 # multi_arch_build_task: 
