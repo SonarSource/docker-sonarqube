@@ -81,7 +81,7 @@ private_scan_task:
     - echo "docker.includes=${tag}" >> .cirrus/wss-unified-agent.config
     - echo "Scan the ${STAGING_IMAGE_NAME}:${tag} image supporting linux/${platform}"
     - .cirrus/pull.sh ${STAGING_IMAGE_NAME} ${tag} ${platform}
-    - java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${STAGING_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
+    - CLASSPATH=/usr/local/bin:${CLASSPATH} java -jar wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${STAGING_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
   # depends_on: multi_arch_build
 
 public_scan_task: 
