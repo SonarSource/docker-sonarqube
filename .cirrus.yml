@@ -72,10 +72,8 @@ private_scan_task:
     matrix:
       - tag: $CURRENT_LTS_VERSION-datacenter-app
       - tag: $NEXT_VERSION-datacenter-app
-  eks_container:
-    image: 275878209202.dkr.ecr.eu-central-1.amazonaws.com/base:j17-latest
-    cluster_name: ${CIRRUS_CLUSTER_NAME}
-    region: eu-central-1
+  ec2_instance:
+    <<: *CI_SCANNER
   login_script:
     - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
   script:
