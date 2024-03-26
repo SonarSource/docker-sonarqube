@@ -16,6 +16,7 @@ env:
   GCLOUD_STAGING_REGISTRY: gcr.io/sonarqube-marketplace-provider
   GCLOUD_STAGING_PRODUCT_NAME: sonarqube-dce-staging
   CURRENT_LTS_VERSION: 9.9.4
+  PREVIOUS_VERSION: 10.3.0
   CURRENT_VERSION: 10.4.1
   NEXT_VERSION: 10.5.0
 
@@ -144,6 +145,7 @@ public_scan_task:
     WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
     matrix:
       - tag: $CURRENT_LTS_VERSION-datacenter-app
+      - tag: $PREVIOUS_VERSION-datacenter-app
       - tag: $CURRENT_VERSION-datacenter-app
   ec2_instance:
     <<: *CI_SCANNER
