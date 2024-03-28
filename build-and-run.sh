@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+# sasldkj
+
 cd "$(dirname "$0")"
 
 port=9000
