@@ -15,7 +15,7 @@ env:
   GCLOUD_PRODUCT_NAME: official-sonarqube-data-center-edition
   GCLOUD_STAGING_REGISTRY: gcr.io/sonarqube-marketplace-provider
   GCLOUD_STAGING_PRODUCT_NAME: sonarqube-dce-staging
-  CURRENT_LTS_VERSION: 9.9.4
+  CURRENT_LTA_VERSION: 9.9.4
   CURRENT_VERSION: 10.4.1
   NEXT_VERSION: 10.5.0
 
@@ -85,15 +85,15 @@ multi_arch_build_task:
   env:
     matrix:
       - version: 9/community
-        tag: $CURRENT_LTS_VERSION-community
+        tag: $CURRENT_LTA_VERSION-community
       - version: 9/developer
-        tag: $CURRENT_LTS_VERSION-developer
+        tag: $CURRENT_LTA_VERSION-developer
       - version: 9/enterprise
-        tag: $CURRENT_LTS_VERSION-enterprise
+        tag: $CURRENT_LTA_VERSION-enterprise
       - version: 9/datacenter/app
-        tag: $CURRENT_LTS_VERSION-datacenter-app
+        tag: $CURRENT_LTA_VERSION-datacenter-app
       - version: 9/datacenter/search
-        tag: $CURRENT_LTS_VERSION-datacenter-search
+        tag: $CURRENT_LTA_VERSION-datacenter-search
       - version: 10/community
         tag: $NEXT_VERSION-community
       - version: 10/developer
@@ -123,7 +123,7 @@ private_scan_task:
     MEND_API_KEY: VAULT[development/kv/data/mend data.apikey]
     WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
     matrix:
-      - tag: $CURRENT_LTS_VERSION-datacenter-app
+      - tag: $CURRENT_LTA_VERSION-datacenter-app
       - tag: $NEXT_VERSION-datacenter-app
   ec2_instance:
     <<: *CI_SCANNER
@@ -143,7 +143,7 @@ public_scan_task:
     MEND_API_KEY: VAULT[development/kv/data/mend data.apikey]
     WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
     matrix:
-      - tag: $CURRENT_LTS_VERSION-datacenter-app
+      - tag: $CURRENT_LTA_VERSION-datacenter-app
       - tag: $CURRENT_VERSION-datacenter-app
   ec2_instance:
     <<: *CI_SCANNER
@@ -167,13 +167,13 @@ multi_arch_test_task:
   env:
     matrix:
       - test_name: docker
-        tag: $CURRENT_LTS_VERSION-community
+        tag: $CURRENT_LTA_VERSION-community
       - test_name: docker
-        tag: $CURRENT_LTS_VERSION-developer
+        tag: $CURRENT_LTA_VERSION-developer
       - test_name: docker
-        tag: $CURRENT_LTS_VERSION-enterprise
+        tag: $CURRENT_LTA_VERSION-enterprise
       - test_name: docker-compose
-        tag: $CURRENT_LTS_VERSION-datacenter
+        tag: $CURRENT_LTA_VERSION-datacenter
       - test_name: docker
         tag: $NEXT_VERSION-community
       - test_name: docker
