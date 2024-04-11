@@ -2,6 +2,14 @@ version: "3"
 
 services:
   sonarqube:
+    deploy:
+      replicas: 3
+    healthcheck:
+      test: wget --no-proxy -qO- http://localhost:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
+      interval: 25s
+      timeout: 1s
+      retries: 3
+      start_period: 55s
     image: sonarqube:datacenter-app
     depends_on:
       search-1:
@@ -9,6 +17,8 @@ services:
       search-2:
         condition: service_healthy
       search-3:
+        condition: service_healthy
+      db:
         condition: service_healthy
     networks:
       - sonar-network
@@ -22,6 +32,7 @@ services:
       SONAR_WEB_PORT: 9000
       SONAR_CLUSTER_SEARCH_HOSTS: "search-1,search-2,search-3"
       SONAR_CLUSTER_HOSTS: "sonarqube"
+      SONAR_CLUSTER_KUBERNETES: true
       SONAR_AUTH_JWTBASE64HS256SECRET: "dZ0EB0KxnF++nr5+4vfTCaun/eWbv6gOoXodiAMqcFo="
       VIRTUAL_HOST: sonarqube.dev.local
       VIRTUAL_PORT: 9000
@@ -35,7 +46,8 @@ services:
     mem_limit: 4096M
     mem_reservation: 1024M
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - sonar-network
     environment:
@@ -59,7 +71,8 @@ services:
     mem_limit: 4096M
     mem_reservation: 1024M
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - sonar-network
     environment:
@@ -83,7 +96,8 @@ services:
     mem_limit: 4096M
     mem_reservation: 1024M
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - sonar-network
     environment:
@@ -102,6 +116,11 @@ services:
         start_period: 55s
   db:
     image: postgres:13
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - sonar-network
     environment:
