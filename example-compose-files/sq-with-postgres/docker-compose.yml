@@ -5,7 +5,8 @@ services:
     hostname: sonarqube
     container_name: sonarqube
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
@@ -17,7 +18,12 @@ services:
     ports:
       - "9000:9000"
   db:
-    image: postgres:13
+    image: postgres:15
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     hostname: postgresql
     container_name: postgresql
     environment:
