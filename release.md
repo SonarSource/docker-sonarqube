@@ -10,10 +10,10 @@ Overview
 Release of a new version of the official SonarQube Docker images is made of several operations:
 
 1. bump the version of SonarQube in Dockerfiles
-2. bump the version of `CURRENT_LTA_VERSION` and `CURRENT_VERSION` accordingly in `.cirrus.yml` (please note that the nightly build will fail before the public image becomes available)
+2. bump the version of `CURRENT_LTA_VERSION` and `CURRENT_VERSION` accordingly in `.cirrus/tasks.yml` (please note that the nightly build will fail before the public image becomes available)
 3. Update the docker hub SonarQube's documentation (if applicable)
 4. Update Docker Hub's SonarQube images
-5. add a GIT tag for the new version 
+5. add a GIT tag for the new version
 
 
 Bump the version of SonarQube in Dockerfiles
