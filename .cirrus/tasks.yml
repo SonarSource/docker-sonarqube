@@ -16,7 +16,7 @@ env:
   GCLOUD_STAGING_REGISTRY: gcr.io/sonarqube-marketplace-provider
   GCLOUD_STAGING_PRODUCT_NAME: sonarqube-dce-staging
   CURRENT_LTA_VERSION: 9.9.5
-  CURRENT_VERSION: 10.5.0
+  CURRENT_VERSION: 10.5.1
   NEXT_VERSION: 10.6.0
 
 
@@ -33,7 +33,7 @@ ci_instance_scanner: &CI_SCANNER
   image: platform-sq-mend-scanner-linux-v*
   <<: *BUILD_SERVER_HW_TEMPLATE
 
-multi_arch_build_gcp_prod_task: 
+multi_arch_build_gcp_prod_task:
   only_if: $CIRRUS_CRON == 'nightly-mend-scan' || $TRIGGER == 'PUSH_GCP_IMAGES'
   ec2_instance:
     <<: *VM_TEMPLATE
@@ -56,8 +56,8 @@ multi_arch_build_gcp_prod_task:
     - docker tag "${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-search" "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_MINOR_VERSION}"
     - docker push "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_VERSION}"
     - docker push "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_MINOR_VERSION}"
-  
-multi_arch_build_gcp_staging_task: 
+
+multi_arch_build_gcp_staging_task:
   only_if: $CIRRUS_CRON == 'nightly-mend-scan' || $TRIGGER == 'PUSH_GCP_STAGING_IMAGES'
   env:
     matrix:
@@ -81,7 +81,7 @@ multi_arch_build_gcp_staging_task:
     - .cirrus/multi-arch-build.sh ${STAGING_IMAGE_NAME} $NEXT_VERSION ${version}
     - .cirrus/multi-arch-build.sh ${STAGING_IMAGE_NAME} $NEXT_MINOR_VERSION ${version}
 
-multi_arch_build_task: 
+multi_arch_build_task:
   env:
     matrix:
       - version: 9/community
@@ -117,7 +117,7 @@ multi_arch_build_task:
     - echo "Build the ${STAGING_IMAGE_NAME}:${tag} image supporting two architectures, linux/amd64 and linux/arm64"
     - .cirrus/multi-arch-build.sh ${STAGING_IMAGE_NAME} ${tag} ${version}
 
-private_scan_task:    
+private_scan_task:
   env:
     platform: amd64
     MEND_API_KEY: VAULT[development/kv/data/mend data.apikey]
@@ -136,7 +136,7 @@ private_scan_task:
     - java -jar /usr/local/bin/wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${STAGING_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
   depends_on: multi_arch_build
 
-public_scan_task: 
+public_scan_task:
   only_if: $CIRRUS_CRON == 'nightly-mend-scan'
   env:
     platform: amd64
