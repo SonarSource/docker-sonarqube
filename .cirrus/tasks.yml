@@ -17,7 +17,7 @@ env:
   GCLOUD_STAGING_PRODUCT_NAME: sonarqube-dce-staging
   CURRENT_LTA_VERSION: 9.9.5
   CURRENT_VERSION: 10.5.1
-  NEXT_VERSION: 10.6.0
+  NEXT_VERSION: 10.5.1
 
 
 build_server_hw_template: &BUILD_SERVER_HW_TEMPLATE
