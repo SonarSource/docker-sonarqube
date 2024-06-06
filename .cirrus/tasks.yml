@@ -23,7 +23,6 @@ env:
 build_server_hw_template: &BUILD_SERVER_HW_TEMPLATE
   type: t2.small
   region: eu-central-1
-  subnet_id: ${CIRRUS_AWS_SUBNET}
 
 vm_instance_template: &VM_TEMPLATE
   image: docker-builder-v*
