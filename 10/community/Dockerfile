@@ -23,7 +23,11 @@ ENV DOCKER_RUNNING="true" \
     SQ_DATA_DIR="/opt/sonarqube/data" \
     SQ_EXTENSIONS_DIR="/opt/sonarqube/extensions" \
     SQ_LOGS_DIR="/opt/sonarqube/logs" \
-    SQ_TEMP_DIR="/opt/sonarqube/temp"
+    SQ_TEMP_DIR="/opt/sonarqube/temp" \
+    ES_TMPDIR=${SQ_TEMP_DIR}
+
+COPY sonar.crt /usr/local/share/ca-certificates/sonar.crt
+RUN update-ca-certificates
 
 # Separate stage to use variable expansion
 ENV ES_TMPDIR="${SQ_TEMP_DIR}"
@@ -60,7 +64,8 @@ RUN set -eux; \
     chmod -R 550 ${SONARQUBE_HOME}; \
     chmod -R 770 "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}"; \
     apt-get remove -y gnupg unzip; \
-    rm -rf /var/lib/apt/lists/*;
+    rm -rf /var/lib/apt/lists/*; \
+    apt-get clean;
 
 VOLUME ["${SQ_DATA_DIR}", "${SQ_EXTENSIONS_DIR}", "${SQ_LOGS_DIR}", "${SQ_TEMP_DIR}"]
 

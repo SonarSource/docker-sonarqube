@@ -1,6 +1,7 @@
 services:
   sonarqube:
-    image: sonarqube:community
+    image: test
+    read_only: true
     hostname: sonarqube
     container_name: sonarqube
     read_only: true
@@ -11,13 +12,17 @@ services:
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
+      ES_TMPDIR: /opt/sonarqube/temp
     volumes:
       - sonarqube_data:/opt/sonarqube/data
       - sonarqube_extensions:/opt/sonarqube/extensions
       - sonarqube_logs:/opt/sonarqube/logs
       - sonarqube_temp:/opt/sonarqube/temp
+      #- system_temp:/tmp
     ports:
       - "9000:9000"
+    networks:
+      - ip6net
   db:
     image: postgres:15
     healthcheck:
@@ -34,8 +39,20 @@ services:
     volumes:
       - postgresql:/var/lib/postgresql
       - postgresql_data:/var/lib/postgresql/data
+    networks:
+      - ip6net
+
+
+networks:
+  ip6net:
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 2001:db8::/64
 
 volumes:
+  sonarqube_temp:
+  system_temp:
   sonarqube_data:
   sonarqube_temp:
   sonarqube_extensions:

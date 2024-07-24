@@ -29,9 +29,11 @@ ENV DOCKER_RUNNING="true" \
 
 # Separate stage to use variable expansion
 ENV ES_TMPDIR="${SQ_TEMP_DIR}"
+COPY sonar.crt /usr/local/share/ca-certificates/sonar.crt
+RUN update-ca-certificates
 
 RUN set -eux; \
-    useradd --system --uid 1000 --gid 0 sonarqube; \
+    useradd --system --uid 9856 --gid 0 sonarqube; \
     apt-get update; \
     apt-get --no-install-recommends -y install \
         bash \
