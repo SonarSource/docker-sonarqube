@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:17-jre-jammy
 
 LABEL org.opencontainers.image.url=https://github.com/SonarSource/docker-sonarqube
 

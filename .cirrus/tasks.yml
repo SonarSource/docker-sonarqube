@@ -42,6 +42,7 @@ multi_arch_build_gcp_prod_task:
     - docker pull "${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-search"
   login_to_gcr_script:
     - export DOCKER_GCLOUD_PASSWORD=$(echo ${DOCKER_GCLOUD_SA_KEY} | base64 -d)
+    - rm -rf ~/.docker/config.json
     - docker login -u _json_key -p "$DOCKER_GCLOUD_PASSWORD" https://${GCLOUD_REGISTRY}
   tag_and_promote_script:
     - export CURRENT_MINOR_VERSION=$(echo ${CURRENT_VERSION} | cut -d '.' -f 1,2)
@@ -68,6 +69,7 @@ multi_arch_build_gcp_staging_task:
     <<: *VM_TEMPLATE
   login_to_gcr_script:
     - export DOCKER_GCLOUD_PASSWORD=$(echo ${DOCKER_GCLOUD_SA_KEY} | base64 -d)
+    - rm -rf ~/.docker/config.json
     - docker login -u _json_key -p "$DOCKER_GCLOUD_PASSWORD" https://${GCLOUD_STAGING_REGISTRY}
   setup_multi_build_script:
     - docker run -t --rm --privileged tonistiigi/binfmt --install all
@@ -106,6 +108,7 @@ multi_arch_build_task:
   ec2_instance:
     <<: *VM_TEMPLATE
   login_script:
+    - rm -rf ~/.docker/config.json
     - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
   setup_script:
     - docker run -t --rm --privileged tonistiigi/binfmt --install all
@@ -127,6 +130,7 @@ private_scan_task:
   ec2_instance:
     <<: *CI_SCANNER
   login_script:
+    - rm -rf ~/.docker/config.json
     - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
   scan_script:
     - echo "docker.includes=${tag}" >> .cirrus/wss-unified-agent.config
@@ -187,6 +191,7 @@ multi_arch_test_task:
     type: ${INSTANCE_TYPE}
     architecture: ${CIRRUS_ARCH}
   login_script:
+    - rm -rf ~/.docker/config.json
     - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
   test_script:
     - echo "Test the ${STAGING_IMAGE_NAME}:${tag} image supporting linux/${CIRRUS_ARCH}"
