@@ -9,6 +9,7 @@ services:
       retries: 3
       start_period: 55s
     image: sonarqube:datacenter-app
+    read_only: true
     depends_on:
       search-1:
         condition: service_healthy
@@ -37,8 +38,10 @@ services:
     volumes:
       - sonarqube_extensions:/opt/sonarqube/extensions
       - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_temp:/opt/sonarqube/temp
   search-1:
     image: sonarqube:datacenter-search
+    read_only: true
     hostname: "search-1"
     cpus: 0.5
     mem_limit: 3072M
@@ -56,6 +59,8 @@ services:
       SONAR_CLUSTER_NODE_NAME: "search-1"
     volumes:
       - search-data-1:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+      - temp_search-1:/opt/sonarqube/temp
     healthcheck:
         test: wget --no-proxy -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
         interval: 25s
@@ -64,6 +69,7 @@ services:
         start_period: 55s
   search-2:
     image: sonarqube:datacenter-search
+    read_only: true
     hostname: "search-2"
     cpus: 0.5
     mem_limit: 3072M
@@ -81,6 +87,8 @@ services:
       SONAR_CLUSTER_NODE_NAME: "search-2"
     volumes:
       - search-data-2:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+      - temp_search-2:/opt/sonarqube/temp
     healthcheck:
         test: wget --no-proxy -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
         interval: 25s
@@ -89,6 +97,7 @@ services:
         start_period: 55s
   search-3:
     image: sonarqube:datacenter-search
+    read_only: true
     hostname: "search-3"
     cpus: 0.5
     mem_limit: 3072M
@@ -106,6 +115,8 @@ services:
       SONAR_CLUSTER_NODE_NAME: "search-3"
     volumes:
       - search-data-3:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+      - temp_search-3:/opt/sonarqube/temp
     healthcheck:
         test: wget --no-proxy -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
         interval: 25s
@@ -153,5 +164,9 @@ volumes:
   search-data-1:
   search-data-2:
   search-data-3:
+  sonarqube_temp:
+  temp_search-1:
+  temp_search-2:
+  temp_search-3:
   postgresql:
   postgresql_data:
