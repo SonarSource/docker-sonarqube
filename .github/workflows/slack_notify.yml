@@ -1,0 +1,12 @@
+name: Slack Notifications
+on:
+  check_run:
+    types: [ rerequested, completed ]
+
+jobs:
+  slack-notifications:
+    permissions:
+      id-token: write  # to authenticate via OIDC
+    uses: SonarSource/gh-action_build-notify/.github/workflows/main.yaml@v1
+    with:
+      slackChannel: squad-sq-platform-build-notification
