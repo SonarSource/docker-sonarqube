@@ -3,6 +3,7 @@ services:
     image: sonarqube:community
     hostname: sonarqube
     container_name: sonarqube
+    read_only: true
     depends_on:
       db:
         condition: service_healthy
@@ -14,6 +15,7 @@ services:
       - sonarqube_data:/opt/sonarqube/data
       - sonarqube_extensions:/opt/sonarqube/extensions
       - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_temp:/opt/sonarqube/temp
     ports:
       - "9000:9000"
   db:
@@ -35,6 +37,7 @@ services:
 
 volumes:
   sonarqube_data:
+  sonarqube_temp:
   sonarqube_extensions:
   sonarqube_logs:
   postgresql:
