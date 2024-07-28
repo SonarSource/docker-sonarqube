@@ -3,7 +3,6 @@ services:
     image: sonarqube:community
     hostname: sonarqube
     container_name: sonarqube
-    read_only: true
     depends_on:
       db:
         condition: service_healthy
