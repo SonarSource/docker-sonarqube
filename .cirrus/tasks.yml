@@ -25,7 +25,7 @@ build_server_hw_template: &BUILD_SERVER_HW_TEMPLATE
   region: eu-central-1
 
 vm_instance_template: &VM_TEMPLATE
-  image: docker-builder-v*
+  image: pr-52-docker-builder-v*
   <<: *BUILD_SERVER_HW_TEMPLATE
 
 ci_instance_scanner: &CI_SCANNER
