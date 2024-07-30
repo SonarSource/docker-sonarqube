@@ -23,7 +23,12 @@ RUN set -eux; \
     groupadd --system --gid 1000 sonarqube; \
     useradd --system --uid 1000 --gid sonarqube sonarqube; \
     apt-get update; \
-    apt-get --no-install-recommends -y install gnupg unzip curl bash fonts-dejavu; \
+    apt-get --no-install-recommends -y install \
+        bash \
+        curl \
+        fonts-dejavu \
+        gnupg \
+        unzip; \
     echo "networkaddress.cache.ttl=5" >> "${JAVA_HOME}/conf/security/java.security"; \
     sed --in-place --expression="s?securerandom.source=file:/dev/random?securerandom.source=file:/dev/urandom?g" "${JAVA_HOME}/conf/security/java.security"; \
     # pub   2048R/D26468DE 2015-05-25
