@@ -31,6 +31,7 @@ ENV ES_TMPDIR="${SQ_TEMP_DIR}"
 RUN set -eux; \
     useradd --system --uid 1000 --gid 0 sonarqube; \
     apt-get update; \
+    apt-get upgrade -y; \
     apt-get --no-install-recommends -y install \
         bash \
         curl \
