@@ -66,7 +66,7 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*; \
     apt-get clean;
 
-VOLUME ["${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}"]
+VOLUME ["${SQ_DATA_DIR}", "${SQ_EXTENSIONS_DIR}", "${SQ_LOGS_DIR}", "${SQ_TEMP_DIR}"]
 
 COPY run.sh sonar.sh ${SONARQUBE_HOME}/docker/
 
