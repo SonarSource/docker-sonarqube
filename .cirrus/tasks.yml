@@ -15,7 +15,7 @@ env:
   GCLOUD_PRODUCT_NAME: official-sonarqube-data-center-edition
   GCLOUD_STAGING_REGISTRY: gcr.io/sonarqube-marketplace-provider
   GCLOUD_STAGING_PRODUCT_NAME: sonarqube-dce-staging
-  CURRENT_LTA_VERSION: 9.9.6
+  CURRENT_LTA_VERSION: 9.9.7
   CURRENT_VERSION: 10.6.0
   NEXT_VERSION: 10.7.0
 
