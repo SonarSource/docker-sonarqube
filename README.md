@@ -26,6 +26,6 @@ With that in mind, if you would like to submit a code contribution, please creat
 
 ### License
 
-Copyright 2015-2020 SonarSource.
+Copyright 2015-2024 SonarSource.
 
 Licensed under the [GNU Lesser General Public License, Version 3.0](http://www.gnu.org/licenses/lgpl.txt)
