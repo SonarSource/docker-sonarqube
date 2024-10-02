@@ -1,0 +1,22 @@
+name: Update copyright year
+
+on:
+  schedule:
+    - cron: '0 3 1 1 *' # 03:00 AM on January 1
+
+jobs:
+  update-license-year:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: FantasticFiasco/action-update-license-year@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: |
+            NOTICE.txt
+            README.md
+          branchName: license/no-jira-update-year-{{currentYear}}
+          prTitle: NO-JIRA - Update copyright year
+          commitTitle: NO-JIRA - Update copyright year
