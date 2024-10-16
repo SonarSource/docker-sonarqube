@@ -9,8 +9,24 @@ services:
       - sonarqube_temp:/opt/sonarqube/temp
     ports:
       - "9000:9000"
+    networks:
+      - ${NETWORK_TYPE:-ipv4}
 volumes:
   sonarqube_data:
   sonarqube_extensions:
   sonarqube_logs:
   sonarqube_temp:
+
+networks:
+  ipv4:
+    driver: bridge
+    enable_ipv6: false
+  dual:
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: "192.168.1.0/24"
+          gateway: "192.168.1.1"
+        - subnet: "2001:db8:1::/64"
+          gateway: "2001:db8:1::1"
