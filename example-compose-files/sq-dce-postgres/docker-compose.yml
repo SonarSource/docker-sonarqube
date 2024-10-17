@@ -20,7 +20,7 @@ services:
       db:
         condition: service_healthy
     networks:
-      - sonar-network
+      - ${NETWORK_TYPE:-ipv4}
     cpus: 0.5
     mem_limit: 4096M
     mem_reservation: 4096M
@@ -51,7 +51,7 @@ services:
       db:
         condition: service_healthy
     networks:
-      - sonar-network
+      - ${NETWORK_TYPE:-ipv4}
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
@@ -80,7 +80,7 @@ services:
       db:
         condition: service_healthy
     networks:
-      - sonar-network
+      - ${NETWORK_TYPE:-ipv4}
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
@@ -109,7 +109,7 @@ services:
       db:
         condition: service_healthy
     networks:
-      - sonar-network
+      - ${NETWORK_TYPE:-ipv4}
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
@@ -135,7 +135,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - sonar-network
+      - ${NETWORK_TYPE:-ipv4}
     environment:
       POSTGRES_USER: sonar
       POSTGRES_PASSWORD: sonar
@@ -150,17 +150,24 @@ services:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./unrestricted_client_body_size.conf:/etc/nginx/conf.d/unrestricted_client_body_size.conf:ro
     networks:
-      - sonar-network
+      - ${NETWORK_TYPE:-ipv4}
       - sonar-public
 
 networks:
-  sonar-network:
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.28.2.0/24
   sonar-public:
     driver: bridge
+  ipv4:
+    driver: bridge
+    enable_ipv6: false
+  dual:
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: "192.168.3.0/24"
+          gateway: "192.168.3.1"
+        - subnet: "2001:db8:3::/64"
+          gateway: "2001:db8:3::1"
 
 volumes:
   sonarqube_extensions:
