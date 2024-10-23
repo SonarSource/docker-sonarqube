@@ -36,6 +36,7 @@ RUN set -eux; \
     apt-get --no-install-recommends -y install \
         bash \
         curl \
+        dnsutils \
         fonts-dejavu \
         gnupg \
         iproute2 \

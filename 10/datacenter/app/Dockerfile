@@ -27,12 +27,16 @@ ENV DOCKER_RUNNING="true" \
     SONAR_CLUSTER_NODE_TYPE="application" \
     SONAR_CLUSTER_ENABLED="true"
 
+COPY sonar.crt /usr/local/share/ca-certificates/sonar.crt
+RUN update-ca-certificates
+
 RUN set -eux; \
     useradd --system --uid 1000 --gid 0 sonarqube; \
     apt-get update; \
     apt-get --no-install-recommends -y install \
         bash \
         curl \
+        dnsutils \
         fonts-dejavu \
         gnupg \
         iproute2 \

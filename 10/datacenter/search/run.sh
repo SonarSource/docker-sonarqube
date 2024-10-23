@@ -1,9 +1,46 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -euxo pipefail
 
 HOSTNAME=$(hostname)
-IP=$(ip -4 address show scope global | grep inet | awk '{ print $2 }' | head -n 1 | cut -d \/ -f 1)
+# Get the global IPv4 and IPv6 addresses
+IPV4=$(ip -4 -br address show scope global | awk '{print $3}' | cut -d '/' -f 1 | head -n 1)
+IPV6=$(ip -6 -br address show scope global | awk '{print $3}' | cut -d '/' -f 1 | head -n 1)
+
+# Check Kubernetes DNS for IPv4 and IPv6
+K8S_DNS_IPV4_ANSWER=1
+K8S_DNS_IPV6_ANSWER=1
+
+if output=$(dig -4 +short kubernetes.default.svc.cluster.local 2>/dev/null) && [[ -n "$output" ]]; then
+    K8S_DNS_IPV4_ANSWER=0
+fi
+
+if output=$(dig -6 AAAA +short kubernetes.default.svc.cluster.local 2>/dev/null) && [[ -n "$output" ]]; then
+    K8S_DNS_IPV6_ANSWER=0
+fi
+
+# Determine the IP address to use
+if [[ $K8S_DNS_IPV4_ANSWER -eq 0 || $K8S_DNS_IPV6_ANSWER -eq 0 ]]; then
+    # Check if it's IPv6 only
+    if [[ $K8S_DNS_IPV6_ANSWER -eq 0 && $K8S_DNS_IPV4_ANSWER -eq 1 ]]; then
+        IP=$IPV6
+    elif [[ $K8S_DNS_IPV4_ANSWER -eq 0 ]]; then
+        IP=$IPV4
+    else
+        echo "No valid Kubernetes IP addresses found." && exit 1
+    fi
+else
+    # Not running in Kubernetes, decide which IP to use
+    if [[ -n "$IPV4" ]]; then
+        IP=$IPV4
+    elif [[ -n "$IPV6" ]]; then
+        IP=$IPV6
+    else
+        echo "No valid IP addresses found." && exit 1
+    fi
+fi
+
+echo "Using IP: $IP"
 
 declare -a sq_opts=()
 set_prop() {
