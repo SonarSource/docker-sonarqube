@@ -1,0 +1,33 @@
+name: Reusable release job template
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+
+jobs:
+  release:
+    name: Upload Release Asset
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - id: secrets
+        uses: SonarSource/vault-action-wrapper@3.0.0
+        with:
+          secrets: |
+            development/kv/data/sign key | gpg_key;
+            development/kv/data/sign passphrase | gpg_passphrase;
+      - name: Generate CycloneDX SBOM
+        uses: SonarSource/gh-action_sbom@v1
+        with:
+          image: "sonarqube:${{ inputs.tag }}"
+          filename: "sonarqube-${{ inputs.tag }}-bom.json"
+          upload-artifact: true
+          upload-release-assets: true
+        env:
+          GPG_PRIVATE_KEY_PASSPHRASE: ${{ fromJSON(steps.secrets.outputs.vault).gpg_passphrase }}
+          GPG_PRIVATE_KEY_BASE64: ${{ fromJSON(steps.secrets.outputs.vault).gpg_key }}
