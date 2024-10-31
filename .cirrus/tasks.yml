@@ -18,6 +18,7 @@ env:
   CURRENT_LTA_VERSION: 9.9.7
   CURRENT_VERSION: 10.7.0
   NEXT_VERSION: 10.8.0
+  COMMUNITY_BUILD_VERSION: 0000
 
 
 build_server_hw_template: &BUILD_SERVER_HW_TEMPLATE
@@ -93,8 +94,8 @@ multi_arch_build_task:
         tag: $CURRENT_LTA_VERSION-datacenter-app
       - version: 9/datacenter/search
         tag: $CURRENT_LTA_VERSION-datacenter-search
-      - version: 10/community
-        tag: $NEXT_VERSION-community
+      - version: community-build
+        tag: $COMMUNITY_BUILD_VERSION-community
       - version: 10/developer
         tag: $NEXT_VERSION-developer
       - version: 10/enterprise
@@ -193,7 +194,7 @@ multi_arch_test_task:
       - test_name: docker-compose
         tag: $CURRENT_LTA_VERSION-datacenter
       - test_name: docker
-        tag: $NEXT_VERSION-community
+        tag: $COMMUNITY_BUILD_VERSION-community
       - test_name: docker
         tag: $NEXT_VERSION-developer
       - test_name: docker
