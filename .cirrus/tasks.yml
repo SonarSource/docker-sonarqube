@@ -82,6 +82,7 @@ multi_arch_build_gcp_staging_task:
     - .cirrus/multi-arch-build.sh ${STAGING_IMAGE_NAME} $NEXT_MINOR_VERSION ${version}
 
 multi_arch_build_task:
+  skip: "!changesInclude(${version}/**/*)"
   env:
     matrix:
       - version: 9/community
