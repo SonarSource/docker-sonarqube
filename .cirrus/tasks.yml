@@ -81,29 +81,7 @@ multi_arch_build_gcp_staging_task:
     - .cirrus/multi-arch-build.sh ${STAGING_IMAGE_NAME} $NEXT_VERSION ${version}
     - .cirrus/multi-arch-build.sh ${STAGING_IMAGE_NAME} $NEXT_MINOR_VERSION ${version}
 
-multi_arch_build_task:
-  env:
-    matrix:
-      - version: 9/community
-        tag: $CURRENT_LTA_VERSION-community
-      - version: 9/developer
-        tag: $CURRENT_LTA_VERSION-developer
-      - version: 9/enterprise
-        tag: $CURRENT_LTA_VERSION-enterprise
-      - version: 9/datacenter/app
-        tag: $CURRENT_LTA_VERSION-datacenter-app
-      - version: 9/datacenter/search
-        tag: $CURRENT_LTA_VERSION-datacenter-search
-      - version: community-build
-        tag: $COMMUNITY_BUILD_VERSION-community
-      - version: 10/developer
-        tag: $NEXT_VERSION-developer
-      - version: 10/enterprise
-        tag: $NEXT_VERSION-enterprise
-      - version: 10/datacenter/app
-        tag: $NEXT_VERSION-datacenter-app
-      - version: 10/datacenter/search
-        tag: $NEXT_VERSION-datacenter-search
+multi_arch_build_task_template: &multi_arch_build_task_template
   ec2_instance:
     <<: *VM_TEMPLATE
   login_script:
@@ -116,6 +94,44 @@ multi_arch_build_task:
   build_script:
     - echo "Build the ${STAGING_IMAGE_NAME}:${tag} image supporting two architectures, linux/amd64 and linux/arm64"
     - .cirrus/multi-arch-build.sh ${STAGING_IMAGE_NAME} ${tag} ${version}
+
+multi_arch_build_9_x_task:
+  <<: *multi_arch_build_task_template
+  skip: "!changesInclude('9/**/*')"
+  env:
+    matrix:
+      - version: 9/community
+        tag: $CURRENT_LTA_VERSION-community
+      - version: 9/developer
+        tag: $CURRENT_LTA_VERSION-developer
+      - version: 9/enterprise
+        tag: $CURRENT_LTA_VERSION-enterprise
+      - version: 9/datacenter/app
+        tag: $CURRENT_LTA_VERSION-datacenter-app
+      - version: 9/datacenter/search
+        tag: $CURRENT_LTA_VERSION-datacenter-search
+
+multi_arch_build_10_x_task:
+  <<: *multi_arch_build_task_template
+  skip: "!changesInclude('10/**/*')"
+  env:
+    matrix:
+      - version: 10/developer
+        tag: $NEXT_VERSION-developer
+      - version: 10/enterprise
+        tag: $NEXT_VERSION-enterprise
+      - version: 10/datacenter/app
+        tag: $NEXT_VERSION-datacenter-app
+      - version: 10/datacenter/search
+        tag: $NEXT_VERSION-datacenter-search
+
+multi_arch_build_community_build_task:
+  <<: *multi_arch_build_task_template
+  skip: "!changesInclude('community-build/**/*')"
+  env:
+    matrix:
+      - version: community-build
+        tag: $COMMUNITY_BUILD_VERSION-community
 
 private_scan_task:
   env:
@@ -134,7 +150,9 @@ private_scan_task:
     - echo "Scan the ${STAGING_IMAGE_NAME}:${tag} image supporting linux/${platform}"
     - .cirrus/pull.sh ${STAGING_IMAGE_NAME} ${tag} ${platform}
     - java -jar /usr/local/bin/wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${STAGING_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
-  depends_on: multi_arch_build
+  depends_on:
+  - multi_arch_build_9_x
+  - multi_arch_build_10_x
 
 public_scan_task:
   only_if: $CIRRUS_CRON == 'nightly-mend-scan'
@@ -173,7 +191,23 @@ public_fossa_scan_task:
     - .cirrus/pull.sh ${PUBLIC_IMAGE_NAME} ${tag} ${platform}
     - fossa container analyze -p "docker-sonarqube" -b "${tag}" ${PUBLIC_IMAGE_NAME}:${tag}
 
-multi_arch_test_task:
+multi_arch_test_task_template: &multi_arch_test_task_template
+  ec2_instance:
+    <<: *VM_TEMPLATE
+    image: ${AMI_NAME}
+    type: ${INSTANCE_TYPE}
+    architecture: ${CIRRUS_ARCH}
+  login_script:
+    - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
+  test_script:
+    - echo "Test the ${STAGING_IMAGE_NAME}:${tag} image supporting linux/${CIRRUS_ARCH}"
+    - sysctl -w vm.max_map_count=524288 # set the recommended memory for ES
+    - ulimit -n 131072 # set the recommended number of opened file descriptors for ES
+    - ./run-tests.sh "${STAGING_IMAGE_NAME}:${tag}" "${test_name}"
+
+multi_arch_test_9_x_task:
+  <<: *multi_arch_test_task_template
+  skip: "!changesInclude('9/**/*')"
   matrix:
     - env:
         CIRRUS_ARCH: arm64
@@ -193,24 +227,44 @@ multi_arch_test_task:
         tag: $CURRENT_LTA_VERSION-enterprise
       - test_name: docker-compose
         tag: $CURRENT_LTA_VERSION-datacenter
-      - test_name: docker
-        tag: $COMMUNITY_BUILD_VERSION-community
+  depends_on: multi_arch_build_9_x
+
+multi_arch_test_10_x_task:
+  <<: *multi_arch_test_task_template
+  skip: "!changesInclude('10/**/*')"
+  matrix:
+    - env:
+        CIRRUS_ARCH: arm64
+        INSTANCE_TYPE: t4g.large
+        AMI_NAME: docker-builder-arm64-v*
+    - env:
+        CIRRUS_ARCH: amd64
+        INSTANCE_TYPE: t3.large
+        AMI_NAME: docker-builder-v*
+  env:
+    matrix:
       - test_name: docker
         tag: $NEXT_VERSION-developer
       - test_name: docker
         tag: $NEXT_VERSION-enterprise
       - test_name: docker-compose
         tag: $NEXT_VERSION-datacenter
-  ec2_instance:
-    <<: *VM_TEMPLATE
-    image: ${AMI_NAME}
-    type: ${INSTANCE_TYPE}
-    architecture: ${CIRRUS_ARCH}
-  login_script:
-    - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
-  test_script:
-    - echo "Test the ${STAGING_IMAGE_NAME}:${tag} image supporting linux/${CIRRUS_ARCH}"
-    - sysctl -w vm.max_map_count=524288 # set the recommended memory for ES
-    - ulimit -n 131072 # set the recommended number of opened file descriptors for ES
-    - ./run-tests.sh "${STAGING_IMAGE_NAME}:${tag}" "${test_name}"
-  depends_on: multi_arch_build
+  depends_on: multi_arch_build_10_x
+
+multi_arch_test_community_build_task:
+  <<: *multi_arch_test_task_template
+  skip: "!changesInclude('community-build/**/*')"
+  matrix:
+    - env:
+        CIRRUS_ARCH: arm64
+        INSTANCE_TYPE: t4g.large
+        AMI_NAME: docker-builder-arm64-v*
+    - env:
+        CIRRUS_ARCH: amd64
+        INSTANCE_TYPE: t3.large
+        AMI_NAME: docker-builder-v*
+  env:
+    matrix:
+      - test_name: docker
+        tag: $COMMUNITY_BUILD_VERSION-community
+  depends_on: multi_arch_build_community_build
