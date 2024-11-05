@@ -37,7 +37,7 @@ jobs:
       tag: ${{ matrix.tag }}
   release-community-build:
     name: Upload Release Assets for community-build release
-    if: contains(github.event.release.name, 'community-build')
+    if: contains(github.event.release.name, 'Community Build')
     strategy:
       fail-fast: false
       matrix:
