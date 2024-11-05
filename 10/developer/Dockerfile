@@ -62,6 +62,8 @@ RUN set -eux; \
     apt-get remove -y gnupg unzip; \
     rm -rf /var/lib/apt/lists/*;
 
+RUN apt-get update
+
 VOLUME ["${SQ_DATA_DIR}", "${SQ_EXTENSIONS_DIR}", "${SQ_LOGS_DIR}", "${SQ_TEMP_DIR}"]
 
 COPY entrypoint.sh ${SONARQUBE_HOME}/docker/
