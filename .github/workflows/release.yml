@@ -6,8 +6,9 @@ on:
       - created
 
 jobs:
-  release:
-    name: Upload Release Asset
+  release-9-x:
+    name: Upload Release Assets for 9-X releases
+    if: contains(github.event.release.name, '9.')
     strategy:
       fail-fast: false
       matrix:
@@ -17,29 +18,31 @@ jobs:
           - 9-enterprise
           - 9-datacenter-app
           - 9-datacenter-search
-          - 10-community
+    uses: ./.github/workflows/release-template.yml
+    with:
+      tag: ${{ matrix.tag }}
+  release-10-x:
+    name: Upload Release Assets for 10-X releases
+    if: contains(github.event.release.name, '10.')
+    strategy:
+      fail-fast: false
+      matrix:
+        tag:
           - 10-developer
           - 10-enterprise
           - 10-datacenter-app
           - 10-datacenter-search
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
-    steps:
-      - id: secrets
-        uses: SonarSource/vault-action-wrapper@3.0.0
-        with:
-          secrets: |
-            development/kv/data/sign key | gpg_key;
-            development/kv/data/sign passphrase | gpg_passphrase;
-      - name: Generate CycloneDX SBOM
-        uses: SonarSource/gh-action_sbom@v1
-        with:
-          image: "sonarqube:${{ matrix.tag }}"
-          filename: "sonarqube-${{ matrix.tag }}-bom.json"
-          upload-artifact: true
-          upload-release-assets: true
-        env:
-          GPG_PRIVATE_KEY_PASSPHRASE: ${{ fromJSON(steps.secrets.outputs.vault).gpg_passphrase }}
-          GPG_PRIVATE_KEY_BASE64: ${{ fromJSON(steps.secrets.outputs.vault).gpg_key }}
+    uses: ./.github/workflows/release-template.yml
+    with:
+      tag: ${{ matrix.tag }}
+  release-community-build:
+    name: Upload Release Assets for community-build release
+    if: contains(github.event.release.name, 'Community Build')
+    strategy:
+      fail-fast: false
+      matrix:
+        tag:
+          - community
+    uses: ./.github/workflows/release-template.yml
+    with:
+      tag: ${{ matrix.tag }}
