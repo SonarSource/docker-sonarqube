@@ -9,6 +9,9 @@ jobs:
   release-9-x:
     name: Upload Release Assets for 9-X releases
     if: contains(github.event.release.name, '9.')
+    permissions:
+      contents: write
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -24,6 +27,9 @@ jobs:
   release-10-x:
     name: Upload Release Assets for 10-X releases
     if: contains(github.event.release.name, '10.')
+    permissions:
+      contents: write
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -38,6 +44,9 @@ jobs:
   release-community-build:
     name: Upload Release Assets for community-build release
     if: contains(github.event.release.name, 'Community Build')
+    permissions:
+      contents: write
+      id-token: write
     strategy:
       fail-fast: false
       matrix:

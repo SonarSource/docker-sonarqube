@@ -11,9 +11,6 @@ jobs:
   release:
     name: Upload Release Asset
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
     steps:
       - id: secrets
         uses: SonarSource/vault-action-wrapper@3.0.0
