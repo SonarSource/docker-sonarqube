@@ -172,25 +172,6 @@ public_scan_task:
     - .cirrus/pull.sh ${PUBLIC_IMAGE_NAME} ${tag} ${platform}
     - java -jar /usr/local/bin/wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${PUBLIC_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
 
-public_fossa_scan_task:
-  env:
-    platform: amd64
-    FOSSA_API_KEY: VAULT[development/team/sonarqube/kv/data/fossa data.api-key]
-    matrix:
-      - tag: $CURRENT_LTA_VERSION-datacenter-app
-      - tag: $CURRENT_VERSION-datacenter-app
-  timeout_in: 30m
-  ec2_instance:
-    <<: *VM_TEMPLATE
-    type: t2.medium
-  setup_script:
-    - curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install-latest.sh | bash
-  scan_script:
-    - echo "Scan the ${PUBLIC_IMAGE_NAME}:${tag} image"
-    - docker pull "${PUBLIC_IMAGE_NAME}:${tag}"
-    - .cirrus/pull.sh ${PUBLIC_IMAGE_NAME} ${tag} ${platform}
-    - fossa container analyze -p "docker-sonarqube" -b "${tag}" ${PUBLIC_IMAGE_NAME}:${tag}
-
 multi_arch_test_task_template: &multi_arch_test_task_template
   ec2_instance:
     <<: *VM_TEMPLATE
