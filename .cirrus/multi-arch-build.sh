@@ -1,5 +1,5 @@
 d53d015.cirrus #!/bin/bash
-
+gh pr checkout 720
 export DOCKER_BUILDKIT=1
 for i in $(seq 1 3); do
   if docker buildx build --platform linux/amd64,linux/arm64 --tag "$1:$2" --push $3; then
