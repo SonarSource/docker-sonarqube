@@ -1,4 +1,4 @@
-.cirrus #!/bin/bash
+d53d015.cirrus #!/bin/bash
 
 export DOCKER_BUILDKIT=1
 for i in $(seq 1 3); do
