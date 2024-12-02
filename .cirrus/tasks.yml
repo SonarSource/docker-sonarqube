@@ -16,9 +16,9 @@ env:
   GCLOUD_STAGING_REGISTRY: gcr.io/sonarqube-marketplace-provider
   GCLOUD_STAGING_PRODUCT_NAME: sonarqube-dce-staging
   CURRENT_LTA_VERSION: 9.9.7
-  CURRENT_VERSION: 10.7.0
-  NEXT_VERSION: 10.8.0
-  COMMUNITY_BUILD_VERSION: 0000
+  CURRENT_VERSION: 10.8.0
+  NEXT_VERSION: 10.9.0
+  COMMUNITY_BUILD_VERSION: 100206
 
 
 build_server_hw_template: &BUILD_SERVER_HW_TEMPLATE
@@ -127,7 +127,7 @@ multi_arch_build_10_x_task:
 
 multi_arch_build_community_build_task:
   <<: *multi_arch_build_task_template
-  skip: "!changesInclude('community-build/**/*')"
+  skip: "!changesInclude('community-build/*')"
   env:
     matrix:
       - version: community-build
@@ -234,7 +234,7 @@ multi_arch_test_10_x_task:
 
 multi_arch_test_community_build_task:
   <<: *multi_arch_test_task_template
-  skip: "!changesInclude('community-build/**/*')"
+  skip: "!changesInclude('community-build/*')"
   matrix:
     - env:
         CIRRUS_ARCH: arm64
