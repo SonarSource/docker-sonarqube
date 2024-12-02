@@ -127,7 +127,7 @@ multi_arch_build_10_x_task:
 
 multi_arch_build_community_build_task:
   <<: *multi_arch_build_task_template
-  skip: "!changesInclude('community-build/**/*')"
+  skip: "!changesInclude('community-build/*')"
   env:
     matrix:
       - version: community-build
