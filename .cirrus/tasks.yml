@@ -234,7 +234,7 @@ multi_arch_test_10_x_task:
 
 multi_arch_test_community_build_task:
   <<: *multi_arch_test_task_template
-  skip: "!changesInclude('community-build/**/*')"
+  skip: "!changesInclude('community-build/*')"
   matrix:
     - env:
         CIRRUS_ARCH: arm64
