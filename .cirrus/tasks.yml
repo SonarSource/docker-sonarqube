@@ -18,8 +18,8 @@ env:
   CURRENT_LTA_VERSION: 9.9.7
   CURRENT_VERSION: 10.8.0
   NEXT_VERSION: 2025.1
-  # Must be in the format YY.MM.0-###### where ###### is the build number
-  COMMUNITY_BUILD_VERSION: 24.12.0-100206
+  # Must be in the format YY.MM.0.###### where ###### is the build number
+  COMMUNITY_BUILD_VERSION: 24.12.0.100206
 
 
 build_server_hw_template: &BUILD_SERVER_HW_TEMPLATE
