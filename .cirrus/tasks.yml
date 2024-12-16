@@ -17,8 +17,9 @@ env:
   GCLOUD_STAGING_PRODUCT_NAME: sonarqube-dce-staging
   CURRENT_LTA_VERSION: 9.9.7
   CURRENT_VERSION: 10.8.1
-  NEXT_VERSION: 10.9.0
-  COMMUNITY_BUILD_VERSION: 100206
+  NEXT_VERSION: 2025.1
+  # Must be in the format YY.MM.0.###### where ###### is the build number
+  COMMUNITY_BUILD_VERSION: 24.12.0.100206
 
 
 build_server_hw_template: &BUILD_SERVER_HW_TEMPLATE
@@ -97,7 +98,7 @@ multi_arch_build_task_template: &multi_arch_build_task_template
 
 multi_arch_build_9_x_task:
   <<: *multi_arch_build_task_template
-  skip: "!changesInclude('9/**/*')"
+  skip: "!changesInclude('9/**/*') && !changesInclude('.cirrus/*')"
   env:
     matrix:
       - version: 9/community
@@ -113,7 +114,7 @@ multi_arch_build_9_x_task:
 
 multi_arch_build_10_x_task:
   <<: *multi_arch_build_task_template
-  skip: "!changesInclude('10/**/*')"
+  skip: "!changesInclude('10/**/*') && !changesInclude('.cirrus/*')"
   env:
     matrix:
       - version: 10/developer
@@ -127,7 +128,7 @@ multi_arch_build_10_x_task:
 
 multi_arch_build_community_build_task:
   <<: *multi_arch_build_task_template
-  skip: "!changesInclude('community-build/*')"
+  skip: "!changesInclude('community-build/*') && !changesInclude('.cirrus/*')"
   env:
     matrix:
       - version: community-build
@@ -188,7 +189,7 @@ multi_arch_test_task_template: &multi_arch_test_task_template
 
 multi_arch_test_9_x_task:
   <<: *multi_arch_test_task_template
-  skip: "!changesInclude('9/**/*')"
+  skip: "!changesInclude('9/**/*') && !changesInclude('.cirrus/*')"
   matrix:
     - env:
         CIRRUS_ARCH: arm64
@@ -212,7 +213,7 @@ multi_arch_test_9_x_task:
 
 multi_arch_test_10_x_task:
   <<: *multi_arch_test_task_template
-  skip: "!changesInclude('10/**/*')"
+  skip: "!changesInclude('10/**/*') && !changesInclude('.cirrus/*')"
   matrix:
     - env:
         CIRRUS_ARCH: arm64
@@ -234,7 +235,7 @@ multi_arch_test_10_x_task:
 
 multi_arch_test_community_build_task:
   <<: *multi_arch_test_task_template
-  skip: "!changesInclude('community-build/*')"
+  skip: "!changesInclude('community-build/*') && !changesInclude('.cirrus/*')"
   matrix:
     - env:
         CIRRUS_ARCH: arm64
