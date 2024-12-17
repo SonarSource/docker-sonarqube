@@ -7,7 +7,7 @@ We consider the **docker image** as part of the SonarQube Server **product**. Th
 Overview
 --------
 
-Release of a new version of the official SonarQube Server Docker images is made of several operations:
+Release of a new version of the official SonarQube Server Docker images is made of several operations. (Please note that in case of a patch release that should not include the latest changes on master, you need to release from a new branch - e.g., `release/10.8.1` - and propagate the changes to master afterwards).
 
 1. set the new version of SonarQube Server (`SONARQUBE_VERSION`) to be released in the Dockerfiles. In case of community build, please remember to update `community-build/Dockerfile` only.
 2. if you are releasing a new LTA, set `CURRENT_LTA_VERSION` in `.cirrus/tasks.yml`. Otherwise, if you are releasing a Community build, set `COMMUNITY_BUILD_VERSION` only. In all the other cases where a paid edition is about to be releases, set `CURRENT_VERSION` (please note that the nightly build will fail before the public image becomes available).
@@ -49,6 +49,7 @@ To do so you can use your own personal fork.
 
 Create a feature branch on the fork:
 * `GitCommit` must be updated to this repository master branch's HEAD.
+* `GitFetch` is the branch/tag (e.g., refs/tags/10.8.1) where the commit can be found. Setting this value is only needed if you are releasing from a branch different from master.
 * `Tags` and `Directory` must be added/updated appropriatly for each edition
 * see https://github.com/docker-library/official-images/pull/8837/files as an example
 
