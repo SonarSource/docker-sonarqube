@@ -23,7 +23,7 @@ env:
 
 
 build_server_hw_template: &BUILD_SERVER_HW_TEMPLATE
-  type: t2.small
+  type: t2.xlarge
   region: eu-central-1
 
 vm_instance_template: &VM_TEMPLATE
