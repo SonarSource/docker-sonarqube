@@ -27,3 +27,4 @@ jobs:
           jira-user:    ${{ fromJSON(steps.secrets.outputs.vault).JIRA_USER }}
           jira-token:   ${{ fromJSON(steps.secrets.outputs.vault).JIRA_TOKEN }}
           jira-project: SONAR
+          additional-fields: '{ "labels": ["sq-platform"] }'
