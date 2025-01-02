@@ -1,6 +1,6 @@
 FROM eclipse-temurin:17-jre-noble
 
-LABEL io.k8s.description="SonarQube is a self-managed, automatic code review tool that systematically helps you deliver Clean Code."
+LABEL io.k8s.description="SonarQube Server is a self-managed, automatic code review tool that systematically helps you deliver Clean Code."
 LABEL io.openshift.min-cpu=400m
 LABEL io.openshift.min-memory=2048M
 LABEL io.openshift.non-scalable=false
@@ -24,11 +24,8 @@ ENV DOCKER_RUNNING="true" \
     SQ_EXTENSIONS_DIR="/opt/sonarqube/extensions" \
     SQ_LOGS_DIR="/opt/sonarqube/logs" \
     SQ_TEMP_DIR="/opt/sonarqube/temp" \
-    SONAR_CLUSTER_NODE_TYPE="search" \
+    SONAR_CLUSTER_NODE_TYPE="application" \
     SONAR_CLUSTER_ENABLED="true"
-
-# Separate stage to use variable expansion
-ENV ES_TMPDIR="${SQ_TEMP_DIR}"
 
 RUN set -eux; \
     deluser ubuntu; \
@@ -63,7 +60,7 @@ RUN set -eux; \
     ln -s "${SONARQUBE_HOME}/lib/sonar-application-${SONARQUBE_VERSION}.jar" "${SONARQUBE_HOME}/lib/sonarqube.jar"; \
     chmod -R 550 ${SONARQUBE_HOME}; \
     chmod -R 770 "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}"; \
-    apt-get remove -y gnupg unzip curl; \
+    apt-get remove -y gnupg unzip; \
     rm -rf /var/lib/apt/lists/*;
 
 VOLUME ["${SQ_DATA_DIR}", "${SQ_EXTENSIONS_DIR}", "${SQ_LOGS_DIR}", "${SQ_TEMP_DIR}"]
