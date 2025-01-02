@@ -115,7 +115,7 @@ multi_arch_build_9_x_task:
 
 multi_arch_build_2025_x_task:
   <<: *multi_arch_build_task_template
-  skip: "!changesInclude('${NEXT_VERSION}/**/*') && !changesInclude('.cirrus/*')"
+  skip: "!changesInclude('2025.1/**/*') && !changesInclude('.cirrus/*')"
   env:
     matrix:
       - version: ${NEXT_VERSION}/developer
@@ -214,7 +214,7 @@ multi_arch_test_9_x_task:
 
 multi_arch_test_2025_x_task:
   <<: *multi_arch_test_task_template
-  skip: "!changesInclude('${NEXT_VERSION}/**/*') && !changesInclude('.cirrus/*')"
+  skip: "!changesInclude('2025.1/**/*') && !changesInclude('.cirrus/*')"
   matrix:
     - env:
         CIRRUS_ARCH: arm64
