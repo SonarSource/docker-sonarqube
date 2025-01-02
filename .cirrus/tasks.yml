@@ -115,6 +115,7 @@ multi_arch_build_9_x_task:
 
 multi_arch_build_2025_x_task:
   <<: *multi_arch_build_task_template
+  alias: multi_arch_build_sonarqube_server_task
   skip: "!changesInclude('2025.1/**/*') && !changesInclude('.cirrus/*')"
   env:
     matrix:
@@ -154,7 +155,7 @@ private_scan_task:
     - java -jar /usr/local/bin/wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${STAGING_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
   depends_on:
   - multi_arch_build_9_x
-  - multi_arch_build_2025_x_task
+  - multi_arch_build_sonarqube_server_task
 
 public_scan_task:
   only_if: $CIRRUS_CRON == 'nightly-mend-scan'
@@ -232,7 +233,7 @@ multi_arch_test_2025_x_task:
         tag: ${NEXT_VERSION}-enterprise
       - test_name: docker-compose
         tag: ${NEXT_VERSION}-datacenter
-  depends_on: multi_arch_build_2025_x_task
+  depends_on: multi_arch_build_sonarqube_server_task
 
 multi_arch_test_community_build_task:
   <<: *multi_arch_test_task_template
