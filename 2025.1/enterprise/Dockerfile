@@ -1,9 +1,9 @@
 FROM eclipse-temurin:17-jre-noble
 
-LABEL io.k8s.description="SonarQube is a self-managed, automatic code review tool that systematically helps you deliver Clean Code."
+LABEL io.k8s.description="SonarQube Server is a self-managed, automatic code review tool that systematically helps you deliver Clean Code."
 LABEL io.openshift.min-cpu=400m
 LABEL io.openshift.min-memory=2048M
-LABEL io.openshift.non-scalable=false
+LABEL io.openshift.non-scalable=true
 LABEL io.openshift.tags=sonarqube,static-code-analysis,code-quality,clean-code
 LABEL org.opencontainers.image.url=https://github.com/SonarSource/docker-sonarqube
 
@@ -15,7 +15,7 @@ ENV LANG='en_US.UTF-8' \
 # SonarQube setup
 #
 ARG SONARQUBE_VERSION=10.8.1.101195
-ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/CommercialDistribution/sonarqube-datacenter/sonarqube-datacenter-${SONARQUBE_VERSION}.zip
+ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/CommercialDistribution/sonarqube-enterprise/sonarqube-enterprise-${SONARQUBE_VERSION}.zip
 ENV DOCKER_RUNNING="true" \
     JAVA_HOME='/opt/java/openjdk' \
     SONARQUBE_HOME=/opt/sonarqube \
@@ -23,9 +23,10 @@ ENV DOCKER_RUNNING="true" \
     SQ_DATA_DIR="/opt/sonarqube/data" \
     SQ_EXTENSIONS_DIR="/opt/sonarqube/extensions" \
     SQ_LOGS_DIR="/opt/sonarqube/logs" \
-    SQ_TEMP_DIR="/opt/sonarqube/temp" \
-    SONAR_CLUSTER_NODE_TYPE="application" \
-    SONAR_CLUSTER_ENABLED="true"
+    SQ_TEMP_DIR="/opt/sonarqube/temp"
+
+# Separate stage to use variable expansion
+ENV ES_TMPDIR="${SQ_TEMP_DIR}"
 
 RUN set -eux; \
     deluser ubuntu; \
@@ -36,7 +37,6 @@ RUN set -eux; \
         curl \
         fonts-dejavu \
         gnupg \
-        iproute2 \
         unzip; \
     echo "networkaddress.cache.ttl=5" >> "${JAVA_HOME}/conf/security/java.security"; \
     sed --in-place --expression="s?securerandom.source=file:/dev/random?securerandom.source=file:/dev/urandom?g" "${JAVA_HOME}/conf/security/java.security"; \
@@ -65,7 +65,7 @@ RUN set -eux; \
 
 VOLUME ["${SQ_DATA_DIR}", "${SQ_EXTENSIONS_DIR}", "${SQ_LOGS_DIR}", "${SQ_TEMP_DIR}"]
 
-COPY run.sh sonar.sh ${SONARQUBE_HOME}/docker/
+COPY entrypoint.sh ${SONARQUBE_HOME}/docker/
 
 WORKDIR ${SONARQUBE_HOME}
 EXPOSE 9000
@@ -73,5 +73,4 @@ EXPOSE 9000
 USER sonarqube
 STOPSIGNAL SIGINT
 
-ENTRYPOINT ["/opt/sonarqube/docker/run.sh"]
-CMD ["/opt/sonarqube/docker/sonar.sh"]
+ENTRYPOINT ["/opt/sonarqube/docker/entrypoint.sh"]
