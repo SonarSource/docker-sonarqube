@@ -26,6 +26,6 @@ With that in mind, if you would like to submit a code contribution, please creat
 
 ### License
 
-Copyright 2015-2024 SonarSource.
+Copyright 2015-2025 SonarSource.
 
 SonarQube Community Build is released under the [GNU Lesser General Public License, Version 3.0⁠,](http://www.gnu.org/licenses/lgpl.txt) and packaged with [SSALv1](https://www.sonarsource.com/license/ssal/) analyzers. SonarQube Server Developer, Enterprise, and Data Center Editions are licensed under [SonarQube Server Terms and Conditions](https://www.sonarsource.com/legal/sonarqube/terms-and-conditions/).
