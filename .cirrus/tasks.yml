@@ -19,7 +19,7 @@ env:
   CURRENT_VERSION: 10.8.1
   NEXT_VERSION: 2025.1
   # Must be in the format YY.MM.0.###### where ###### is the build number
-  COMMUNITY_BUILD_VERSION: 24.12.0.100206
+  COMMUNITY_BUILD_VERSION: 25.1.0.102122
 
 
 build_server_hw_template: &BUILD_SERVER_HW_TEMPLATE
