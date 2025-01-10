@@ -115,7 +115,7 @@ multi_arch_build_9_x_task:
 
 multi_arch_build_2025_x_task:
   <<: *multi_arch_build_task_template
-  alias: multi_arch_build_sonarqube_server_task
+  alias: multi_arch_build_sonarqube_server
   skip: "!changesInclude('2025.1/**/*') && !changesInclude('.cirrus/*')"
   env:
     matrix:
