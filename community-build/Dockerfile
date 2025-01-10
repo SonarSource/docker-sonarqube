@@ -7,6 +7,8 @@ LABEL io.openshift.non-scalable=true
 LABEL io.openshift.tags=sonarqube,static-code-analysis,code-quality,clean-code
 LABEL org.opencontainers.image.url=https://github.com/SonarSource/docker-sonarqube
 
+SHELL ["/bin/bash", "-o", "errexit", "-o", "nounset", "-o", "xtrace", "-c"]
+
 ENV LANG='en_US.UTF-8' \
     LANGUAGE='en_US:en' \
     LC_ALL='en_US.UTF-8'
@@ -28,8 +30,7 @@ ENV DOCKER_RUNNING="true" \
 # Separate stage to use variable expansion
 ENV ES_TMPDIR="${SQ_TEMP_DIR}"
 
-RUN set -eux; \
-    deluser ubuntu; \
+RUN deluser ubuntu; \
     useradd --system --uid 1000 --gid 0 sonarqube; \
     apt-get update; \
     apt-get --no-install-recommends -y install \
