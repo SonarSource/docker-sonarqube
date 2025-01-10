@@ -31,7 +31,8 @@ ENV DOCKER_RUNNING="true" \
 ENV ES_TMPDIR="${SQ_TEMP_DIR}"
 
 RUN deluser ubuntu; \
-    useradd --system --uid 1000 --gid 0 sonarqube; \
+    groupadd --gid 3000 sonarqube; \
+    useradd --uid 1000 --gid 3000 sonarqube; \
     apt-get update; \
     apt-get --no-install-recommends -y install \
         bash \
@@ -64,14 +65,16 @@ RUN deluser ubuntu; \
     apt-get remove -y gnupg unzip; \
     rm -rf /var/lib/apt/lists/*;
 
-VOLUME ["${SQ_DATA_DIR}", "${SQ_EXTENSIONS_DIR}", "${SQ_LOGS_DIR}", "${SQ_TEMP_DIR}"]
-
 COPY entrypoint.sh ${SONARQUBE_HOME}/docker/
+
+RUN chown -R sonarqube:sonarqube /opt/sonarqube
+USER sonarqube
+
+VOLUME ["${SQ_DATA_DIR}", "${SQ_EXTENSIONS_DIR}", "${SQ_LOGS_DIR}", "${SQ_TEMP_DIR}"]
 
 WORKDIR ${SONARQUBE_HOME}
 EXPOSE 9000
 
-USER sonarqube
 STOPSIGNAL SIGINT
 
 ENTRYPOINT ["/opt/sonarqube/docker/entrypoint.sh"]
