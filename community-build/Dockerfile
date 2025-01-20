@@ -1,6 +1,6 @@
 FROM eclipse-temurin:17-jre-noble
 
-LABEL io.k8s.description="SonarQube is a self-managed, automatic code review tool that systematically helps you deliver Clean Code."
+LABEL io.k8s.description="SonarQube Community Build is a self-managed, automatic code review tool that systematically helps you deliver Clean Code."
 LABEL io.openshift.min-cpu=400m
 LABEL io.openshift.min-memory=2048M
 LABEL io.openshift.non-scalable=true

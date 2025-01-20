@@ -18,6 +18,7 @@ env:
   CURRENT_LTA_VERSION: 9.9.7
   CURRENT_VERSION: 10.8.1
   NEXT_VERSION: 2025.1
+
   # Must be in the format YY.MM.0.###### where ###### is the build number
   COMMUNITY_BUILD_VERSION: 25.1.0.102122
 
@@ -62,9 +63,9 @@ multi_arch_build_gcp_staging_task:
   only_if: $CIRRUS_CRON == 'nightly-mend-scan' || $TRIGGER == 'PUSH_GCP_STAGING_IMAGES'
   env:
     matrix:
-      - version: 10/datacenter/app
+      - version: 2025.1/datacenter/app
         STAGING_IMAGE_NAME: ${GCLOUD_STAGING_REGISTRY}/${GCLOUD_STAGING_PRODUCT_NAME}
-      - version: 10/datacenter/search
+      - version: 2025.1/datacenter/search
         STAGING_IMAGE_NAME: ${GCLOUD_STAGING_REGISTRY}/${GCLOUD_STAGING_PRODUCT_NAME}/sonarqube-dce-search
   ec2_instance:
     <<: *VM_TEMPLATE
@@ -112,19 +113,20 @@ multi_arch_build_9_x_task:
       - version: 9/datacenter/search
         tag: $CURRENT_LTA_VERSION-datacenter-search
 
-multi_arch_build_10_x_task:
+multi_arch_build_2025_x_task:
   <<: *multi_arch_build_task_template
-  skip: "!changesInclude('10/**/*') && !changesInclude('.cirrus/*')"
+  alias: multi_arch_build_sonarqube_server
+  skip: "!changesInclude('2025.1/**/*') && !changesInclude('.cirrus/*')"
   env:
     matrix:
-      - version: 10/developer
-        tag: $NEXT_VERSION-developer
-      - version: 10/enterprise
-        tag: $NEXT_VERSION-enterprise
-      - version: 10/datacenter/app
-        tag: $NEXT_VERSION-datacenter-app
-      - version: 10/datacenter/search
-        tag: $NEXT_VERSION-datacenter-search
+      - version: ${NEXT_VERSION}/developer
+        tag: ${NEXT_VERSION}-developer
+      - version: ${NEXT_VERSION}/enterprise
+        tag: ${NEXT_VERSION}-enterprise
+      - version: ${NEXT_VERSION}/datacenter/app
+        tag: ${NEXT_VERSION}-datacenter-app
+      - version: ${NEXT_VERSION}/datacenter/search
+        tag: ${NEXT_VERSION}-datacenter-search
 
 multi_arch_build_community_build_task:
   <<: *multi_arch_build_task_template
@@ -141,7 +143,7 @@ private_scan_task:
     WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
     matrix:
       - tag: $CURRENT_LTA_VERSION-datacenter-app
-      - tag: $NEXT_VERSION-datacenter-app
+      - tag: ${NEXT_VERSION}-datacenter-app
   ec2_instance:
     <<: *CI_SCANNER
   login_script:
@@ -153,7 +155,7 @@ private_scan_task:
     - java -jar /usr/local/bin/wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${STAGING_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
   depends_on:
   - multi_arch_build_9_x
-  - multi_arch_build_10_x
+  - multi_arch_build_sonarqube_server
 
 public_scan_task:
   only_if: $CIRRUS_CRON == 'nightly-mend-scan'
@@ -211,9 +213,9 @@ multi_arch_test_9_x_task:
         tag: $CURRENT_LTA_VERSION-datacenter
   depends_on: multi_arch_build_9_x
 
-multi_arch_test_10_x_task:
+multi_arch_test_2025_x_task:
   <<: *multi_arch_test_task_template
-  skip: "!changesInclude('10/**/*') && !changesInclude('.cirrus/*')"
+  skip: "!changesInclude('2025.1/**/*') && !changesInclude('.cirrus/*')"
   matrix:
     - env:
         CIRRUS_ARCH: arm64
@@ -226,12 +228,12 @@ multi_arch_test_10_x_task:
   env:
     matrix:
       - test_name: docker
-        tag: $NEXT_VERSION-developer
+        tag: ${NEXT_VERSION}-developer
       - test_name: docker
-        tag: $NEXT_VERSION-enterprise
+        tag: ${NEXT_VERSION}-enterprise
       - test_name: docker-compose
-        tag: $NEXT_VERSION-datacenter
-  depends_on: multi_arch_build_10_x
+        tag: ${NEXT_VERSION}-datacenter
+  depends_on: multi_arch_build_sonarqube_server
 
 multi_arch_test_community_build_task:
   <<: *multi_arch_test_task_template

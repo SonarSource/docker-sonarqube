@@ -24,9 +24,9 @@ jobs:
     uses: ./.github/workflows/release-template.yml
     with:
       tag: ${{ matrix.tag }}
-  release-10-x:
-    name: Upload Release Assets for 10-X releases
-    if: contains(github.event.release.name, '10.')
+  release-2025-x:
+    name: Upload Release Assets for 2025.X releases
+    if: contains(github.event.release.name, 'SonarQube Server 2025.')
     permissions:
       contents: write
       id-token: write
@@ -34,10 +34,10 @@ jobs:
       fail-fast: false
       matrix:
         tag:
-          - 10-developer
-          - 10-enterprise
-          - 10-datacenter-app
-          - 10-datacenter-search
+          - 2025.1-developer
+          - 2025.1-enterprise
+          - 2025.1-datacenter-app
+          - 2025.1-datacenter-search
     uses: ./.github/workflows/release-template.yml
     with:
       tag: ${{ matrix.tag }}
