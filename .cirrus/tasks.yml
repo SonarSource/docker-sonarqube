@@ -51,13 +51,21 @@ multi_arch_build_gcp_prod_task:
     - echo "Promote the ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-app images supporting two architectures (linux/amd64 and linux/arm64) to the GCP registry ${GCLOUD_REGISTRY}"
     - docker tag "${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-app" "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_VERSION}"
     - docker tag "${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-app" "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_MINOR_VERSION}"
+    - echo -e "FROM ${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_VERSION}\nLABEL com.googleapis.cloudmarketplace.product.service.name=services/sonarqube-dce" | docker build -t ${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_VERSION} -
+    - echo -e "FROM ${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_MINOR_VERSION}\nLABEL com.googleapis.cloudmarketplace.product.service.name=services/sonarqube-dce" | docker build -t ${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_MINOR_VERSION} -
     - docker push "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_VERSION}"
     - docker push "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_MINOR_VERSION}"
     - echo "Promote the ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-search images supporting two architectures (linux/amd64 and linux/arm64) to the GCP registry ${GCLOUD_REGISTRY}"
     - docker tag "${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-search" "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_VERSION}"
     - docker tag "${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-search" "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_MINOR_VERSION}"
+    - echo -e "FROM ${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_VERSION}\nLABEL com.googleapis.cloudmarketplace.product.service.name=services/sonarqube-dce" | docker build -t ${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_VERSION} -
+    - echo -e "FROM ${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_MINOR_VERSION}\nLABEL com.googleapis.cloudmarketplace.product.service.name=services/sonarqube-dce" | docker build -t ${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_MINOR_VERSION} -
     - docker push "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_VERSION}"
     - docker push "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_MINOR_VERSION}"
+    - docker inspect "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_VERSION}"
+    - docker inspect "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_MINOR_VERSION}"
+    - docker inspect "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_VERSION}"
+    - docker inspect "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_MINOR_VERSION}"
 
 multi_arch_build_gcp_staging_task:
   only_if: $CIRRUS_CRON == 'nightly-mend-scan' || $TRIGGER == 'PUSH_GCP_STAGING_IMAGES'
@@ -82,6 +90,8 @@ multi_arch_build_gcp_staging_task:
     - echo "Build and promote the ${STAGING_IMAGE_NAME}:${NEXT_VERSION} and ${STAGING_IMAGE_NAME}:${NEXT_MINOR_VERSION} image supporting two architectures, linux/amd64 and linux/arm64"
     - .cirrus/multi-arch-build.sh ${STAGING_IMAGE_NAME} $NEXT_VERSION ${version}
     - .cirrus/multi-arch-build.sh ${STAGING_IMAGE_NAME} $NEXT_MINOR_VERSION ${version}
+    - docker inspect ${STAGING_IMAGE_NAME}:${NEXT_VERSION}
+    - docker inspect ${STAGING_IMAGE_NAME}:${NEXT_MINOR_VERSION}
 
 multi_arch_build_task_template: &multi_arch_build_task_template
   ec2_instance:
@@ -127,6 +137,20 @@ multi_arch_build_2025_x_task:
         tag: ${NEXT_VERSION}-datacenter-app
       - version: ${NEXT_VERSION}/datacenter/search
         tag: ${NEXT_VERSION}-datacenter-search
+
+multi_arch_build_task_template: &multi_arch_build_task_template
+  ec2_instance:
+    <<: *VM_TEMPLATE
+  login_script:
+    - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
+  setup_script:
+    - docker run -t --rm --privileged tonistiigi/binfmt --install all
+    - docker buildx create --name multibuilder --driver docker-container
+    - docker buildx use multibuilder
+    - docker buildx inspect --bootstrap
+  build_script:
+    - echo "Build the ${STAGING_IMAGE_NAME}:${tag} image supporting two architectures, linux/amd64 and linux/arm64"
+    - .cirrus/multi-arch-build.sh ${STAGING_IMAGE_NAME} ${tag} ${version}
 
 multi_arch_build_community_build_task:
   <<: *multi_arch_build_task_template
