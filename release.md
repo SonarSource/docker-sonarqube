@@ -11,10 +11,10 @@ Release of a new version of the official SonarQube Server Docker images is made 
 1. Set the new version of SonarQube Server (`SONARQUBE_VERSION`) to be released in the Dockerfiles. In case of community build, please remember to update `community-build/Dockerfile` only.
 2. If you are releasing a new LTA, set `CURRENT_LTA_VERSION` in `.cirrus/tasks.yml`. Otherwise, if you are releasing a Community build, set `COMMUNITY_BUILD_VERSION` only. In all the other cases where a paid edition is about to be releases, set `CURRENT_VERSION` (please note that the nightly build will fail before the public image becomes available).
 3. Update the docker hub SonarQube Server's documentation (if applicable)
-4. Add a GIT tag for the new version
-   1. If you are releasing a SonarQube Server version, you need to [Draft a New Release](https://github.com/SonarSource/docker-sonarqube/releases/new), where the name matches "SonarQube Server 2025.", followed by the month version, i.e., "SonarQube Server 2025.1".
-   2. Likewise, if you are releasing a Community Build, the release name should match "Community Build", followed by the month version, i.e., "Community Build 25.1".
-5. Update Docker Hub's SonarQube Server images
+4. Update Docker Hub's SonarQube Server images
+5. Add a GIT tag for the new version (This needs to be done after the images become available on DockerHub)
+   1. If you are releasing a SonarQube Server version, you need to [Add a New Release](https://github.com/SonarSource/docker-sonarqube/releases/new), where the name matches "SonarQube Server", followed by the release version, e.g., "SonarQube Server 2025.1.0".
+   2. Likewise, if you are releasing a Community Build, the release name should match "Community Build", followed by the release version, e.g., "Community Build 25.1.102122".
 
 ## Bump the version of SonarQube Server in Dockerfiles
 

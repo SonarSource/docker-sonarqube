@@ -16,8 +16,8 @@ env:
   GCLOUD_STAGING_REGISTRY: gcr.io/sonarqube-marketplace-provider
   GCLOUD_STAGING_PRODUCT_NAME: sonarqube-dce-staging
   CURRENT_LTA_VERSION: 9.9.8
-  CURRENT_VERSION: 2025.1
-  NEXT_VERSION: 2025.1
+  CURRENT_VERSION: 2025.1.0
+  NEXT_VERSION: 2025.1.0
 
   # Must be in the format YY.MM.0.###### where ###### is the build number
   COMMUNITY_BUILD_VERSION: 25.1.0.102122
@@ -51,11 +51,15 @@ multi_arch_build_gcp_prod_task:
     - echo "Promote the ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-app images supporting two architectures (linux/amd64 and linux/arm64) to the GCP registry ${GCLOUD_REGISTRY}"
     - docker tag "${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-app" "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_VERSION}"
     - docker tag "${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-app" "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_MINOR_VERSION}"
+    - echo -e "FROM ${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_VERSION}\nLABEL com.googleapis.cloudmarketplace.product.service.name=services/sonarqube-dce" | docker build -t ${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_VERSION} -
+    - echo -e "FROM ${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_MINOR_VERSION}\nLABEL com.googleapis.cloudmarketplace.product.service.name=services/sonarqube-dce" | docker build -t ${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_MINOR_VERSION} -
     - docker push "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_VERSION}"
     - docker push "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_MINOR_VERSION}"
     - echo "Promote the ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-search images supporting two architectures (linux/amd64 and linux/arm64) to the GCP registry ${GCLOUD_REGISTRY}"
     - docker tag "${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-search" "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_VERSION}"
     - docker tag "${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-search" "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_MINOR_VERSION}"
+    - echo -e "FROM ${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_VERSION}\nLABEL com.googleapis.cloudmarketplace.product.service.name=services/sonarqube-dce" | docker build -t ${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_VERSION} -
+    - echo -e "FROM ${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_MINOR_VERSION}\nLABEL com.googleapis.cloudmarketplace.product.service.name=services/sonarqube-dce" | docker build -t ${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_MINOR_VERSION} -
     - docker push "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_VERSION}"
     - docker push "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_MINOR_VERSION}"
 
@@ -119,13 +123,13 @@ multi_arch_build_2025_x_task:
   skip: "!changesInclude('2025.1/**/*') && !changesInclude('.cirrus/*')"
   env:
     matrix:
-      - version: ${NEXT_VERSION}/developer
+      - version: 2025.1/developer
         tag: ${NEXT_VERSION}-developer
-      - version: ${NEXT_VERSION}/enterprise
+      - version: 2025.1/enterprise
         tag: ${NEXT_VERSION}-enterprise
-      - version: ${NEXT_VERSION}/datacenter/app
+      - version: 2025.1/datacenter/app
         tag: ${NEXT_VERSION}-datacenter-app
-      - version: ${NEXT_VERSION}/datacenter/search
+      - version: 2025.1/datacenter/search
         tag: ${NEXT_VERSION}-datacenter-search
 
 multi_arch_build_community_build_task:
