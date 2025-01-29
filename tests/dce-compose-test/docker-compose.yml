@@ -45,7 +45,7 @@ services:
         test: wget --no-proxy -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $$? -eq 0 ]; then exit 0; else exit 1; fi
         interval: 25s
         timeout: 1s
-        retries: 3
+        retries: 9
         start_period: 55s
   db:
     image: postgres:12
