@@ -15,9 +15,11 @@ env:
   GCLOUD_PRODUCT_NAME: official-sonarqube-data-center-edition
   GCLOUD_STAGING_REGISTRY: gcr.io/sonarqube-marketplace-provider
   GCLOUD_STAGING_PRODUCT_NAME: sonarqube-dce-staging
-  CURRENT_LTA_VERSION: 9.9.8
+  CURRENT_LTA_VERSION: 2025.1.0
   CURRENT_VERSION: 2025.1.0
-  NEXT_VERSION: 2025.1.0
+  NEXT_VERSION: 2025.2.0
+  # We keep the previous LTA support for the next 6 months
+  PREVIOUS_LTA_VERSION: 9.9.8
 
   # Must be in the format YY.MM.0.###### where ###### is the build number
   COMMUNITY_BUILD_VERSION: 25.1.0.102122
@@ -67,9 +69,9 @@ multi_arch_build_gcp_staging_task:
   only_if: $CIRRUS_CRON == 'nightly-mend-scan' || $TRIGGER == 'PUSH_GCP_STAGING_IMAGES'
   env:
     matrix:
-      - version: 2025.1/datacenter/app
+      - version: 2025/datacenter/app
         STAGING_IMAGE_NAME: ${GCLOUD_STAGING_REGISTRY}/${GCLOUD_STAGING_PRODUCT_NAME}
-      - version: 2025.1/datacenter/search
+      - version: 2025/datacenter/search
         STAGING_IMAGE_NAME: ${GCLOUD_STAGING_REGISTRY}/${GCLOUD_STAGING_PRODUCT_NAME}/sonarqube-dce-search
   ec2_instance:
     <<: *VM_TEMPLATE
@@ -107,29 +109,43 @@ multi_arch_build_9_x_task:
   env:
     matrix:
       - version: 9/community
-        tag: $CURRENT_LTA_VERSION-community
+        tag: $PREVIOUS_LTA_VERSION-community
       - version: 9/developer
-        tag: $CURRENT_LTA_VERSION-developer
+        tag: $PREVIOUS_LTA_VERSION-developer
       - version: 9/enterprise
-        tag: $CURRENT_LTA_VERSION-enterprise
+        tag: $PREVIOUS_LTA_VERSION-enterprise
       - version: 9/datacenter/app
-        tag: $CURRENT_LTA_VERSION-datacenter-app
+        tag: $PREVIOUS_LTA_VERSION-datacenter-app
       - version: 9/datacenter/search
+        tag: $PREVIOUS_LTA_VERSION-datacenter-search
+
+multi_arch_build_2025_1_task:
+  <<: *multi_arch_build_task_template
+  skip: "!changesInclude('2025.1/**/*') && !changesInclude('.cirrus/*')"
+  env:
+    matrix:
+      - version: 2025.1/developer
+        tag: $CURRENT_LTA_VERSION-developer
+      - version: 2025.1/enterprise
+        tag: $CURRENT_LTA_VERSION-enterprise
+      - version: 2025.1/datacenter/app
+        tag: $CURRENT_LTA_VERSION-datacenter-app
+      - version: 2025.1/datacenter/search
         tag: $CURRENT_LTA_VERSION-datacenter-search
 
 multi_arch_build_2025_x_task:
   <<: *multi_arch_build_task_template
   alias: multi_arch_build_sonarqube_server
-  skip: "!changesInclude('2025.1/**/*') && !changesInclude('.cirrus/*')"
+  skip: "!changesInclude('2025/**/*') && !changesInclude('.cirrus/*')"
   env:
     matrix:
-      - version: 2025.1/developer
+      - version: 2025/developer
         tag: ${NEXT_VERSION}-developer
-      - version: 2025.1/enterprise
+      - version: 2025/enterprise
         tag: ${NEXT_VERSION}-enterprise
-      - version: 2025.1/datacenter/app
+      - version: 2025/datacenter/app
         tag: ${NEXT_VERSION}-datacenter-app
-      - version: 2025.1/datacenter/search
+      - version: 2025/datacenter/search
         tag: ${NEXT_VERSION}-datacenter-search
 
 multi_arch_build_community_build_task:
@@ -169,6 +185,7 @@ public_scan_task:
     WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
     matrix:
       - tag: $CURRENT_LTA_VERSION-datacenter-app
+      - tag: $PREVIOUS_LTA_VERSION-datacenter-app
       - tag: $CURRENT_VERSION-datacenter-app
   ec2_instance:
     <<: *CI_SCANNER
@@ -208,18 +225,40 @@ multi_arch_test_9_x_task:
   env:
     matrix:
       - test_name: docker
-        tag: $CURRENT_LTA_VERSION-community
+        tag: $PREVIOUS_LTA_VERSION-community
+      - test_name: docker
+        tag: $PREVIOUS_LTA_VERSION-developer
+      - test_name: docker
+        tag: $PREVIOUS_LTA_VERSION-enterprise
+      - test_name: docker-compose
+        tag: $PREVIOUS_LTA_VERSION-datacenter
+  depends_on: multi_arch_build_9_x
+
+multi_arch_test_2025_1_task:
+  <<: *multi_arch_test_task_template
+  skip: "!changesInclude('2025.1/**/*') && !changesInclude('.cirrus/*')"
+  matrix:
+    - env:
+        CIRRUS_ARCH: arm64
+        INSTANCE_TYPE: t4g.large
+        AMI_NAME: docker-builder-arm64-v*
+    - env:
+        CIRRUS_ARCH: amd64
+        INSTANCE_TYPE: t3.large
+        AMI_NAME: docker-builder-v*
+  env:
+    matrix:
       - test_name: docker
         tag: $CURRENT_LTA_VERSION-developer
       - test_name: docker
         tag: $CURRENT_LTA_VERSION-enterprise
       - test_name: docker-compose
         tag: $CURRENT_LTA_VERSION-datacenter
-  depends_on: multi_arch_build_9_x
+  depends_on: multi_arch_build_2025_1
 
 multi_arch_test_2025_x_task:
   <<: *multi_arch_test_task_template
-  skip: "!changesInclude('2025.1/**/*') && !changesInclude('.cirrus/*')"
+  skip: "!changesInclude('2025/**/*') && !changesInclude('.cirrus/*')"
   matrix:
     - env:
         CIRRUS_ARCH: arm64
