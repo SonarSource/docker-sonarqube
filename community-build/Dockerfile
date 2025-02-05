@@ -67,7 +67,7 @@ RUN set -eux; \
 
 VOLUME ["${SQ_DATA_DIR}", "${SQ_EXTENSIONS_DIR}", "${SQ_LOGS_DIR}", "${SQ_TEMP_DIR}"]
 
-COPY --chown=sonarqube:root --chmod=550 entrypoint.sh ${SONARQUBE_HOME}/docker/
+COPY --chown=root:root --chmod=555 entrypoint.sh ${SONARQUBE_HOME}/docker/
 
 WORKDIR ${SONARQUBE_HOME}
 EXPOSE 9000
