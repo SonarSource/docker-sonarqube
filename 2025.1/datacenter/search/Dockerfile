@@ -5,8 +5,7 @@ LABEL io.openshift.min-cpu=400m
 LABEL io.openshift.min-memory=2048M
 LABEL io.openshift.non-scalable=false
 LABEL io.openshift.tags=sonarqube,static-code-analysis,code-quality,clean-code
-LABEL org.opencontainers.image.url=https://github.com/SonarSource/docker-sonarqube
-LABEL com.googleapis.cloudmarketplace.product.service.name=services/sonarqube-dce
+LABEL org.opencontainers.image.url=https://github.com/SonarSource/docker-sonarqube 
 
 ENV LANG='en_US.UTF-8' \
     LANGUAGE='en_US:en' \
