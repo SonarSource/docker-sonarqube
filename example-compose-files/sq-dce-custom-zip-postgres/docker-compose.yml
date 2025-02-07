@@ -1,7 +1,5 @@
 services:
-  sonarqube:
-    deploy:
-      replicas: 2
+  sonarqube-1:
     healthcheck:
       test: wget --no-proxy -qO- http://localhost:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
       interval: 25s
@@ -22,7 +20,9 @@ services:
       db:
         condition: service_healthy
     networks:
-      - ${NETWORK_TYPE:-ipv4}
+      dual:
+        ipv4_address: 192.168.3.91
+        ipv6_address: 2001:db8:3::91
     cpus: 0.5
     mem_limit: 4096M
     mem_reservation: 4096M
@@ -35,13 +35,58 @@ services:
       SONAR_CLUSTER_HOSTS: "sonarqube"
       SONAR_CLUSTER_KUBERNETES: true
       SONAR_AUTH_JWTBASE64HS256SECRET: "dZ0EB0KxnF++nr5+4vfTCaun/eWbv6gOoXodiAMqcFo="
+      JAVA_TOOL_OPTIONS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
       VIRTUAL_HOST: sonarqube.dev.local
       VIRTUAL_PORT: 9000
-    volumes:
-      - sonarqube_extensions:/opt/sonarqube/extensions
-      - sonarqube_logs:/opt/sonarqube/logs
-      - sonarqube_temp:/opt/sonarqube/temp
-      - /opt/sonarqube/data
+    # volumes:
+    #   - sonarqube_extensions:/opt/sonarqube/extensions
+    #   - sonarqube_logs:/opt/sonarqube/logs
+    #   - sonarqube_temp:/opt/sonarqube/temp
+    #   - /opt/sonarqube/data
+  sonarqube-2:
+    healthcheck:
+      test: wget --no-proxy -qO- http://localhost:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
+      interval: 25s
+      timeout: 1s
+      retries: 3
+      start_period: 55s
+    build:
+      context: .
+      dockerfile: Dockerfile-app
+      args:
+        SONARQUBE_VERSION: ${SONARQUBE_VERSION}
+    read_only: true
+    depends_on:
+      search-1:
+        condition: service_healthy
+      search-2:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      dual:
+        ipv4_address: 192.168.3.92
+        ipv6_address: 2001:db8:3::92
+    cpus: 0.5
+    mem_limit: 4096M
+    mem_reservation: 4096M
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+      SONAR_WEB_PORT: 9000
+      SONAR_CLUSTER_SEARCH_HOSTS: "search-1,search-2"
+      SONAR_CLUSTER_HOSTS: "sonarqube"
+      SONAR_CLUSTER_KUBERNETES: true
+      SONAR_AUTH_JWTBASE64HS256SECRET: "dZ0EB0KxnF++nr5+4vfTCaun/eWbv6gOoXodiAMqcFo="
+      JAVA_TOOL_OPTIONS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
+      VIRTUAL_HOST: sonarqube.dev.local
+      VIRTUAL_PORT: 9000
+    # volumes:
+    #   - sonarqube_extensions:/opt/sonarqube/extensions
+    #   - sonarqube_logs:/opt/sonarqube/logs
+    #   - sonarqube_temp:/opt/sonarqube/temp
+    #   - /opt/sonarqube/data
   search-1:
     build:
       context: .
@@ -57,13 +102,16 @@ services:
       db:
         condition: service_healthy
     networks:
-      - ${NETWORK_TYPE:-ipv4}
+      dual:
+        ipv4_address: 192.168.3.81
+        ipv6_address: 2001:db8:3::81
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
       SONAR_CLUSTER_ES_HOSTS: "search-1,search-2"
       SONAR_CLUSTER_NODE_NAME: "search-1"
+      JAVA_TOOL_OPTIONS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
     volumes:
       - search_data-1:/opt/sonarqube/data
       - sonarqube_logs:/opt/sonarqube/logs
@@ -90,13 +138,16 @@ services:
       db:
         condition: service_healthy
     networks:
-      - ${NETWORK_TYPE:-ipv4}
+      dual:
+        ipv4_address: 192.168.3.82
+        ipv6_address: 2001:db8:3::82
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
       SONAR_CLUSTER_ES_HOSTS: "search-1,search-2"
       SONAR_CLUSTER_NODE_NAME: "search-2"
+      JAVA_TOOL_OPTIONS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
     volumes:
       - search_data-2:/opt/sonarqube/data
       - sonarqube_logs:/opt/sonarqube/logs
@@ -116,7 +167,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - ${NETWORK_TYPE:-ipv4}
+      - dual
     environment:
       POSTGRES_USER: sonar
       POSTGRES_PASSWORD: sonar
@@ -131,7 +182,7 @@ services:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./unrestricted_client_body_size.conf:/etc/nginx/conf.d/unrestricted_client_body_size.conf:ro
     networks:
-      - ${NETWORK_TYPE:-ipv4}
+      - dual
       - sonar-public
 
 networks:
