@@ -14,7 +14,8 @@ Release of a new version of the official SonarQube Server Docker images is made 
 4. Update Docker Hub's SonarQube Server images
 5. Add a GIT tag for the new version (This needs to be done after the images become available on DockerHub)
    1. If you are releasing a SonarQube Server version, you need to [Add a New Release](https://github.com/SonarSource/docker-sonarqube/releases/new), where the name matches "SonarQube Server", followed by the release version, e.g., "SonarQube Server 2025.1.0".
-   2. Likewise, if you are releasing a Community Build, the release name should match "Community Build", followed by the release version, e.g., "Community Build 25.1.102122".
+   2. Likewise, if you are releasing a Community Build, the release name should match "Community Build", followed by the release version, e.g., "Community Build 25.1.0.102122".
+   3. The Git tag for the SonarQube Community Build release must be the full version, e.g., `25.1.0.102122`.
 
 ## Bump the version of SonarQube Server in Dockerfiles
 
@@ -47,7 +48,7 @@ Create a feature branch on the fork:
 
 * `GitCommit` must be updated to this repository master branch's HEAD.
 * `GitFetch` is the branch/tag (e.g., refs/tags/10.8.1) where the commit can be found. Setting this value is only needed if you are releasing from a branch different from master.
-* `Tags` and `Directory` must be added/updated appropriatly for each edition
+* `Tags` and `Directory` must be added/updated appropriately for each edition
 * see https://github.com/docker-library/official-images/pull/8837/files as an example
 
 Until SonarQube Server is released and the public artifacts are available, keep your PR a draft PR to make it clear it is not ready to be merged yet.
