@@ -21,7 +21,7 @@ jobs:
         # Disabling shallow clone is recommended for improving relevancy of reporting
         fetch-depth: 0
     - id: secrets
-      uses: SonarSource/vault-action-wrapper@3.0.0
+      uses: SonarSource/vault-action-wrapper@v3
       with:
         secrets: |
           development/kv/data/next token | sq_next_token;
