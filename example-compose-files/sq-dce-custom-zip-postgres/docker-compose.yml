@@ -1,4 +1,13 @@
+
 services:
+  # python:
+  #   image: python:3.8
+  #   command: python -m http.server 8000 --bind 2001:db8:3::101
+  #   networks:
+  #     dual:
+  #       ipv4_address: 192.168.3.101
+  #       ipv6_address: 2001:db8:3::101
+
   sonarqube-1:
     healthcheck:
       test: wget --no-proxy -qO- http://localhost:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
@@ -175,11 +184,12 @@ services:
       - postgresql:/var/lib/postgresql
       - postgresql_data:/var/lib/postgresql/data
   proxy:
-    image: jwilder/nginx-proxy
+    image: nginx
     ports:
-      - "80:80"
+      - "8080:80"
+      - "[::]:8081:80"
     volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./unrestricted_client_body_size.conf:/etc/nginx/conf.d/unrestricted_client_body_size.conf:ro
     networks:
       - dual
