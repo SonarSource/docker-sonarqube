@@ -40,6 +40,7 @@ if [[ "$1" = '/opt/sonarqube/docker/sonar.sh' ]]; then
     #
     # Set mandatory properties
     #
+    set_prop "sonar.web.host" "${IP:-}"
     set_prop "sonar.cluster.node.host" "${IP:-}"
     set_prop "sonar.path.logs" "${SONAR_CLUSTER_PATH_LOGS:-}"
     if [ ${#sq_opts[@]} -ne 0 ]; then
