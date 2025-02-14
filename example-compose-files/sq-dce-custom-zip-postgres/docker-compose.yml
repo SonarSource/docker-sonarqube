@@ -1,9 +1,10 @@
 services:
   sonarqube-1:
+    hostname: "sonarqube-1"
     ports:
       - "9001:9000"
     healthcheck:
-      test: wget --no-proxy -qO- http://localhost:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
+      test: wget --no-proxy -qO- http://$$SONAR_CLUSTER_NODE_NAME:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
       interval: 25s
       timeout: 1s
       retries: 3
@@ -14,7 +15,6 @@ services:
       args:
         SONARQUBE_VERSION: ${SONARQUBE_VERSION}
     read_only: true
-    hostname: "sonarqube-1"
     depends_on:
       search-1:
         condition: service_healthy
@@ -26,6 +26,8 @@ services:
       dual:
         ipv4_address: 192.168.3.91
         ipv6_address: 2001:db8:3::91
+        aliases:
+          - sonarqube
     cpus: 0.5
     mem_limit: 4096M
     mem_reservation: 4096M
@@ -36,11 +38,12 @@ services:
       SONAR_WEB_PORT: 9000
       SONAR_CLUSTER_SEARCH_HOSTS: "search-1,search-2"
       SONAR_CLUSTER_NODE_NAME: "sonarqube-1"
-      SONAR_CLUSTER_HOSTS: "[2001:db8:3::91],[2001:db8:3::92]"
+      SONAR_CLUSTER_HOSTS: "sonarqube"
       SONAR_AUTH_JWTBASE64HS256SECRET: "dZ0EB0KxnF++nr5+4vfTCaun/eWbv6gOoXodiAMqcFo="
       JAVA_TOOL_OPTIONS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
       SONAR_WEB_JAVAADDITIONALOPTS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
       SONAR_CE_JAVAADDITIONALOPTS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
+      SONAR_CLUSTER_KUBERNETES: true
       VIRTUAL_HOST: sonarqube.dev.local
       VIRTUAL_PORT: 9000
     # volumes:
@@ -52,7 +55,7 @@ services:
     ports:
       - "9002:9000"
     healthcheck:
-      test: wget --no-proxy -qO- http://localhost:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
+      test: wget --no-proxy -qO- http://$$SONAR_CLUSTER_NODE_NAME:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
       interval: 25s
       timeout: 1s
       retries: 3
@@ -75,6 +78,8 @@ services:
       dual:
         ipv4_address: 192.168.3.92
         ipv6_address: 2001:db8:3::92
+        aliases:
+          - sonarqube
     cpus: 0.5
     mem_limit: 4096M
     mem_reservation: 4096M
@@ -85,11 +90,12 @@ services:
       SONAR_WEB_PORT: 9000
       SONAR_CLUSTER_SEARCH_HOSTS: "search-1,search-2"
       SONAR_CLUSTER_NODE_NAME: "sonarqube-2"
-      SONAR_CLUSTER_HOSTS: "[2001:db8:3::91],[2001:db8:3::92]"
+      SONAR_CLUSTER_HOSTS: "sonarqube"
       SONAR_AUTH_JWTBASE64HS256SECRET: "dZ0EB0KxnF++nr5+4vfTCaun/eWbv6gOoXodiAMqcFo="
       JAVA_TOOL_OPTIONS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
       SONAR_WEB_JAVAADDITIONALOPTS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
       SONAR_CE_JAVAADDITIONALOPTS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
+      SONAR_CLUSTER_KUBERNETES: true
       VIRTUAL_HOST: sonarqube.dev.local
       VIRTUAL_PORT: 9000
     # volumes:
@@ -115,11 +121,14 @@ services:
       dual:
         ipv4_address: 192.168.3.81
         ipv6_address: 2001:db8:3::81
+        aliases:
+          - search
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
       SONAR_CLUSTER_ES_HOSTS: "search-1,search-2"
+      SONAR_CLUSTER_ES_DISCOVERY_SEED_HOSTS: "search"
       SONAR_CLUSTER_NODE_NAME: "search-1"
       JAVA_TOOL_OPTIONS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
       SONAR_SEARCH_JAVAADDITIONALOPTS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
@@ -152,11 +161,14 @@ services:
       dual:
         ipv4_address: 192.168.3.82
         ipv6_address: 2001:db8:3::82
+        aliases:
+          - search
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
       SONAR_CLUSTER_ES_HOSTS: "search-1,search-2"
+      SONAR_CLUSTER_ES_DISCOVERY_SEED_HOSTS: "search"
       SONAR_CLUSTER_NODE_NAME: "search-2"
       JAVA_TOOL_OPTIONS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
       SONAR_SEARCH_JAVAADDITIONALOPTS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
