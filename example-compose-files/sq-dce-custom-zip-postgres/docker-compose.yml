@@ -42,15 +42,14 @@ services:
       SONAR_AUTH_JWTBASE64HS256SECRET: "dZ0EB0KxnF++nr5+4vfTCaun/eWbv6gOoXodiAMqcFo="
       JAVA_TOOL_OPTIONS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
       SONAR_WEB_JAVAADDITIONALOPTS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
-      SONAR_CE_JAVAADDITIONALOPTS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
       SONAR_CLUSTER_KUBERNETES: true
       VIRTUAL_HOST: sonarqube.dev.local
       VIRTUAL_PORT: 9000
-    # volumes:
-    #   - sonarqube_extensions:/opt/sonarqube/extensions
-    #   - sonarqube_logs:/opt/sonarqube/logs
-    #   - sonarqube_temp:/opt/sonarqube/temp
-    #   - /opt/sonarqube/data
+    volumes:
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_temp:/opt/sonarqube/temp
+      - /opt/sonarqube/data
   sonarqube-2:
     ports:
       - "9002:9000"
@@ -94,15 +93,14 @@ services:
       SONAR_AUTH_JWTBASE64HS256SECRET: "dZ0EB0KxnF++nr5+4vfTCaun/eWbv6gOoXodiAMqcFo="
       JAVA_TOOL_OPTIONS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
       SONAR_WEB_JAVAADDITIONALOPTS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
-      SONAR_CE_JAVAADDITIONALOPTS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
       SONAR_CLUSTER_KUBERNETES: true
       VIRTUAL_HOST: sonarqube.dev.local
       VIRTUAL_PORT: 9000
-    # volumes:
-    #   - sonarqube_extensions:/opt/sonarqube/extensions
-    #   - sonarqube_logs:/opt/sonarqube/logs
-    #   - sonarqube_temp:/opt/sonarqube/temp
-    #   - /opt/sonarqube/data
+    volumes:
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_temp:/opt/sonarqube/temp
+      - /opt/sonarqube/data
   search-1:
     build:
       context: .
@@ -131,7 +129,6 @@ services:
       SONAR_CLUSTER_ES_DISCOVERY_SEED_HOSTS: "search"
       SONAR_CLUSTER_NODE_NAME: "search-1"
       JAVA_TOOL_OPTIONS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
-      SONAR_SEARCH_JAVAADDITIONALOPTS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
     volumes:
       - search_data-1:/opt/sonarqube/data
       - sonarqube_logs:/opt/sonarqube/logs
@@ -171,7 +168,6 @@ services:
       SONAR_CLUSTER_ES_DISCOVERY_SEED_HOSTS: "search"
       SONAR_CLUSTER_NODE_NAME: "search-2"
       JAVA_TOOL_OPTIONS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
-      SONAR_SEARCH_JAVAADDITIONALOPTS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
     volumes:
       - search_data-2:/opt/sonarqube/data
       - sonarqube_logs:/opt/sonarqube/logs
