@@ -13,13 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: secrets
-        uses: SonarSource/vault-action-wrapper@3.0.0
+        uses: SonarSource/vault-action-wrapper@v3
         with:
           secrets: |
             development/kv/data/sign key | gpg_key;
             development/kv/data/sign passphrase | gpg_passphrase;
       - name: Generate CycloneDX SBOM
-        uses: SonarSource/gh-action_sbom@v1
+        uses: SonarSource/gh-action_sbom@v3
         with:
           image: "sonarqube:${{ inputs.tag }}"
           filename: "sonarqube-${{ inputs.tag }}-bom.json"

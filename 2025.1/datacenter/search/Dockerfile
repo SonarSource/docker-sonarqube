@@ -5,8 +5,7 @@ LABEL io.openshift.min-cpu=400m
 LABEL io.openshift.min-memory=2048M
 LABEL io.openshift.non-scalable=false
 LABEL io.openshift.tags=sonarqube,static-code-analysis,code-quality,clean-code
-LABEL org.opencontainers.image.url=https://github.com/SonarSource/docker-sonarqube
-LABEL com.googleapis.cloudmarketplace.product.service.name=services/sonarqube-dce
+LABEL org.opencontainers.image.url=https://github.com/SonarSource/docker-sonarqube 
 
 ENV LANG='en_US.UTF-8' \
     LANGUAGE='en_US:en' \
@@ -62,8 +61,6 @@ RUN set -eux; \
     rm sonarqube.zip*; \
     rm -rf ${SONARQUBE_HOME}/bin/*; \
     ln -s "${SONARQUBE_HOME}/lib/sonar-application-${SONARQUBE_VERSION}.jar" "${SONARQUBE_HOME}/lib/sonarqube.jar"; \
-    chown -R sonarqube:root ${SONARQUBE_HOME}; \
-    chown -R sonarqube:root "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}"; \
     chmod -R 550 ${SONARQUBE_HOME}; \
     chmod -R 770 "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}"; \
     apt-get remove -y gnupg unzip curl; \
@@ -71,7 +68,7 @@ RUN set -eux; \
 
 VOLUME ["${SQ_DATA_DIR}", "${SQ_EXTENSIONS_DIR}", "${SQ_LOGS_DIR}", "${SQ_TEMP_DIR}"]
 
-COPY --chown=sonarqube:root --chmod=550 run.sh sonar.sh ${SONARQUBE_HOME}/docker/
+COPY run.sh sonar.sh ${SONARQUBE_HOME}/docker/
 
 WORKDIR ${SONARQUBE_HOME}
 EXPOSE 9000
