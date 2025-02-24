@@ -1,10 +1,10 @@
-# This is used mostly for internal development
+# Example of SonarQube DCE running on an IPv6 environment.
 
 You need Docker and docker-compose installed.
 
 > Please note that depending on your Docker install the compose cmd can be either `docker-compose` or `docker compose`.
 
-You need to put your SonarQube zip into this **sq-dce-custom-zip-postgres directory**.
+You need to put your SonarQube Server zip into this **sq-dce-custom-zip-postgres directory**.
 
 bash
 ```
@@ -16,13 +16,13 @@ ls -al
 11:33 Dockerfile-search
 11:39 README
 11:37 docker-compose.yml
-11:33 sonarqube-datacenter-10.8.1.102637.zip
+11:33 sonarqube-datacenter-2025.1.0.102418.zip
 11:33 unrestricted_client_body_size.conf
 ```
 
-You need to specify the SonarQube version that will be used either with an export like this `export SONARQUBE_VERSION=10.8.1.102637` or by changing the docker-compose file.
+You need to specify the SonarQube Server version that will be used either with an export like this `export SONARQUBE_VERSION=2025.1.0.102418` or by changing the docker-compose file.
 
-You can then run this command to start the SonarQube instance:
+You can then run this command to start the SonarQube Server instance:
 
 ```
 docker-compose up -d --build
@@ -41,12 +41,12 @@ sq-dce-custom-zip-postgres-sonarqube-1   sq-dce-custom-zip-postgres-sonarqube  s
 sq-dce-custom-zip-postgres-sonarqube-2   sq-dce-custom-zip-postgres-sonarqube  sonarqube   2 minutes ago    Up About a minute (healthy) 9000/tcp
 ```
 
-You can access your SonarQube instance trought the reverse proxy to this url `http://sonarqube.dev.local/` this dns entry `127.0.0.1 sonarqube.dev.local` needs to be set on your `/etc/hosts`.
+You can access your SonarQube Server instance through the reverse proxy with this url `http://sonarqube.dev.local/`. (the DNS entry `127.0.0.1 sonarqube.dev.local` needs to be set on your `/etc/hosts`).
 
-## Debug
+## Troubleshooting
 
-If you experience random crash of SonarQube search/app, the top most cause will be memory. Please make sure your Docker desktop has enought resources (we advise at least 18Gb of memory)
+If you experience random crash of SonarQube Server search/app, it will be likely due to memory shortage. Please make sure your Docker desktop has enough resources (we advise at least 18Gb of memory).
 
 ## External access
 
-If you want that your SonarQube instance access something on your host (like the telemetry listener) you can use this `host.docker.internal` dns name. This will be routed to the localhost of your **Host machine**
+If you want that your SonarQube Server instance access something on your host (like the telemetry listener) you can use the `host.docker.internal` dns name. This will be routed to the localhost of your **Host machine**.
