@@ -1,0 +1,32 @@
+FROM eclipse-temurin:17-jre-noble AS copier
+ARG SONARQUBE_VERSION
+
+COPY sonarqube-datacenter-${SONARQUBE_VERSION}.zip /opt/sonarqube.zip
+
+RUN apt-get update && apt-get install unzip
+
+RUN cd /opt; \
+    unzip -q sonarqube.zip;
+
+
+FROM sonarqube:2025.1.0-datacenter-search
+ARG SONARQUBE_VERSION
+ENV SONAR_VERSION=${SONARQUBE_VERSION}
+
+USER root
+
+RUN rm -rf /opt/sonarqube*;
+
+COPY --from=sonarqube:2025.1.0-datacenter-search --chown=root:root --chmod=555 ${SONARQUBE_HOME}/docker/sonar.sh ${SONARQUBE_HOME}/docker/
+COPY --chown=root:root --chmod=555 ./run-search.sh ${SONARQUBE_HOME}/docker/run.sh
+COPY --from=copier /opt/sonarqube-${SONARQUBE_VERSION} /opt/sonarqube
+
+RUN cd /opt; \
+    rm -rf ${SONARQUBE_HOME}/bin/*; \
+    ln -s "${SONARQUBE_HOME}/lib/sonar-application-${SONARQUBE_VERSION}.jar" "${SONARQUBE_HOME}/lib/sonarqube.jar"; \
+    chown -R sonarqube:root ${SONARQUBE_HOME}; \
+    chown -R sonarqube:root "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}"; \
+    chmod -R 550 ${SONARQUBE_HOME}; \
+    chmod -R 770 "${SQ_DATA_DIR}" "${SQ_EXTENSIONS_DIR}" "${SQ_LOGS_DIR}" "${SQ_TEMP_DIR}";
+
+USER sonarqube

@@ -1,0 +1,236 @@
+services:
+  sonarqube-1:
+    hostname: "sonarqube-1"
+    ports:
+      - "9001:9000"
+    healthcheck:
+      test: wget --no-proxy -qO- http://$$SONAR_CLUSTER_NODE_NAME:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
+      interval: 25s
+      timeout: 1s
+      retries: 3
+      start_period: 55s
+    build:
+      context: .
+      dockerfile: Dockerfile-app
+      args:
+        SONARQUBE_VERSION: ${SONARQUBE_VERSION}
+    read_only: true
+    depends_on:
+      search-1:
+        condition: service_healthy
+      search-2:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      dual:
+        ipv4_address: 192.168.3.91
+        ipv6_address: 2001:db8:3::91
+        aliases:
+          - sonarqube
+    cpus: 0.5
+    mem_limit: 4096M
+    mem_reservation: 4096M
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+      SONAR_WEB_PORT: 9000
+      SONAR_CLUSTER_SEARCH_HOSTS: "search-1,search-2"
+      SONAR_CLUSTER_NODE_NAME: "sonarqube-1"
+      SONAR_CLUSTER_HOSTS: "sonarqube"
+      SONAR_AUTH_JWTBASE64HS256SECRET: "dZ0EB0KxnF++nr5+4vfTCaun/eWbv6gOoXodiAMqcFo="
+      JAVA_TOOL_OPTIONS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
+      SONAR_WEB_JAVAADDITIONALOPTS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
+      SONAR_CLUSTER_KUBERNETES: true
+      VIRTUAL_HOST: sonarqube.dev.local
+      VIRTUAL_PORT: 9000
+    volumes:
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_temp:/opt/sonarqube/temp
+      - /opt/sonarqube/data
+  sonarqube-2:
+    ports:
+      - "9002:9000"
+    healthcheck:
+      test: wget --no-proxy -qO- http://$$SONAR_CLUSTER_NODE_NAME:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
+      interval: 25s
+      timeout: 1s
+      retries: 3
+      start_period: 55s
+    build:
+      context: .
+      dockerfile: Dockerfile-app
+      args:
+        SONARQUBE_VERSION: ${SONARQUBE_VERSION}
+    read_only: true
+    hostname: "sonarqube-2"
+    depends_on:
+      search-1:
+        condition: service_healthy
+      search-2:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      dual:
+        ipv4_address: 192.168.3.92
+        ipv6_address: 2001:db8:3::92
+        aliases:
+          - sonarqube
+    cpus: 0.5
+    mem_limit: 4096M
+    mem_reservation: 4096M
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+      SONAR_WEB_PORT: 9000
+      SONAR_CLUSTER_SEARCH_HOSTS: "search-1,search-2"
+      SONAR_CLUSTER_NODE_NAME: "sonarqube-2"
+      SONAR_CLUSTER_HOSTS: "sonarqube"
+      SONAR_AUTH_JWTBASE64HS256SECRET: "dZ0EB0KxnF++nr5+4vfTCaun/eWbv6gOoXodiAMqcFo="
+      JAVA_TOOL_OPTIONS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
+      SONAR_WEB_JAVAADDITIONALOPTS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
+      SONAR_CLUSTER_KUBERNETES: true
+      VIRTUAL_HOST: sonarqube.dev.local
+      VIRTUAL_PORT: 9000
+    volumes:
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_temp:/opt/sonarqube/temp
+      - /opt/sonarqube/data
+  search-1:
+    build:
+      context: .
+      dockerfile: Dockerfile-search
+      args:
+        SONARQUBE_VERSION: ${SONARQUBE_VERSION}
+    read_only: true
+    hostname: "search-1"
+    cpus: 0.5
+    mem_limit: 3072M
+    mem_reservation: 3072M
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      dual:
+        ipv4_address: 192.168.3.81
+        ipv6_address: 2001:db8:3::81
+        aliases:
+          - search
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+      SONAR_CLUSTER_ES_HOSTS: "search-1,search-2"
+      SONAR_CLUSTER_ES_DISCOVERY_SEED_HOSTS: "search"
+      SONAR_CLUSTER_NODE_NAME: "search-1"
+      JAVA_TOOL_OPTIONS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
+    volumes:
+      - search_data-1:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+      - search_temp-1:/opt/sonarqube/temp
+      - search_logs-1:/opt/sonarqube/logs
+    healthcheck:
+        test: wget --no-proxy -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
+        interval: 25s
+        timeout: 1s
+        retries: 3
+        start_period: 55s
+  search-2:
+    build:
+      context: .
+      dockerfile: Dockerfile-search
+      args:
+        SONARQUBE_VERSION: ${SONARQUBE_VERSION}
+    read_only: true
+    hostname: "search-2"
+    cpus: 0.5
+    mem_limit: 3072M
+    mem_reservation: 3072M
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      dual:
+        ipv4_address: 192.168.3.82
+        ipv6_address: 2001:db8:3::82
+        aliases:
+          - search
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+      SONAR_CLUSTER_ES_HOSTS: "search-1,search-2"
+      SONAR_CLUSTER_ES_DISCOVERY_SEED_HOSTS: "search"
+      SONAR_CLUSTER_NODE_NAME: "search-2"
+      JAVA_TOOL_OPTIONS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
+    volumes:
+      - search_data-2:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+      - search_temp-2:/opt/sonarqube/temp
+      - search_logs-2:/opt/sonarqube/logs
+    healthcheck:
+        test: wget --no-proxy -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
+        interval: 25s
+        timeout: 1s
+        retries: 3
+        start_period: 55s
+  db:
+    image: postgres:15
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dual
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+    volumes:
+      - postgresql:/var/lib/postgresql
+      - postgresql_data:/var/lib/postgresql/data
+  proxy:
+    image: nginx
+    ports:
+      - "8080:80"
+      - "[::]:8081:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./unrestricted_client_body_size.conf:/etc/nginx/conf.d/unrestricted_client_body_size.conf:ro
+    networks:
+      - dual
+      - sonar-public
+
+networks:
+  sonar-public:
+    driver: bridge
+  ipv4:
+    driver: bridge
+    enable_ipv6: false
+  dual:
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: "192.168.3.0/24"
+          gateway: "192.168.3.1"
+        - subnet: "2001:db8:3::/64"
+          gateway: "2001:db8:3::1"
+
+volumes:
+  sonarqube_extensions:
+  sonarqube_logs:
+  search_logs-1:
+  search_logs-2:
+  search_data-1:
+  search_data-2:
+  search_temp-1:
+  search_temp-2:
+  sonarqube_temp:
+  postgresql:
+  postgresql_data:
