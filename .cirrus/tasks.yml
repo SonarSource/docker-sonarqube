@@ -22,8 +22,7 @@ env:
   PREVIOUS_LTA_VERSION: 9.9.8
 
   # Must be in the format YY.MM.0.###### where ###### is the build number
-  COMMUNITY_BUILD_VERSION: 25.2.0.102705
-
+  COMMUNITY_BUILD_VERSION: 25.3.0.104237
 
 build_server_hw_template: &BUILD_SERVER_HW_TEMPLATE
   type: t2.xlarge
@@ -59,7 +58,7 @@ multi_arch_build_gcp_prod_task:
 multi_arch_build_gcp_staging_task:
   only_if: $CIRRUS_CRON == 'nightly-mend-scan' || $TRIGGER == 'PUSH_GCP_STAGING_IMAGES'
   env:
-    EXTRA_DOCKER_BUILD_ARGS: '--provenance=false --annotation=manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog'
+    EXTRA_DOCKER_BUILD_ARGS: "--provenance=false --annotation=manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog"
     matrix:
       - version: 2025/datacenter/app
         STAGING_IMAGE_NAME: ${GCLOUD_STAGING_REGISTRY}/${GCLOUD_STAGING_PRODUCT_NAME}
@@ -166,8 +165,8 @@ private_scan_task:
     - .cirrus/pull.sh ${STAGING_IMAGE_NAME} ${tag} ${platform}
     - java -jar /usr/local/bin/wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${STAGING_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
   depends_on:
-  - multi_arch_build_9_x
-  - multi_arch_build_sonarqube_server
+    - multi_arch_build_9_x
+    - multi_arch_build_sonarqube_server
 
 public_scan_task:
   only_if: $CIRRUS_CRON == 'nightly-mend-scan'
