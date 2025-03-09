@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jre-noble
+FROM eclipse-temurin:21-jre-noble
 
 LABEL io.k8s.description="SonarQube Community Build is a self-managed, automatic code review tool that systematically helps you deliver Clean Code."
 LABEL io.openshift.min-cpu=400m
