@@ -19,7 +19,7 @@ env:
   CURRENT_VERSION: 2025.1.0
   NEXT_VERSION: 2025.2.0
   # We keep the previous LTA support for the next 6 months
-  PREVIOUS_LTA_VERSION: 9.9.8
+  PREVIOUS_LTA_VERSION: 9.9.9
 
   # Must be in the format YY.MM.0.###### where ###### is the build number
   COMMUNITY_BUILD_VERSION: 25.3.0.104237
