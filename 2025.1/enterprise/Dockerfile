@@ -33,11 +33,11 @@ RUN set -eux; \
     useradd --system --uid 1000 --gid 0 sonarqube; \
     apt-get update; \
     apt-get --no-install-recommends -y install \
-    bash \
-    curl \
-    fonts-dejavu \
-    gnupg \
-    unzip; \
+        bash \
+        curl \
+        fonts-dejavu \
+        gnupg \
+        unzip; \
     echo "networkaddress.cache.ttl=5" >> "${JAVA_HOME}/conf/security/java.security"; \
     sed --in-place --expression="s?securerandom.source=file:/dev/random?securerandom.source=file:/dev/urandom?g" "${JAVA_HOME}/conf/security/java.security"; \
     # pub   2048R/D26468DE 2015-05-25
@@ -45,8 +45,8 @@ RUN set -eux; \
     # uid                  sonarsource_deployer (Sonarsource Deployer) <infra@sonarsource.com>
     # sub   2048R/06855C1D 2015-05-25
     for server in $(shuf -e hkps://keys.openpgp.org \
-    hkps://keyserver.ubuntu.com) ; do \
-    gpg --batch --keyserver "${server}" --recv-keys 679F1EE92B19609DE816FDE81DB198F93525EC1A && break || : ; \
+                            hkps://keyserver.ubuntu.com) ; do \
+        gpg --batch --keyserver "${server}" --recv-keys 679F1EE92B19609DE816FDE81DB198F93525EC1A && break || : ; \
     done; \
     mkdir --parents /opt; \
     cd /opt; \
