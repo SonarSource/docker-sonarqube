@@ -5,7 +5,7 @@ LABEL io.openshift.min-cpu=400m
 LABEL io.openshift.min-memory=2048M
 LABEL io.openshift.non-scalable=false
 LABEL io.openshift.tags=sonarqube,static-code-analysis,code-quality,clean-code
-LABEL org.opencontainers.image.url=https://github.com/SonarSource/docker-sonarqube 
+LABEL org.opencontainers.image.url=https://github.com/SonarSource/docker-sonarqube
 
 ENV LANG='en_US.UTF-8' \
     LANGUAGE='en_US:en' \
@@ -14,7 +14,7 @@ ENV LANG='en_US.UTF-8' \
 #
 # SonarQube setup
 #
-ARG SONARQUBE_VERSION=2025.1.0.102418
+ARG SONARQUBE_VERSION=2025.1.1.104738
 ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/CommercialDistribution/sonarqube-datacenter/sonarqube-datacenter-${SONARQUBE_VERSION}.zip
 ENV DOCKER_RUNNING="true" \
     JAVA_HOME='/opt/java/openjdk' \
