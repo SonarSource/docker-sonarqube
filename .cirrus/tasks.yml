@@ -96,7 +96,7 @@ multi_arch_build_task_template: &multi_arch_build_task_template
 
 multi_arch_build_9_x_task:
   <<: *multi_arch_build_task_template
-  skip: "!changesInclude('9/**/*') && !changesInclude('.cirrus/*')"
+  skip: "!changesInclude('9/**/*') && !changesInclude('.cirrus/*') && $CIRRUS_CRON != 'nightly-mend-scan'"
   env:
     matrix:
       - version: 9/community
@@ -112,7 +112,7 @@ multi_arch_build_9_x_task:
 
 multi_arch_build_2025_1_task:
   <<: *multi_arch_build_task_template
-  skip: "!changesInclude('2025.1/**/*') && !changesInclude('.cirrus/*')"
+  skip: "!changesInclude('2025.1/**/*') && !changesInclude('.cirrus/*')  && $CIRRUS_CRON != 'nightly-mend-scan'"
   env:
     matrix:
       - version: 2025.1/developer
@@ -127,7 +127,7 @@ multi_arch_build_2025_1_task:
 multi_arch_build_2025_x_task:
   <<: *multi_arch_build_task_template
   alias: multi_arch_build_sonarqube_server
-  skip: "!changesInclude('2025/**/*') && !changesInclude('.cirrus/*')"
+  skip: "!changesInclude('2025/**/*') && !changesInclude('.cirrus/*')  && $CIRRUS_CRON != 'nightly-mend-scan'"
   env:
     matrix:
       - version: 2025/developer
@@ -141,7 +141,7 @@ multi_arch_build_2025_x_task:
 
 multi_arch_build_community_build_task:
   <<: *multi_arch_build_task_template
-  skip: "!changesInclude('community-build/*') && !changesInclude('.cirrus/*')"
+  skip: "!changesInclude('community-build/*') && !changesInclude('.cirrus/*')  && $CIRRUS_CRON != 'nightly-mend-scan'"
   env:
     matrix:
       - version: community-build
@@ -203,7 +203,7 @@ multi_arch_test_task_template: &multi_arch_test_task_template
 
 multi_arch_test_9_x_task:
   <<: *multi_arch_test_task_template
-  skip: "!changesInclude('9/**/*') && !changesInclude('.cirrus/*')"
+  skip: "!changesInclude('9/**/*') && !changesInclude('.cirrus/*')  && $CIRRUS_CRON != 'nightly-mend-scan'"
   matrix:
     - env:
         CIRRUS_ARCH: arm64
@@ -227,7 +227,7 @@ multi_arch_test_9_x_task:
 
 multi_arch_test_2025_1_task:
   <<: *multi_arch_test_task_template
-  skip: "!changesInclude('2025.1/**/*') && !changesInclude('.cirrus/*')"
+  skip: "!changesInclude('2025.1/**/*') && !changesInclude('.cirrus/*')  && $CIRRUS_CRON != 'nightly-mend-scan'"
   matrix:
     - env:
         CIRRUS_ARCH: arm64
@@ -249,7 +249,7 @@ multi_arch_test_2025_1_task:
 
 multi_arch_test_2025_x_task:
   <<: *multi_arch_test_task_template
-  skip: "!changesInclude('2025/**/*') && !changesInclude('.cirrus/*')"
+  skip: "!changesInclude('2025/**/*') && !changesInclude('.cirrus/*')  && $CIRRUS_CRON != 'nightly-mend-scan'"
   matrix:
     - env:
         CIRRUS_ARCH: arm64
@@ -271,7 +271,7 @@ multi_arch_test_2025_x_task:
 
 multi_arch_test_community_build_task:
   <<: *multi_arch_test_task_template
-  skip: "!changesInclude('community-build/*') && !changesInclude('.cirrus/*')"
+  skip: "!changesInclude('community-build/*') && !changesInclude('.cirrus/*')  && $CIRRUS_CRON != 'nightly-mend-scan'"
   matrix:
     - env:
         CIRRUS_ARCH: arm64
