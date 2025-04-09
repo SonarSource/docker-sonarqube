@@ -1,12 +1,24 @@
+---
 name: Slack Notifications
 on:
-  check_run:
-    types: [ rerequested, completed ]
+  check_suite:
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+  checks: read
+  id-token: write
 
 jobs:
   slack-notifications:
-    permissions:
-      id-token: write  # to authenticate via OIDC
-    uses: SonarSource/gh-action_build-notify/.github/workflows/main.yaml@v2
-    with:
-      slackChannel: squad-sq-platform-build-notification
+    if: >-
+      contains(fromJSON('["main", "master"]'), github.event.check_suite.head_branch) || startsWith(github.event.check_suite.head_branch, 'dogfood-') || startsWith(github.event.check_suite.head_branch, 'branch-')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack Notification
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        uses: SonarSource/gh-action_slack-notify@v1
+        with:
+          slackChannel: squad-sq-platform-build-notification
