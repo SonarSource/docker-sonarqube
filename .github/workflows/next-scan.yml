@@ -10,7 +10,7 @@ on:
 name: Main Workflow
 jobs:
   next:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-large
     permissions:
       id-token: write
       pull-requests: read
