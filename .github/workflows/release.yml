@@ -34,10 +34,10 @@ jobs:
       fail-fast: false
       matrix:
         tag:
-          - 2025.2-developer
-          - 2025.2-enterprise
-          - 2025.2-datacenter-app
-          - 2025.2-datacenter-search
+          - 2025.3-developer
+          - 2025.3-enterprise
+          - 2025.3-datacenter-app
+          - 2025.3-datacenter-search
     uses: ./.github/workflows/release-template.yml
     with:
       tag: ${{ matrix.tag }}
