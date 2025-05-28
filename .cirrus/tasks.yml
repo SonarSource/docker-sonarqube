@@ -44,16 +44,24 @@ multi_arch_build_gcp_prod_task:
     - echo "Pull the ${PUBLIC_IMAGE_NAME} datacenter public images"
     - docker pull "${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-app"
     - docker pull "${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-search"
+    - docker pull "${PUBLIC_IMAGE_NAME}:${CURRENT_LTA_VERSION}-datacenter-app"
+    - docker pull "${PUBLIC_IMAGE_NAME}:${CURRENT_LTA_VERSION}-datacenter-search"
   login_to_gcr_script:
     - export DOCKER_GCLOUD_PASSWORD=$(echo ${DOCKER_GCLOUD_SA_KEY} | base64 -d)
     - docker login -u _json_key -p "$DOCKER_GCLOUD_PASSWORD" https://${GCLOUD_REGISTRY}
     - docker buildx create --use
   tag_and_promote_script:
     - export CURRENT_MINOR_VERSION=$(echo ${CURRENT_VERSION} | cut -d '.' -f 1,2)
+    - export CURRENT_LTA_MINOR_VERSION=$(echo ${CURRENT_LTA_VERSION} | cut -d '.' -f 1,2)
     - echo "Promote the ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-app images supporting one architecture (linux/amd64) to the GCP registry ${GCLOUD_REGISTRY}"
     - echo -e "FROM ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-app" | docker buildx build --platform linux/amd64 --provenance=false --annotation "manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog" --tag "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_VERSION}" --tag "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_MINOR_VERSION}" --push -
     - echo "Promote the ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-search images supporting one architecture (linux/amd64) to the GCP registry ${GCLOUD_REGISTRY}"
     - echo -e "FROM ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-search" | docker buildx build --platform linux/amd64 --provenance=false --annotation "manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog" --tag "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_VERSION}" --tag "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_MINOR_VERSION}" --push -
+    - echo "-----"
+    - echo "Promote the ${PUBLIC_IMAGE_NAME}:${CURRENT_LTA_VERSION}-datacenter-app images supporting one architecture (linux/amd64) to the GCP registry ${GCLOUD_REGISTRY}"
+    - echo -e "FROM ${PUBLIC_IMAGE_NAME}:${CURRENT_LTA_VERSION}-datacenter-app" | docker buildx build --platform linux/amd64 --provenance=false --annotation "manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog" --tag "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_LTA_VERSION}" --tag "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_LTA_MINOR_VERSION}" --push -
+    - echo "Promote the ${PUBLIC_IMAGE_NAME}:${CURRENT_LTA_VERSION}-datacenter-search images supporting one architecture (linux/amd64) to the GCP registry ${GCLOUD_REGISTRY}"
+    - echo -e "FROM ${PUBLIC_IMAGE_NAME}:${CURRENT_LTA_VERSION}-datacenter-search" | docker buildx build --platform linux/amd64 --provenance=false --annotation "manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog" --tag "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_LTA_VERSION}" --tag "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_LTA_MINOR_VERSION}" --push -
 
 multi_arch_build_gcp_staging_task:
   only_if: $CIRRUS_CRON == 'nightly-mend-scan' || $TRIGGER == 'PUSH_GCP_STAGING_IMAGES'
