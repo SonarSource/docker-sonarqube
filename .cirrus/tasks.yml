@@ -70,8 +70,16 @@ multi_arch_build_gcp_staging_task:
     matrix:
       - version: 2025/datacenter/app
         STAGING_IMAGE_NAME: ${GCLOUD_STAGING_REGISTRY}/${GCLOUD_STAGING_PRODUCT_NAME}
+        TAG: ${CURRENT_VERSION}
       - version: 2025/datacenter/search
         STAGING_IMAGE_NAME: ${GCLOUD_STAGING_REGISTRY}/${GCLOUD_STAGING_PRODUCT_NAME}/sonarqube-dce-search
+        TAG: ${CURRENT_VERSION}
+      - version: 2025.1/datacenter/app
+        STAGING_IMAGE_NAME: ${GCLOUD_STAGING_REGISTRY}/${GCLOUD_STAGING_PRODUCT_NAME}
+        TAG: ${CURRENT_LTA_VERSION}
+      - version: 2025.1/datacenter/search
+        STAGING_IMAGE_NAME: ${GCLOUD_STAGING_REGISTRY}/${GCLOUD_STAGING_PRODUCT_NAME}/sonarqube-dce-search
+        TAG: ${CURRENT_LTA_VERSION}
   ec2_instance:
     <<: *VM_TEMPLATE
   login_to_gcr_script:
@@ -83,10 +91,10 @@ multi_arch_build_gcp_staging_task:
     - docker buildx use multibuilder
     - docker buildx inspect --bootstrap
   build_script:
-    - export NEXT_MINOR_VERSION=$(echo ${NEXT_VERSION} | cut -d '.' -f 1,2)
-    - echo "Build and promote the ${STAGING_IMAGE_NAME}:${NEXT_VERSION} and ${STAGING_IMAGE_NAME}:${NEXT_MINOR_VERSION} image supporting two architectures, linux/amd64 and linux/arm64"
-    - .cirrus/multi-arch-build.sh ${STAGING_IMAGE_NAME} $NEXT_VERSION ${version}
-    - .cirrus/multi-arch-build.sh ${STAGING_IMAGE_NAME} $NEXT_MINOR_VERSION ${version}
+    - export MINOR_TAG=$(echo ${TAG} | cut -d '.' -f 1,2)
+    - echo "Build and promote the ${STAGING_IMAGE_NAME}:${TAG} and ${STAGING_IMAGE_NAME}:${MINOR_TAG} image supporting two architectures, linux/amd64 and linux/arm64"
+    - .cirrus/multi-arch-build.sh ${STAGING_IMAGE_NAME} $TAG ${version}
+    - .cirrus/multi-arch-build.sh ${STAGING_IMAGE_NAME} $MINOR_TAG ${version}
 
 multi_arch_build_task_template: &multi_arch_build_task_template
   ec2_instance:
