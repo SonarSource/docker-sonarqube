@@ -100,15 +100,15 @@ multi_arch_build_9_x_task:
   env:
     matrix:
       - version: 9/community
-        tag: $PREVIOUS_LTA_VERSION-community
+        tag: $PREVIOUS_LTA_VERSION-master-community
       - version: 9/developer
-        tag: $PREVIOUS_LTA_VERSION-developer
+        tag: $PREVIOUS_LTA_VERSION-master-developer
       - version: 9/enterprise
-        tag: $PREVIOUS_LTA_VERSION-enterprise
+        tag: $PREVIOUS_LTA_VERSION-master-enterprise
       - version: 9/datacenter/app
-        tag: $PREVIOUS_LTA_VERSION-datacenter-app
+        tag: $PREVIOUS_LTA_VERSION-master-datacenter-app
       - version: 9/datacenter/search
-        tag: $PREVIOUS_LTA_VERSION-datacenter-search
+        tag: $PREVIOUS_LTA_VERSION-master-datacenter-search
 
 multi_arch_build_commercial_editions_task:
   <<: *multi_arch_build_task_template
@@ -139,7 +139,7 @@ private_scan_task:
     MEND_API_KEY: VAULT[development/kv/data/mend data.apikey]
     WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
     matrix:
-      - tag: ${PREVIOUS_LTA_VERSION}-datacenter-app
+      - tag: ${PREVIOUS_LTA_VERSION}-master-datacenter-app
       - tag: ${CURRENT_VERSION}-master-datacenter-app
   ec2_instance:
     <<: *CI_SCANNER
@@ -201,13 +201,13 @@ multi_arch_test_9_x_task:
   env:
     matrix:
       - test_name: docker
-        tag: $PREVIOUS_LTA_VERSION-community
+        tag: $PREVIOUS_LTA_VERSION-master-community
       - test_name: docker
-        tag: $PREVIOUS_LTA_VERSION-developer
+        tag: $PREVIOUS_LTA_VERSION-master-developer
       - test_name: docker
-        tag: $PREVIOUS_LTA_VERSION-enterprise
+        tag: $PREVIOUS_LTA_VERSION-master-enterprise
       - test_name: docker-compose
-        tag: $PREVIOUS_LTA_VERSION-datacenter
+        tag: $PREVIOUS_LTA_VERSION-master-datacenter
   depends_on: multi_arch_build_9_x
 
 multi_arch_test_commercial_editions_task:
