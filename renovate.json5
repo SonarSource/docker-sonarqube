@@ -3,7 +3,7 @@
     "baseBranches": [
       "master",
       "main",
-      "release/2025"
+      "release/2025.1"
     ],
     "rollbackPrs": true,
     "labels": ["docker-release"],
