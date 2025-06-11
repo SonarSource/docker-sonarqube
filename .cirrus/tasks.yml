@@ -15,9 +15,7 @@ env:
   GCLOUD_PRODUCT_NAME: official-sonarqube-data-center-edition
   GCLOUD_STAGING_REGISTRY: gcr.io/sonarqube-marketplace-provider
   GCLOUD_STAGING_PRODUCT_NAME: sonarqube-dce-staging
-  CURRENT_LTA_VERSION: 2025.1.2
   CURRENT_VERSION: 2025.3.0
-  NEXT_VERSION: 2025.4.0
   # We keep the previous LTA support for the next 6 months
   PREVIOUS_LTA_VERSION: 9.9.9
 
@@ -44,42 +42,28 @@ multi_arch_build_gcp_prod_task:
     - echo "Pull the ${PUBLIC_IMAGE_NAME} datacenter public images"
     - docker pull "${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-app"
     - docker pull "${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-search"
-    - docker pull "${PUBLIC_IMAGE_NAME}:${CURRENT_LTA_VERSION}-datacenter-app"
-    - docker pull "${PUBLIC_IMAGE_NAME}:${CURRENT_LTA_VERSION}-datacenter-search"
   login_to_gcr_script:
     - export DOCKER_GCLOUD_PASSWORD=$(echo ${DOCKER_GCLOUD_SA_KEY} | base64 -d)
     - docker login -u _json_key -p "$DOCKER_GCLOUD_PASSWORD" https://${GCLOUD_REGISTRY}
     - docker buildx create --use
   tag_and_promote_script:
     - export CURRENT_MINOR_VERSION=$(echo ${CURRENT_VERSION} | cut -d '.' -f 1,2)
-    - export CURRENT_LTA_MINOR_VERSION=$(echo ${CURRENT_LTA_VERSION} | cut -d '.' -f 1,2)
     - echo "Promote the ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-app images supporting one architecture (linux/amd64) to the GCP registry ${GCLOUD_REGISTRY}"
     - echo -e "FROM ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-app" | docker buildx build --platform linux/amd64 --provenance=false --annotation "manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog" --tag "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_VERSION}" --tag "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_MINOR_VERSION}" --push -
     - echo "Promote the ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-search images supporting one architecture (linux/amd64) to the GCP registry ${GCLOUD_REGISTRY}"
     - echo -e "FROM ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-search" | docker buildx build --platform linux/amd64 --provenance=false --annotation "manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog" --tag "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_VERSION}" --tag "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_MINOR_VERSION}" --push -
-    - echo "-----"
-    - echo "Promote the ${PUBLIC_IMAGE_NAME}:${CURRENT_LTA_VERSION}-datacenter-app images supporting one architecture (linux/amd64) to the GCP registry ${GCLOUD_REGISTRY}"
-    - echo -e "FROM ${PUBLIC_IMAGE_NAME}:${CURRENT_LTA_VERSION}-datacenter-app" | docker buildx build --platform linux/amd64 --provenance=false --annotation "manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog" --tag "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_LTA_VERSION}" --tag "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}:${CURRENT_LTA_MINOR_VERSION}" --push -
-    - echo "Promote the ${PUBLIC_IMAGE_NAME}:${CURRENT_LTA_VERSION}-datacenter-search images supporting one architecture (linux/amd64) to the GCP registry ${GCLOUD_REGISTRY}"
-    - echo -e "FROM ${PUBLIC_IMAGE_NAME}:${CURRENT_LTA_VERSION}-datacenter-search" | docker buildx build --platform linux/amd64 --provenance=false --annotation "manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog" --tag "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_LTA_VERSION}" --tag "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_LTA_MINOR_VERSION}" --push -
 
 multi_arch_build_gcp_staging_task:
   only_if: $CIRRUS_CRON == 'nightly-mend-scan' || $TRIGGER == 'PUSH_GCP_STAGING_IMAGES'
   env:
     EXTRA_DOCKER_BUILD_ARGS: "--provenance=false --annotation=manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog"
     matrix:
-      - version: 2025/datacenter/app
+      - version: commercial-editions/datacenter/app
         STAGING_IMAGE_NAME: ${GCLOUD_STAGING_REGISTRY}/${GCLOUD_STAGING_PRODUCT_NAME}
         TAG: ${CURRENT_VERSION}
-      - version: 2025/datacenter/search
+      - version: commercial-editions/datacenter/search
         STAGING_IMAGE_NAME: ${GCLOUD_STAGING_REGISTRY}/${GCLOUD_STAGING_PRODUCT_NAME}/sonarqube-dce-search
         TAG: ${CURRENT_VERSION}
-      - version: 2025.1/datacenter/app
-        STAGING_IMAGE_NAME: ${GCLOUD_STAGING_REGISTRY}/${GCLOUD_STAGING_PRODUCT_NAME}
-        TAG: ${CURRENT_LTA_VERSION}
-      - version: 2025.1/datacenter/search
-        STAGING_IMAGE_NAME: ${GCLOUD_STAGING_REGISTRY}/${GCLOUD_STAGING_PRODUCT_NAME}/sonarqube-dce-search
-        TAG: ${CURRENT_LTA_VERSION}
   ec2_instance:
     <<: *VM_TEMPLATE
   login_to_gcr_script:
@@ -116,44 +100,30 @@ multi_arch_build_9_x_task:
   env:
     matrix:
       - version: 9/community
-        tag: $PREVIOUS_LTA_VERSION-community
+        tag: $PREVIOUS_LTA_VERSION-master-community
       - version: 9/developer
-        tag: $PREVIOUS_LTA_VERSION-developer
+        tag: $PREVIOUS_LTA_VERSION-master-developer
       - version: 9/enterprise
-        tag: $PREVIOUS_LTA_VERSION-enterprise
+        tag: $PREVIOUS_LTA_VERSION-master-enterprise
       - version: 9/datacenter/app
-        tag: $PREVIOUS_LTA_VERSION-datacenter-app
+        tag: $PREVIOUS_LTA_VERSION-master-datacenter-app
       - version: 9/datacenter/search
-        tag: $PREVIOUS_LTA_VERSION-datacenter-search
+        tag: $PREVIOUS_LTA_VERSION-master-datacenter-search
 
-multi_arch_build_2025_1_task:
-  <<: *multi_arch_build_task_template
-  skip: "!changesInclude('2025.1/**/*') && !changesInclude('.cirrus/*')  && $CIRRUS_CRON != 'nightly-mend-scan'"
-  env:
-    matrix:
-      - version: 2025.1/developer
-        tag: $CURRENT_LTA_VERSION-developer
-      - version: 2025.1/enterprise
-        tag: $CURRENT_LTA_VERSION-enterprise
-      - version: 2025.1/datacenter/app
-        tag: $CURRENT_LTA_VERSION-datacenter-app
-      - version: 2025.1/datacenter/search
-        tag: $CURRENT_LTA_VERSION-datacenter-search
-
-multi_arch_build_2025_x_task:
+multi_arch_build_commercial_editions_task:
   <<: *multi_arch_build_task_template
   alias: multi_arch_build_sonarqube_server
-  skip: "!changesInclude('2025/**/*') && !changesInclude('.cirrus/*')  && $CIRRUS_CRON != 'nightly-mend-scan'"
+  skip: "!changesInclude('commercial-editions/**/*') && !changesInclude('.cirrus/*')  && $CIRRUS_CRON != 'nightly-mend-scan'"
   env:
     matrix:
-      - version: 2025/developer
-        tag: ${NEXT_VERSION}-developer
-      - version: 2025/enterprise
-        tag: ${NEXT_VERSION}-enterprise
-      - version: 2025/datacenter/app
-        tag: ${NEXT_VERSION}-datacenter-app
-      - version: 2025/datacenter/search
-        tag: ${NEXT_VERSION}-datacenter-search
+      - version: commercial-editions/developer
+        tag: ${CURRENT_VERSION}-master-developer
+      - version: commercial-editions/enterprise
+        tag: ${CURRENT_VERSION}-master-enterprise
+      - version: commercial-editions/datacenter/app
+        tag: ${CURRENT_VERSION}-master-datacenter-app
+      - version: commercial-editions/datacenter/search
+        tag: ${CURRENT_VERSION}-master-datacenter-search
 
 multi_arch_build_community_build_task:
   <<: *multi_arch_build_task_template
@@ -161,7 +131,7 @@ multi_arch_build_community_build_task:
   env:
     matrix:
       - version: community-build
-        tag: $COMMUNITY_BUILD_VERSION-community
+        tag: $COMMUNITY_BUILD_VERSION-master-community
 
 private_scan_task:
   env:
@@ -169,8 +139,8 @@ private_scan_task:
     MEND_API_KEY: VAULT[development/kv/data/mend data.apikey]
     WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
     matrix:
-      - tag: $CURRENT_LTA_VERSION-datacenter-app
-      - tag: ${NEXT_VERSION}-datacenter-app
+      - tag: ${PREVIOUS_LTA_VERSION}-master-datacenter-app
+      - tag: ${CURRENT_VERSION}-master-datacenter-app
   ec2_instance:
     <<: *CI_SCANNER
   login_script:
@@ -191,7 +161,6 @@ public_scan_task:
     MEND_API_KEY: VAULT[development/kv/data/mend data.apikey]
     WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
     matrix:
-      - tag: $CURRENT_LTA_VERSION-datacenter-app
       - tag: $PREVIOUS_LTA_VERSION-datacenter-app
       - tag: $CURRENT_VERSION-datacenter-app
   ec2_instance:
@@ -232,18 +201,18 @@ multi_arch_test_9_x_task:
   env:
     matrix:
       - test_name: docker
-        tag: $PREVIOUS_LTA_VERSION-community
+        tag: $PREVIOUS_LTA_VERSION-master-community
       - test_name: docker
-        tag: $PREVIOUS_LTA_VERSION-developer
+        tag: $PREVIOUS_LTA_VERSION-master-developer
       - test_name: docker
-        tag: $PREVIOUS_LTA_VERSION-enterprise
+        tag: $PREVIOUS_LTA_VERSION-master-enterprise
       - test_name: docker-compose
-        tag: $PREVIOUS_LTA_VERSION-datacenter
+        tag: $PREVIOUS_LTA_VERSION-master-datacenter
   depends_on: multi_arch_build_9_x
 
-multi_arch_test_2025_1_task:
+multi_arch_test_commercial_editions_task:
   <<: *multi_arch_test_task_template
-  skip: "!changesInclude('2025.1/**/*') && !changesInclude('.cirrus/*')  && $CIRRUS_CRON != 'nightly-mend-scan'"
+  skip: "!changesInclude('commercial-editions/**/*') && !changesInclude('.cirrus/*')  && $CIRRUS_CRON != 'nightly-mend-scan'"
   matrix:
     - env:
         CIRRUS_ARCH: arm64
@@ -256,33 +225,11 @@ multi_arch_test_2025_1_task:
   env:
     matrix:
       - test_name: docker
-        tag: $CURRENT_LTA_VERSION-developer
+        tag: ${CURRENT_VERSION}-master-developer
       - test_name: docker
-        tag: $CURRENT_LTA_VERSION-enterprise
+        tag: ${CURRENT_VERSION}-master-enterprise
       - test_name: docker-compose
-        tag: $CURRENT_LTA_VERSION-datacenter
-  depends_on: multi_arch_build_2025_1
-
-multi_arch_test_2025_x_task:
-  <<: *multi_arch_test_task_template
-  skip: "!changesInclude('2025/**/*') && !changesInclude('.cirrus/*')  && $CIRRUS_CRON != 'nightly-mend-scan'"
-  matrix:
-    - env:
-        CIRRUS_ARCH: arm64
-        INSTANCE_TYPE: t4g.large
-        AMI_NAME: docker-builder-arm64-v*
-    - env:
-        CIRRUS_ARCH: amd64
-        INSTANCE_TYPE: t3.large
-        AMI_NAME: docker-builder-v*
-  env:
-    matrix:
-      - test_name: docker
-        tag: ${NEXT_VERSION}-developer
-      - test_name: docker
-        tag: ${NEXT_VERSION}-enterprise
-      - test_name: docker-compose
-        tag: ${NEXT_VERSION}-datacenter
+        tag: ${CURRENT_VERSION}-master-datacenter
   depends_on: multi_arch_build_sonarqube_server
 
 multi_arch_test_community_build_task:
