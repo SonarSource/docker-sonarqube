@@ -15,7 +15,8 @@
     "automerge": false,
     "includePaths": [
       "commercial-editions/**",
-      "community-build/Dockerfile"
+      "community-build/Dockerfile",
+      ".cirrus/tasks.yml"
     ],
     "enabledManagers": [
       "custom.regex"
@@ -27,6 +28,19 @@
         "groupSlug": "docker-sonarqube-server-releases",
         "matchDepNames": ["sonarqube-server"],
         "labels": ["sonarqube-server"]
+      },
+      {
+        "matchManagers": ["custom.regex"],
+        "groupName": "docker-sonarqube-community-build-releases",
+        "groupSlug": "docker-sonarqube-community-build-releases",
+        "matchDepNames": ["sonarqube-community-build"],
+        "labels": ["sonarqube-community-build"]
+      },
+      {
+        "matchManagers": ["custom.regex"],
+        "matchBaseBranches": ["release/2025.1"],
+        "matchUpdateTypes": ["major","minor"],
+        "enabled": "false"
       }
     ],
     "customManagers": [
@@ -44,6 +58,18 @@
       },
       {
         "customType": "regex",
+        "managerFilePatterns": [".cirrus/tasks.yml"],
+        "datasourceTemplate":"github-releases",
+        "depNameTemplate": "sonarqube-server",
+        "versioningTemplate": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)",
+        "extractVersionTemplate": "^sqs-(?<version>\\d+\\.\\d+\\.\\d+)\\.\\d+$",
+        "packageNameTemplate": "SonarSource/sonar-enterprise",
+        "matchStrings": [
+          "CURRENT_VERSION: (?<currentValue>.+)"
+        ]
+      },
+      {
+        "customType": "regex",
         "managerFilePatterns": ["community-build/Dockerfile"],
         "datasourceTemplate":"github-releases",
         "depNameTemplate": "sonarqube-community-build",
@@ -51,6 +77,17 @@
         "packageNameTemplate": "SonarSource/sonarqube",
         "matchStrings": [
           "ARG SONARQUBE_VERSION=(?<currentValue>.+)"
+        ]
+      },
+      {
+        "customType": "regex",
+        "managerFilePatterns": [".cirrus/tasks.yml"],
+        "datasourceTemplate":"github-releases",
+        "depNameTemplate": "sonarqube-community-build",
+        "versioningTemplate": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)",
+        "packageNameTemplate": "SonarSource/sonarqube",
+        "matchStrings": [
+          "COMMUNITY_BUILD_VERSION: (?<currentValue>.+)"
         ]
       }
     ]
