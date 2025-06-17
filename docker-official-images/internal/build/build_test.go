@@ -102,6 +102,10 @@ func TestGetDockerfilePaths(t *testing.T) {
 	}
 }
 
+const SONAR_EXPECTED_VERSION = "2025.3.0.108892"
+const SONAR_EXPECTED_LTS_VERSION = "9.9.8.100196"
+const SONAR_DATACENTER_STRING = "datacenter-app"
+
 func TestExtractSonarQubeVersion(t *testing.T) {
     tests := []struct {
         name          string
@@ -116,7 +120,7 @@ FROM alpine:latest
 ARG SONARQUBE_VERSION=2025.3.0.108892
 RUN echo "Hello"
 `,
-            wantVersion: "2025.3.0.108892",
+            wantVersion: SONAR_EXPECTED_VERSION,
             wantErr:     false,
         },
         {
@@ -125,7 +129,7 @@ RUN echo "Hello"
 FROM ubuntu
 ARG SONARQUBE_VERSION   9.9.8.100196
 `,
-            wantVersion: "9.9.8.100196",
+            wantVersion: SONAR_EXPECTED_LTS_VERSION,
             wantErr:     false,
         },
         {
@@ -191,7 +195,7 @@ func TestGetBuildMetadataFromConfig(t *testing.T) {
             fetcher:           gitFetcher,
             wantMetadataCount: 4,
             wantErr:           false,
-            expectedVersion:   "2025.3.0.108892",
+            expectedVersion:   SONAR_EXPECTED_VERSION,
             expectedCommit:    "",
         },
         {
@@ -215,7 +219,7 @@ func TestGetBuildMetadataFromConfig(t *testing.T) {
             fetcher:           gitFetcher,
             wantMetadataCount: 5, // 5 Dockerfiles for legacy
             wantErr:           false,
-            expectedVersion:   "9.9.8.100196",
+            expectedVersion:   SONAR_EXPECTED_LTS_VERSION,
             expectedCommit:    "",
         },
         {
@@ -228,7 +232,7 @@ func TestGetBuildMetadataFromConfig(t *testing.T) {
             fetcher: gitFetcher,
             wantMetadataCount: 4,
             wantErr: false,
-            expectedVersion: "2025.3.0.108892",
+            expectedVersion: SONAR_EXPECTED_VERSION,
         },
         {
             name: "Dockerfile Not Found by Fetcher",
@@ -296,9 +300,9 @@ func TestGetBuildMetadataFromConfig(t *testing.T) {
     }
 }
 
-// TestGitFetcher_Fetch tests the GitFetcher's ability to fetch file content
+// testGitFetcherFetch tests the GitFetcher's ability to fetch file content
 // from the current working directory's Git repository.
-func TestGitFetcher_Fetch(t *testing.T) {
+func testGitFetcherFetch(t *testing.T) {
 	// Define the exact commit SHA and content from your repository
 	const testCommitSHA = "408a6865f494736d3a428e31d964271785f67d77"
 	const testFilePath = "NOTICE.txt"
@@ -386,7 +390,7 @@ func TestGetEditionTypeFromPath(t *testing.T) {
 		{
 			name:        "Commercial Datacenter App",
 			filePath:    "commercial-editions/datacenter/app/Dockerfile",
-			wantEdition: "datacenter-app", // Note the dash for "datacenter-app"
+			wantEdition: SONAR_DATACENTER_STRING, // Note the dash for "datacenter-app"
 			wantErr:     false,
 		},
 		{
@@ -416,7 +420,7 @@ func TestGetEditionTypeFromPath(t *testing.T) {
 		{
 			name:        "Legacy Datacenter App (9/datacenter/app)",
 			filePath:    "9/datacenter/app/Dockerfile",
-			wantEdition: "datacenter-app",
+			wantEdition: SONAR_DATACENTER_STRING,
 			wantErr:     false,
 		},
 		{
@@ -447,7 +451,7 @@ func TestGetEditionTypeFromPath(t *testing.T) {
 	}
 }
 
-func TestGitFetcher_ResolveBranchToSHA(t *testing.T) {
+func TestGitFetcherResolveBranchToSHA(t *testing.T) {
 	fetcher := build.NewGitFetcher() // GitFetcher will act as GitRefResolver, operating on current repo
 
 	tests := []struct {
@@ -504,7 +508,7 @@ func TestGenerateTags(t *testing.T) {
 	}{
 		{
 			name:         "Commercial Edition - Developer (Standard)",
-			version:      "2025.3.0.108892",
+			version:      SONAR_EXPECTED_VERSION,
 			editionType:  "developer",
 			isLatestLTSTag: false,
 			isLatestLTATag: false,
@@ -516,7 +520,7 @@ func TestGenerateTags(t *testing.T) {
 		},
 		{
 			name:         "Commercial Edition - Enterprise (Standard)",
-			version:      "2025.3.0.108892",
+			version:      SONAR_EXPECTED_VERSION,
 			editionType:  "enterprise",
 			isLatestLTSTag: false,
 			isLatestLTATag: false,
@@ -527,8 +531,8 @@ func TestGenerateTags(t *testing.T) {
 		},
 		{
 			name:         "Commercial Edition - Datacenter App (Standard)",
-			version:      "2025.3.0.108892",
-			editionType:  "datacenter-app",
+			version:      SONAR_EXPECTED_VERSION,
+			editionType:  SONAR_DATACENTER_STRING,
 			isLatestLTSTag: false,
 			isLatestLTATag: false,
 			isLatest: true,
@@ -548,7 +552,7 @@ func TestGenerateTags(t *testing.T) {
 		},
 		{
 			name:         "Legacy Edition - Community (9.9.8)",
-			version:      "9.9.8.100196",
+			version:      SONAR_EXPECTED_LTS_VERSION,
 			editionType:  "community",
 			isLatestLTSTag: true,
 			isLatestLTATag: false,
@@ -558,7 +562,7 @@ func TestGenerateTags(t *testing.T) {
 		},
 		{
 			name:         "Legacy Edition - Developer (9.9.8)",
-			version:      "9.9.8.100196",
+			version:      SONAR_EXPECTED_LTS_VERSION,
 			editionType:  "developer",
 			isLatestLTSTag: true,
 			isLatestLTATag: false,

@@ -12,6 +12,8 @@ import (
 	"github.com/SonarSource/docker-sonarqube/official-images-builder/internal/config"
 )
 
+const DOCKERFILE_STR_CONST = "/Dockerfile"
+
 // ImageBuildMetadata represents the processed information for a single Docker image build.
 // This will be the output of parsing a Dockerfile and combining it with ActiveVersionConfig info.
 type ImageBuildMetadata struct {
@@ -53,12 +55,12 @@ func GetDockerfilePaths(editionType string) []string {
 
 // GetEditionTypeFromPath extracts the edition type string from a relative Dockerfile path.
 func GetEditionTypeFromPath(dockerfilePath string) (string, error) {
-	if !strings.HasSuffix(dockerfilePath, "/Dockerfile") {
+	if !strings.HasSuffix(dockerfilePath, DOCKERFILE_STR_CONST) {
 		return "", fmt.Errorf("invalid Dockerfile path format: '%s' (must end with /Dockerfile)", dockerfilePath)
 	}
 
 	// Remove "/Dockerfile" suffix
-	pathWithoutFilename := strings.TrimSuffix(dockerfilePath, "/Dockerfile")
+	pathWithoutFilename := strings.TrimSuffix(dockerfilePath, DOCKERFILE_STR_CONST)
 
 	// Split the path into components
 	parts := strings.Split(pathWithoutFilename, "/")
@@ -162,7 +164,7 @@ func GetBuildMetadataFromConfig(cfg config.ActiveVersionConfig, fetcher FileCont
             Architectures: []string{"amd64", "arm64v8"},
             GitCommit:     branchOrCommit,
             EditionType:   editionType,
-            ImageDirectory: strings.TrimSuffix(relPath, "/Dockerfile"),
+            ImageDirectory: strings.TrimSuffix(relPath, DOCKERFILE_STR_CONST),
 			Tags: tags,       
         }
 
