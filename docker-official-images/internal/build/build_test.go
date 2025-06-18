@@ -6,50 +6,11 @@ import (
 	"fmt"
 	"github.com/SonarSource/docker-sonarqube/docker-official-images/internal/build"
 	"github.com/SonarSource/docker-sonarqube/docker-official-images/internal/config"
+	"github.com/SonarSource/docker-sonarqube/docker-official-images/internal/fetcher"
 	"reflect"
 	"strings"
 	"testing"
 )
-
-// mockFetcher implements build.FileContentFetcher for testing purposes.
-type mockFetcher struct {
-	// A map where key is "branchOrCommit/relativePath" and value is Dockerfile content.
-	contents map[string]string
-	// Optional: store errors to return for specific fetches
-	errors map[string]error
-}
-
-// NewMockFetcher creates a new mockFetcher.
-func NewMockFetcher(contents map[string]string, errors map[string]error) *mockFetcher {
-	if contents == nil {
-		contents = make(map[string]string)
-	}
-	if errors == nil {
-		errors = make(map[string]error)
-	}
-	return &mockFetcher{
-		contents: contents,
-		errors:   errors,
-	}
-}
-
-// Fetch implements the build.FileContentFetcher interface for the mock.
-func (m *mockFetcher) Fetch(branchOrCommit, relativePath string) (string, error) {
-	key := fmt.Sprintf("%s/%s", branchOrCommit, relativePath)
-	if err, ok := m.errors[key]; ok && err != nil {
-		return "", err
-	}
-	if content, ok := m.contents[key]; ok {
-		return content, nil
-	}
-	// Simulate content not found for a given branch/path combination
-	return "", fmt.Errorf("mock: content not found for %s on %s", relativePath, branchOrCommit)
-}
-
-// Fetch implements the build.FileContentFetcher interface for the mock.
-func (m *mockFetcher) ResolveBranchToSHA(branchOrCommit string) (string, error) {
-	return "", fmt.Errorf("not implemented")
-}
 
 func TestGetDockerfilePaths(t *testing.T) {
 	tests := []struct {
@@ -175,12 +136,12 @@ SONARQUBE_VERSION 1.2.3.4
 
 func TestGetBuildMetadataFromConfig(t *testing.T) {
 
-	gitFetcher := build.NewGitFetcher()
+	gitFetcher := fetcher.NewGitFetcher()
 
 	tests := []struct {
 		name              string
 		activeConfig      config.ActiveVersionConfig
-		fetcher           build.FileContentFetcher
+		fetcher           fetcher.FileContentFetcher
 		wantMetadataCount int
 		wantErr           bool
 		expectedVersion   string
@@ -240,7 +201,7 @@ func TestGetBuildMetadataFromConfig(t *testing.T) {
 				Branch: "non-existent-branch", // No content mapped for this branch
 				Type:   "communityBuild",
 			},
-			fetcher:           NewMockFetcher(nil, nil), // A fetcher with no content mapped
+			fetcher:           fetcher.NewMockFetcher(nil, nil), // A fetcher with no content mapped
 			wantMetadataCount: 0,
 			wantErr:           true, // Expect an error from fetcher.Fetch
 		},
@@ -295,73 +256,6 @@ func TestGetBuildMetadataFromConfig(t *testing.T) {
 				if !reflect.DeepEqual(gotMetadata[0].Architectures, []string{"amd64", "arm64v8"}) {
 					t.Errorf("Expected first metadata Architectures %v, got %v", []string{"amd64", "arm64v8"}, gotMetadata[0].Architectures)
 				}
-			}
-		})
-	}
-}
-
-// testGitFetcherFetch tests the GitFetcher's ability to fetch file content
-// from the current working directory's Git repository.
-func testGitFetcherFetch(t *testing.T) {
-	// Define the exact commit SHA and content from your repository
-	const testCommitSHA = "408a6865f494736d3a428e31d964271785f67d77"
-	const testFilePath = "NOTICE.txt"
-	const expectedContent = `docker-sonarqube
-Copyright (C) 2015-2025 SonarSource SA
-mailto:info AT sonarsource DOT com
-
-This product includes software developed at
-SonarSource (http://www.sonarsource.com/).
-`
-
-	fetcher := build.NewGitFetcher() // No arguments, assumes current directory is repo root
-
-	tests := []struct {
-		name           string
-		branchOrCommit string
-		relativePath   string
-		wantContent    string
-		wantErr        bool
-	}{
-		{
-			name:           "Fetch existing file by specific commit SHA",
-			branchOrCommit: testCommitSHA,
-			relativePath:   testFilePath,
-			wantContent:    expectedContent,
-			wantErr:        false,
-		},
-		{
-			name:           "Fetch existing file from 'master' branch (assuming it points to the commit or has this content)",
-			branchOrCommit: "master",
-			relativePath:   testFilePath,
-			wantContent:    expectedContent,
-			wantErr:        false,
-		},
-		{
-			name:           "Fetch non-existent file at specific commit",
-			branchOrCommit: testCommitSHA,
-			relativePath:   "non/existent/file.txt",
-			wantContent:    "",
-			wantErr:        true,
-		},
-		{
-			name:           "Fetch from non-existent branch/commit ref",
-			branchOrCommit: "non-existent-ref",
-			relativePath:   testFilePath,
-			wantContent:    "",
-			wantErr:        true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gotContent, err := fetcher.Fetch(tt.branchOrCommit, tt.relativePath)
-
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Fetch() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if gotContent != tt.wantContent {
-				t.Errorf("Fetch() gotContent = %q, want %q", gotContent, tt.wantContent)
 			}
 		})
 	}
@@ -458,7 +352,7 @@ func TestGetEditionTypeFromPath(t *testing.T) {
 }
 
 func TestGitFetcherResolveBranchToSHA(t *testing.T) {
-	fetcher := build.NewGitFetcher() // GitFetcher will act as GitRefResolver, operating on current repo
+	fetcher := fetcher.NewGitFetcher() // GitFetcher will act as GitRefResolver, operating on current repo
 
 	tests := []struct {
 		name    string
