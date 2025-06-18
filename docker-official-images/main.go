@@ -14,15 +14,13 @@ import (
 func main() {
 	configFilePath := "active_versions.json"
 
-	// 1. Read and parse the activeVersions JSON file
 	activeConfigs, err := config.ParseConfigFile(configFilePath)
 	if err != nil {
 		log.Fatalf("Error reading or parsing active versions config: %v", err)
 	}
 
-	gitFetcher := fetcher.NewGitFetcher() // Operates on current Git repo
+	gitFetcher := fetcher.NewGitFetcher()
 
-	// 3. Process each activeVersion to retrieve ImageBuildMetadata
 	var allBuildMetadata []build.ImageBuildMetadata
 	for _, cfg := range activeConfigs {
 
@@ -34,11 +32,6 @@ func main() {
 	}
 
 	fmt.Printf("Successfully processed %d image build metadata entries.\n", len(allBuildMetadata))
-	// fmt.Println("--- Generated Build Metadata ---")
-	// for _, md := range allBuildMetadata {
-	// 	fmt.Printf("Branch: %s, Edition: %s, Version: %s, Directory: %s, Tags: %v, GitCommit: %s\n",
-	// 		md.Branch, md.EditionType, md.Version, md.ImageDirectory, md.Tags, md.GitCommit)
-	// }
 
 	templateFilePath := "official_images.tmpl"
 
