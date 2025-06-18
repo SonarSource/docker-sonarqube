@@ -55,8 +55,6 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error executing template: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Println("--------------------------------")
 
-	// Placeholder output for now
 	fmt.Println("CLI application finished.")
 }
