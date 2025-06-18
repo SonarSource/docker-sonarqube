@@ -72,3 +72,46 @@ SonarSource (http://www.sonarsource.com/).
 		})
 	}
 }
+
+func TestGitFetcherResolveBranchToSHA(t *testing.T) {
+	fetcher := fetcher.NewGitFetcher() // GitFetcher will act as GitRefResolver, operating on current repo
+
+	tests := []struct {
+		name    string
+		branch  string
+		wantSHA string
+		wantErr bool
+	}{
+		{
+			name:    "Resolve a specific, known commit SHA",
+			branch:  "408a6865f494736d3a428e31d964271785f67d77",
+			wantSHA: "408a6865f494736d3a428e31d964271785f67d77",
+			wantErr: false,
+		},
+		{
+			name:    "Resolve another feature branch",
+			branch:  "origin/release/10.8",
+			wantSHA: "e871c0c6e82a55e3a7eb0ea59b5307c895c5b010",
+			wantErr: false,
+		},
+		{
+			name:    "Resolve non-existent branch",
+			branch:  "non-existent-branch-xyz",
+			wantSHA: "",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotSHA, err := fetcher.ResolveBranchToSHA(tt.branch)
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ResolveBranchToSHA() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if gotSHA != tt.wantSHA {
+				t.Errorf("ResolveBranchToSHA() gotSHA = %q, want %q", gotSHA, tt.wantSHA)
+			}
+		})
+	}
+}
