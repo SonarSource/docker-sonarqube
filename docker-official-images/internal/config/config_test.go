@@ -15,14 +15,14 @@ import (
 func TestParseSingleActiveVersionConfig(t *testing.T) {
 	// 1. Define a sample JSON input
 	jsonInput := `
-	{
-		"branch": "main",
-		"type": "communityBuild",
-		"isLatestLTATag": true,
-		"isLatestLTSTag": true,
-		"isLatest": true,
-		"commitSha": "abc123def456"
-	}`
+    {
+        "branch": "main",
+        "type": "communityBuild",
+        "isLatestLTATag": true,
+        "isLatestLTSTag": true,
+        "isLatest": true,
+        "commitSha": "abc123def456"
+    }`
 
 	// 2. Declare a variable to hold the unmarshaled data
 	var cfg config.ActiveVersionConfig
@@ -58,10 +58,10 @@ func TestParseSingleActiveVersionConfig(t *testing.T) {
 
 	// Test default values for optional fields not provided
 	jsonInputNoOptional := `
-	{
-		"branch": "develop",
-		"type": "commercialEditions"
-	}`
+    {
+        "branch": "develop",
+        "type": "commercialEditions"
+    }`
 	var cfgNoOptional config.ActiveVersionConfig
 	err = json.Unmarshal([]byte(jsonInputNoOptional), &cfgNoOptional)
 	if err != nil {
@@ -82,22 +82,22 @@ func TestParseSingleActiveVersionConfig(t *testing.T) {
 func TestParseMultipleActiveVersionConfigs(t *testing.T) {
 	// 1. Define a sample JSON input with an array of objects
 	jsonInput := `
-	[
-		{
-			"branch": "main",
-			"type": "communityBuild",
-			"isLatestLTATag": true
-		},
-		{
-			"branch": "develop",
-			"type": "commercialEditions",
-			"commitSha": "789def012ghi"
-		},
-		{
-			"branch": "release/1.0",
-			"type": "legacy"
-		}
-	]`
+    [
+        {
+            "branch": "main",
+            "type": "communityBuild",
+            "isLatestLTATag": true
+        },
+        {
+            "branch": "develop",
+            "type": "commercialEditions",
+            "commitSha": "789def012ghi"
+        },
+        {
+            "branch": "release/1.0",
+            "type": "legacy"
+        }
+    ]`
 
 	// 2. Declare a slice (array) to hold the unmarshaled data
 	var configs []config.ActiveVersionConfig
@@ -280,17 +280,17 @@ func TestParseConfigFile(t *testing.T) {
 
 	configFilePath := filepath.Join(tempDir, "test_config.json")
 	jsonContent := `
-	[
-		{
-			"branch": "feature/new",
-			"type": "communityBuild"
-		},
-		{
-			"branch": "pathlta",
-			"type": "commercialEditions",
-			"commitSha": "deadbeef"
-		}
-	]`
+    [
+        {
+            "branch": "feature/new",
+            "type": "communityBuild"
+        },
+        {
+            "branch": "pathlta",
+            "type": "commercialEditions",
+            "commitSha": "deadbeef"
+        }
+    ]`
 
 	// Write the JSON content to the temporary file
 	err = os.WriteFile(configFilePath, []byte(jsonContent), 0644) // 0644 is standard file permissions
@@ -319,12 +319,12 @@ func TestParseConfigFile(t *testing.T) {
 	// Test case for invalid JSON (e.g., malformed)
 	invalidConfigFilePath := filepath.Join(tempDir, "invalid_config.json")
 	invalidJsonContent := `
-	[
-		{
-			"branch": "malformed",
-			"type": "communityBuild"
-		, // Extra comma makes it invalid JSON
-	]`
+    [
+        {
+            "branch": "malformed",
+            "type": "communityBuild"
+        , // Extra comma makes it invalid JSON
+    ]`
 	err = os.WriteFile(invalidConfigFilePath, []byte(invalidJsonContent), 0644)
 	if err != nil {
 		t.Fatalf("Failed to write invalid temp config file: %v", err)

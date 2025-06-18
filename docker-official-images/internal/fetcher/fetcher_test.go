@@ -2,10 +2,9 @@
 package fetcher_test
 
 import (
-	"testing"
 	"github.com/SonarSource/docker-sonarqube/docker-official-images/internal/fetcher"
+	"testing"
 )
-
 
 // testGitFetcherFetch tests the GitFetcher's ability to fetch file content
 // from the current working directory's Git repository.
