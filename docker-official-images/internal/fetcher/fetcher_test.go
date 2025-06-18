@@ -38,7 +38,7 @@ SonarSource (http://www.sonarsource.com/).
 		},
 		{
 			name:           "Fetch existing file from 'master' branch (assuming it points to the commit or has this content)",
-			branchOrCommit: "master",
+			branchOrCommit: "origin/master",
 			relativePath:   testFilePath,
 			wantContent:    expectedContent,
 			wantErr:        false,
