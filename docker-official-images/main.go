@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/SonarSource/docker-sonarqube/docker-official-images/internal/build"
+	"github.com/SonarSource/docker-sonarqube/docker-official-images/internal/config"
 	"log"
-	"text/template"
 	"os"
-	"github.com/SonarSource/docker-sonarqube/official-images-builder/internal/build"
-	"github.com/SonarSource/docker-sonarqube/official-images-builder/internal/config"
+	"text/template"
 )
 
 // main is the entry point of the CLI application.
@@ -19,7 +19,7 @@ func main() {
 		log.Fatalf("Error reading or parsing active versions config: %v", err)
 	}
 
-    gitFetcher := build.NewGitFetcher() // Operates on current Git repo
+	gitFetcher := build.NewGitFetcher() // Operates on current Git repo
 
 	// 3. Process each activeVersion to retrieve ImageBuildMetadata
 	var allBuildMetadata []build.ImageBuildMetadata
@@ -62,7 +62,6 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Println("--------------------------------")
-
 
 	// Placeholder output for now
 	fmt.Println("CLI application finished.")

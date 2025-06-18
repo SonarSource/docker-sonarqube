@@ -1,3 +1,3 @@
-module github.com/SonarSource/docker-sonarqube/official-images-builder
+module github.com/SonarSource/docker-sonarqube/docker-official-images
 
 go 1.23.3

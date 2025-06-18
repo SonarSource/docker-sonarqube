@@ -3,13 +3,13 @@ package config_test // We use _test suffix to indicate this is an external test 
 
 import (
 	"encoding/json"
-	"testing"
 	"os"
 	"path/filepath"
+	"testing"
 )
 
 import (
-    "github.com/SonarSource/docker-sonarqube/official-images-builder/internal/config"
+	"github.com/SonarSource/docker-sonarqube/docker-official-images/internal/config"
 )
 
 func TestParseSingleActiveVersionConfig(t *testing.T) {
@@ -71,14 +71,13 @@ func TestParseSingleActiveVersionConfig(t *testing.T) {
 		t.Errorf("Expected IsLatestLTATag to default to false, got %t", cfgNoOptional.IsLatestLTATag)
 	}
 	if cfgNoOptional.IsLatestLTSTag != false {
-		t.Errorf("Expected IsLatestLTSTag to default to false, got %t", cfgNoOptional.IsLatestLTATag)
+		t.Errorf("Expected IsLatestLTSTag to default to false, got %t", cfgNoOptional.IsLatestLTSTag)
 	}
 	if cfgNoOptional.CommitSHA != "" { // Go's default for string is empty string
 		t.Errorf("Expected CommitSHA to default to empty string, got '%s'", cfgNoOptional.CommitSHA)
 	}
 
 }
-
 
 func TestParseMultipleActiveVersionConfigs(t *testing.T) {
 	// 1. Define a sample JSON input with an array of objects
@@ -158,8 +157,8 @@ func TestParseMultipleActiveVersionConfigs(t *testing.T) {
 // TestValidationMandatoryFields tests that mandatory fields are enforced.
 func TestValidationMandatoryFields(t *testing.T) {
 	tests := []struct {
-		name string
-		cfg  config.ActiveVersionConfig
+		name    string
+		cfg     config.ActiveVersionConfig
 		wantErr bool
 	}{
 		{
@@ -212,8 +211,8 @@ func TestValidationMandatoryFields(t *testing.T) {
 // TestValidationTypeField tests that the Type field has an allowed value.
 func TestValidationTypeField(t *testing.T) {
 	tests := []struct {
-		name string
-		cfg  config.ActiveVersionConfig
+		name    string
+		cfg     config.ActiveVersionConfig
 		wantErr bool
 	}{
 		{

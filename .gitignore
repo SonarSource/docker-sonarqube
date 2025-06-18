@@ -36,3 +36,4 @@ Desktop.ini
 
 # ---- Docker Official Images
 docker-official-images/official_images.txt
+docker-official-images/coverage.out

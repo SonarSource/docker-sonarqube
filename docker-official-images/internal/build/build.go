@@ -3,13 +3,13 @@ package build
 
 import (
 	"bufio"
-	"fmt"
-	"io"
-	"strings"
-	"regexp"
-	"os/exec"
 	"bytes"
-	"github.com/SonarSource/docker-sonarqube/official-images-builder/internal/config"
+	"fmt"
+	"github.com/SonarSource/docker-sonarqube/docker-official-images/internal/config"
+	"io"
+	"os/exec"
+	"regexp"
+	"strings"
 )
 
 const DOCKERFILE_STR_CONST = "/Dockerfile"
@@ -23,34 +23,34 @@ type ImageBuildMetadata struct {
 	ImageDirectory string   // e.g., "2025/developer" - derived from version and Dockerfile path
 	Tags           []string // e.g., ["2025.3.0-developer", "2025.3-developer", "developer"]
 	Architectures  []string // Always ["amd64", "arm64v8"]
-	GitCommit      string   // From ActiveVersionConfig
+	GitCommit      string   // From ActiveVersionConfig or resolved from branch
 }
 
 // GetDockerfilePaths function remains the same
 func GetDockerfilePaths(editionType string) []string {
-    switch editionType {
-    case "commercialEditions":
-        return []string{
-            "commercial-editions/developer/Dockerfile",
-            "commercial-editions/enterprise/Dockerfile",
-            "commercial-editions/datacenter/app/Dockerfile",
-            "commercial-editions/datacenter/search/Dockerfile",
-        }
-    case "communityBuild":
-        return []string{
-            "community-build/Dockerfile",
-        }
-    case "legacy":
-        return []string{
-            "9/community/Dockerfile",
-            "9/developer/Dockerfile",
-            "9/enterprise/Dockerfile",
-            "9/datacenter/app/Dockerfile",
-            "9/datacenter/search/Dockerfile",
-        }
-    default:
-        return []string{}
-    }
+	switch editionType {
+	case "commercialEditions":
+		return []string{
+			"commercial-editions/developer/Dockerfile",
+			"commercial-editions/enterprise/Dockerfile",
+			"commercial-editions/datacenter/app/Dockerfile",
+			"commercial-editions/datacenter/search/Dockerfile",
+		}
+	case "communityBuild":
+		return []string{
+			"community-build/Dockerfile",
+		}
+	case "legacy":
+		return []string{
+			"9/community/Dockerfile",
+			"9/developer/Dockerfile",
+			"9/enterprise/Dockerfile",
+			"9/datacenter/app/Dockerfile",
+			"9/datacenter/search/Dockerfile",
+		}
+	default:
+		return []string{}
+	}
 }
 
 // GetEditionTypeFromPath extracts the edition type string from a relative Dockerfile path.
@@ -64,7 +64,7 @@ func GetEditionTypeFromPath(dockerfilePath string) (string, error) {
 
 	// Split the path into components
 	parts := strings.Split(pathWithoutFilename, "/")
-	if len(parts) == 0 {
+	if len(parts) == 1 && parts[0] == "" {
 		return "", fmt.Errorf("invalid Dockerfile path format: '%s' (no components found)", dockerfilePath)
 	}
 
@@ -93,22 +93,22 @@ func GetEditionTypeFromPath(dockerfilePath string) (string, error) {
 }
 
 func ExtractSonarQubeVersion(r io.Reader) (string, error) {
-    re := regexp.MustCompile(`ARG SONARQUBE_VERSION=?\s*(\d+\.\d+\.\d+\.\d+)`)
+	re := regexp.MustCompile(`ARG SONARQUBE_VERSION=?\s*(\d+\.\d+\.\d+\.\d+)`)
 
-    scanner := bufio.NewScanner(r) // Use the io.Reader directly
-    for scanner.Scan() {
-        line := scanner.Text()
-        matches := re.FindStringSubmatch(line)
-        if len(matches) > 1 {
-            return matches[1], nil
-        }
-    }
+	scanner := bufio.NewScanner(r) // Use the io.Reader directly
+	for scanner.Scan() {
+		line := scanner.Text()
+		matches := re.FindStringSubmatch(line)
+		if len(matches) > 1 {
+			return matches[1], nil
+		}
+	}
 
-    if err := scanner.Err(); err != nil {
-        return "", fmt.Errorf("error reading Dockerfile content stream: %w", err)
-    }
+	if err := scanner.Err(); err != nil {
+		return "", fmt.Errorf("error reading Dockerfile content stream: %w", err)
+	}
 
-    return "", fmt.Errorf("SONARQUBE_VERSION not found in Dockerfile content")
+	return "", fmt.Errorf("SONARQUBE_VERSION not found in Dockerfile content")
 }
 
 func GetBuildMetadataFromConfig(cfg config.ActiveVersionConfig, fetcher FileContentFetcher) ([]ImageBuildMetadata, error) {
@@ -145,35 +145,34 @@ func GetBuildMetadataFromConfig(cfg config.ActiveVersionConfig, fetcher FileCont
 			return nil, fmt.Errorf("failed to extract SONARQUBE_VERSION from %s/%s: %w", branchOrCommit, relPath, err)
 		}
 
-        // Extract EditionType here
-        editionType, err := GetEditionTypeFromPath(relPath)
-        if err != nil {
-            return nil, fmt.Errorf("failed to determine edition type for '%s': %w", relPath, err)
-        }
+		// Extract EditionType here
+		editionType, err := GetEditionTypeFromPath(relPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to determine edition type for '%s': %w", relPath, err)
+		}
 
 		// Generate tags based on the version, edition type, and LTS/LTA status.
 		tags, err := GenerateTags(version, editionType, cfg.IsLatestLTSTag, cfg.IsLatestLTATag, cfg.IsLatest, cfg.Type)
 
 		if err != nil {
-			fmt.Errorf("GenerateTags(%q, %q, %t, %t, %t, %q) error = %v",version, editionType, cfg.IsLatestLTSTag, cfg.IsLatestLTATag, cfg.IsLatest, cfg.Type, err)
+			return nil, fmt.Errorf("GenerateTags(%q, %q, %t, %t, %t, %q) error = %v", version, editionType, cfg.IsLatestLTSTag, cfg.IsLatestLTATag, cfg.IsLatest, cfg.Type, err)
 		}
 
-        metadata := ImageBuildMetadata{
-            Branch:        cfg.Branch,
-            Version:       version,
-            Architectures: []string{"amd64", "arm64v8"},
-            GitCommit:     branchOrCommit,
-            EditionType:   editionType,
-            ImageDirectory: strings.TrimSuffix(relPath, DOCKERFILE_STR_CONST),
-			Tags: tags,       
-        }
+		metadata := ImageBuildMetadata{
+			Branch:         cfg.Branch,
+			Version:        version,
+			Architectures:  []string{"amd64", "arm64v8"},
+			GitCommit:      branchOrCommit,
+			EditionType:    editionType,
+			ImageDirectory: strings.TrimSuffix(relPath, DOCKERFILE_STR_CONST),
+			Tags:           tags,
+		}
 
-        allMetadata = append(allMetadata, metadata)
+		allMetadata = append(allMetadata, metadata)
 	}
 
 	return allMetadata, nil
 }
-
 
 type FileContentFetcher interface {
 	Fetch(branchOrCommit, relativePath string) (string, error)
@@ -199,16 +198,7 @@ func (f *GitFetcher) Fetch(branchOrCommit, relativePath string) (string, error) 
 
 	err := cmd.Run()
 	if err != nil {
-		// Attempt to differentiate common git errors for better messages.
-		stderrStr := stderr.String()
-		if strings.Contains(stderrStr, "does not exist") || strings.Contains(stderrStr, "bad path") {
-			return "", fmt.Errorf("file '%s' not found at '%s': %w", relativePath, branchOrCommit, err)
-		}
-		if strings.Contains(stderrStr, "unknown revision") || strings.Contains(stderrStr, "bad revision") || strings.Contains(stderrStr, "ambiguous argument") {
-			return "", fmt.Errorf("branch/commit '%s' not found: %w", branchOrCommit, err)
-		}
-		// Generic error for other git issues.
-		return "", fmt.Errorf("failed to fetch content for '%s' from '%s': %w (Stderr: %s)", relativePath, branchOrCommit, err, stderrStr)
+		return "", fmt.Errorf("failed to fetch content for '%s' from '%s': %w", relativePath, branchOrCommit, err)
 	}
 
 	return stdout.String(), nil
@@ -234,8 +224,8 @@ func (f *GitFetcher) ResolveBranchToSHA(branchName string) (string, error) {
 }
 
 // GenerateTags computes a list of Docker image tags based on version, edition type, and LTA status.
-func GenerateTags(version string, editionType string, isLatestLTSTag bool, isLatestLTATag bool,isLatest bool, activeVersiontype string) ([]string, error) {
-	
+func GenerateTags(version string, editionType string, isLatestLTSTag bool, isLatestLTATag bool, isLatest bool, activeVersiontype string) ([]string, error) {
+
 	if editionType == "" {
 		return nil, fmt.Errorf("editionType cannot be empty")
 	}
@@ -244,26 +234,26 @@ func GenerateTags(version string, editionType string, isLatestLTSTag bool, isLat
 	if matched, err := regexp.MatchString(versionPattern, version); err != nil || !matched {
 		return nil, fmt.Errorf("error matching version pattern or invalid version: %w", err)
 	}
-	
+
 	majorVersion := strings.Split(version, ".")[0]
 	minorVersion := strings.Split(version, ".")[1]
 	patchVersion := strings.Split(version, ".")[2]
-	buildNumber  := strings.Split(version, ".")[3]
+	buildNumber := strings.Split(version, ".")[3]
 
 	if activeVersiontype == "legacy" {
-			tags := []string{
-				fmt.Sprintf("%s.%s.%s-%s", majorVersion, minorVersion, patchVersion,editionType),
-				fmt.Sprintf("%s.%s-%s", majorVersion, minorVersion,editionType),
-				fmt.Sprintf("%s-%s", majorVersion,editionType),
-			}
-			if isLatestLTSTag && editionType == "community" {
-				tags = append(tags, "lts")
-			}
-			if isLatestLTSTag {
-				tags = append(tags,fmt.Sprintf("lts-%s", editionType))
-			}
-			return tags, nil
-	} 
+		tags := []string{
+			fmt.Sprintf("%s.%s.%s-%s", majorVersion, minorVersion, patchVersion, editionType),
+			fmt.Sprintf("%s.%s-%s", majorVersion, minorVersion, editionType),
+			fmt.Sprintf("%s-%s", majorVersion, editionType),
+		}
+		if isLatestLTSTag && editionType == "community" {
+			tags = append(tags, "lts")
+		}
+		if isLatestLTSTag {
+			tags = append(tags, fmt.Sprintf("lts-%s", editionType))
+		}
+		return tags, nil
+	}
 	if activeVersiontype == "communityBuild" {
 		tags := []string{
 			fmt.Sprintf("%s.%s.%s.%s-%s", majorVersion, minorVersion, patchVersion, buildNumber, editionType),
@@ -278,13 +268,13 @@ func GenerateTags(version string, editionType string, isLatestLTSTag bool, isLat
 			fmt.Sprintf("%s.%s-%s", majorVersion, minorVersion, editionType),
 		}
 		if isLatestLTATag {
-			tags = append(tags, fmt.Sprintf("%s-lta-%s",majorVersion, editionType))
+			tags = append(tags, fmt.Sprintf("%s-lta-%s", majorVersion, editionType))
 		}
 		if isLatest {
-			tags = append(tags, fmt.Sprintf("%s",editionType))
+			tags = append(tags, fmt.Sprintf("%s", editionType))
 		}
 		return tags, nil
 	}
-	
+
 	return nil, fmt.Errorf("ActiveVersion is empty")
 }

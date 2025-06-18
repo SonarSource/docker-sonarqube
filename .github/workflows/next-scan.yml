@@ -25,6 +25,15 @@ jobs:
       with:
         secrets: |
           development/kv/data/next token | sq_next_token;
+    # Set up Go environment
+    - name: Set up Go based on go.mod
+      uses: actions/setup-go@v4
+      with:
+        go-version-file: docker-official-images/go.mod
+    # Run Go tests
+    - name: Run tests
+      run: go test ./... -coverprofile=coverage.out
+      working-directory: docker-official-images/
     - name: SonarQube Next Scan
       uses: sonarsource/sonarqube-scan-action@master
       env:
