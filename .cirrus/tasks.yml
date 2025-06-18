@@ -35,7 +35,7 @@ ci_instance_scanner: &CI_SCANNER
   <<: *BUILD_SERVER_HW_TEMPLATE
 
 multi_arch_build_gcp_prod_task:
-  only_if: $CIRRUS_CRON == 'nightly-mend-scan' || $TRIGGER == 'PUSH_GCP_IMAGES'
+  only_if: $CIRRUS_CRON == 'nightly-mend-scan' || $TRIGGER == 'PUSH_GCP_IMAGES' || $CIRRUS_RELEASE != ''
   ec2_instance:
     <<: *VM_TEMPLATE
   pull_public_images_script:
@@ -54,7 +54,7 @@ multi_arch_build_gcp_prod_task:
     - echo -e "FROM ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-search" | docker buildx build --platform linux/amd64 --provenance=false --annotation "manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog" --tag "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_VERSION}" --tag "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_MINOR_VERSION}" --push -
 
 multi_arch_build_gcp_staging_task:
-  only_if: $CIRRUS_CRON == 'nightly-mend-scan' || $TRIGGER == 'PUSH_GCP_STAGING_IMAGES'
+  only_if: $CIRRUS_CRON == 'nightly-mend-scan' || $TRIGGER == 'PUSH_GCP_STAGING_IMAGES' || ($CIRRUS_CHANGE_MESSAGE =~ '.*Update docker-sonarqube-server-releases.*' && $CIRRUS_BASE_BRANCH == '')
   env:
     EXTRA_DOCKER_BUILD_ARGS: "--provenance=false --annotation=manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog"
     matrix:
