@@ -3,11 +3,10 @@ package build
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"github.com/SonarSource/docker-sonarqube/docker-official-images/internal/config"
+	"github.com/SonarSource/docker-sonarqube/docker-official-images/internal/fetcher"
 	"io"
-	"os/exec"
 	"regexp"
 	"strings"
 )
@@ -111,14 +110,14 @@ func ExtractSonarQubeVersion(r io.Reader) (string, error) {
 	return "", fmt.Errorf("SONARQUBE_VERSION not found in Dockerfile content")
 }
 
-func GetBuildMetadataFromConfig(cfg config.ActiveVersionConfig, fetcher FileContentFetcher) ([]ImageBuildMetadata, error) {
+func GetBuildMetadataFromConfig(cfg config.ActiveVersionConfig, fileFetcher fetcher.FileContentFetcher) ([]ImageBuildMetadata, error) {
 	var allMetadata []ImageBuildMetadata
 
 	branchOrCommit := cfg.Branch
 	if cfg.CommitSHA != "" {
 		branchOrCommit = cfg.CommitSHA
 	} else {
-		gotSHA, err := NewGitFetcher().ResolveBranchToSHA(cfg.Branch)
+		gotSHA, err := fetcher.NewGitFetcher().ResolveBranchToSHA(cfg.Branch)
 		if err == nil {
 			branchOrCommit = gotSHA
 		} else {
@@ -133,7 +132,7 @@ func GetBuildMetadataFromConfig(cfg config.ActiveVersionConfig, fetcher FileCont
 
 	for _, relPath := range relPaths {
 		// Fetch Dockerfile content from the Git repository.
-		content, err := fetcher.Fetch(branchOrCommit, relPath)
+		content, err := fileFetcher.Fetch(branchOrCommit, relPath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch Dockerfile content for %s/%s: %w", branchOrCommit, relPath, err)
 		}
@@ -174,54 +173,54 @@ func GetBuildMetadataFromConfig(cfg config.ActiveVersionConfig, fetcher FileCont
 	return allMetadata, nil
 }
 
-type FileContentFetcher interface {
-	Fetch(branchOrCommit, relativePath string) (string, error)
-	ResolveBranchToSHA(branchName string) (string, error)
-}
-type GitFetcher struct {
-}
+// type FileContentFetcher interface {
+// 	Fetch(branchOrCommit, relativePath string) (string, error)
+// 	ResolveBranchToSHA(branchName string) (string, error)
+// }
+// type GitFetcher struct {
+// }
 
-func NewGitFetcher() *GitFetcher {
-	return &GitFetcher{}
-}
+// func NewGitFetcher() *GitFetcher {
+// 	return &GitFetcher{}
+// }
 
-// Fetch retrieves the content of a file from the current local Git repository
-// at a specific branch/commit without checking out the local directory.
-func (f *GitFetcher) Fetch(branchOrCommit, relativePath string) (string, error) {
-	// Use 'git show' to get the content of the file at the specific branch/commit.
-	// Format: <ref>:<path_to_file>
-	cmd := exec.Command("git", "show", fmt.Sprintf("%s:%s", branchOrCommit, relativePath))
+// // Fetch retrieves the content of a file from the current local Git repository
+// // at a specific branch/commit without checking out the local directory.
+// func (f *GitFetcher) Fetch(branchOrCommit, relativePath string) (string, error) {
+// 	// Use 'git show' to get the content of the file at the specific branch/commit.
+// 	// Format: <ref>:<path_to_file>
+// 	cmd := exec.Command("git", "show", fmt.Sprintf("%s:%s", branchOrCommit, relativePath))
 
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
+// 	var stdout, stderr bytes.Buffer
+// 	cmd.Stdout = &stdout
+// 	cmd.Stderr = &stderr
 
-	err := cmd.Run()
-	if err != nil {
-		return "", fmt.Errorf("failed to fetch content for '%s' from '%s': %w", relativePath, branchOrCommit, err)
-	}
+// 	err := cmd.Run()
+// 	if err != nil {
+// 		return "", fmt.Errorf("failed to fetch content for '%s' from '%s': %w", relativePath, branchOrCommit, err)
+// 	}
 
-	return stdout.String(), nil
-}
+// 	return stdout.String(), nil
+// }
 
-// ResolveBranchToSHA resolves a branch name (or any Git reference) to its full commit SHA.
-func (f *GitFetcher) ResolveBranchToSHA(branchName string) (string, error) {
-	cmd := exec.Command("git", "rev-parse", branchName)
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
+// // ResolveBranchToSHA resolves a branch name (or any Git reference) to its full commit SHA.
+// func (f *GitFetcher) ResolveBranchToSHA(branchName string) (string, error) {
+// 	cmd := exec.Command("git", "rev-parse", branchName)
+// 	var stdout, stderr bytes.Buffer
+// 	cmd.Stdout = &stdout
+// 	cmd.Stderr = &stderr
 
-	err := cmd.Run()
-	if err != nil {
-		stderrStr := stderr.String()
-		if strings.Contains(stderrStr, "unknown revision") || strings.Contains(stderrStr, "bad revision") || strings.Contains(stderrStr, "ambiguous argument") {
-			return "", fmt.Errorf("branch or ref '%s' not found: %w", branchName, err)
-		}
-		return "", fmt.Errorf("failed to resolve ref '%s' to SHA: %w (Stderr: %s)", branchName, err, stderrStr)
-	}
+// 	err := cmd.Run()
+// 	if err != nil {
+// 		stderrStr := stderr.String()
+// 		if strings.Contains(stderrStr, "unknown revision") || strings.Contains(stderrStr, "bad revision") || strings.Contains(stderrStr, "ambiguous argument") {
+// 			return "", fmt.Errorf("branch or ref '%s' not found: %w", branchName, err)
+// 		}
+// 		return "", fmt.Errorf("failed to resolve ref '%s' to SHA: %w (Stderr: %s)", branchName, err, stderrStr)
+// 	}
 
-	return strings.TrimSpace(stdout.String()), nil // Trim newline from git rev-parse output
-}
+// 	return strings.TrimSpace(stdout.String()), nil // Trim newline from git rev-parse output
+// }
 
 // GenerateTags computes a list of Docker image tags based on version, edition type, and LTA status.
 func GenerateTags(version string, editionType string, isLatestLTSTag bool, isLatestLTATag bool, isLatest bool, activeVersiontype string) ([]string, error) {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/SonarSource/docker-sonarqube/docker-official-images/internal/build"
 	"github.com/SonarSource/docker-sonarqube/docker-official-images/internal/config"
+	"github.com/SonarSource/docker-sonarqube/docker-official-images/internal/fetcher"
 	"log"
 	"os"
 	"text/template"
@@ -19,7 +20,7 @@ func main() {
 		log.Fatalf("Error reading or parsing active versions config: %v", err)
 	}
 
-	gitFetcher := build.NewGitFetcher() // Operates on current Git repo
+	gitFetcher := fetcher.NewGitFetcher() // Operates on current Git repo
 
 	// 3. Process each activeVersion to retrieve ImageBuildMetadata
 	var allBuildMetadata []build.ImageBuildMetadata
