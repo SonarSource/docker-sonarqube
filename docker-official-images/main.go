@@ -37,23 +37,22 @@ func main() {
 
 	tmpl, err := template.ParseFiles(templateFilePath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error parsing template file %s: %v\n", templateFilePath, err)
-		os.Exit(1)
+		log.Fatalf("Error parsing template file %s: %v", templateFilePath, err)
+
 	}
 
 	outputFileName := "official_images.txt"
 
 	outputFile, err := os.Create(outputFileName)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating output file %s: %v\n", outputFileName, err)
-		os.Exit(1)
+		log.Fatalf("Error creating output file %s: %v", outputFileName, err)
+
 	}
 	defer outputFile.Close()
 
 	err = tmpl.Execute(outputFile, allBuildMetadata)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error executing template: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("Error executing template: %v", err)
 	}
 
 	fmt.Println("CLI application finished.")
