@@ -6,7 +6,7 @@ We consider the **docker image** as part of the SonarQube Server **product**. Th
 
 ## Overview
 
-Release of a new version of the official SonarQube Server Docker images is made of several operations. (Please note that in case of a patch release that should not include the latest changes on master, you need to release from a new branch - e.g., `release/10.8.1` - and propagate the changes to master afterwards).
+Release of a new version of the official SonarQube Server Docker images is made of several operations. (Please note that in case of an LTA patch release that should not include the latest changes on master, you need to release from a new branch - e.g., `release/2025.4` - and propagate the changes to master afterwards).
 
 1. Set the new version of SonarQube Server (`SONARQUBE_VERSION`) to be released in the Dockerfiles. In case of community build, please remember to update `community-build/Dockerfile` only.
 2. If you are releasing a new LTA, set `CURRENT_LTA_VERSION` in `.cirrus/tasks.yml`. Otherwise, if you are releasing a Community build, set `COMMUNITY_BUILD_VERSION` only. In all the other cases where a paid edition is about to be releases, set `CURRENT_VERSION` (please note that the nightly build will fail before the public image becomes available).
