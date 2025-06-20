@@ -1,0 +1,71 @@
+name: Release Official Images
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  go-test:
+    uses: ./.github/workflows/test-official-images-generator.yml
+  generate-release-file:
+    name: Generate release file
+    runs-on: ubuntu-latest
+    needs: go-test
+    steps:
+    - name: actions/checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Set up Go based on go.mod
+      uses: actions/setup-go@v4
+      with:
+        go-version-file: docker-official-images/go.mod
+    - name: generate release file with go script
+      run: go run main.go
+      working-directory: docker-official-images/
+    - name: Upload release-file
+      uses: actions/upload-artifact@v4
+      with:
+        name: docker-official-images-release-file-${{ github.sha }}
+        path: docker-official-images/official_images.txt
+        retention-days: 1
+  create-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    needs: generate-release-file
+    steps:
+    - id: secrets
+      uses: SonarSource/vault-action-wrapper@v3
+      with:
+        secrets: |
+          development/github/token/${{ github.repository_owner }}-${{ github.event.repository.name }}-release token | gh-token
+    - name: actions/checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        repository: docker-library/official-images
+        token: ${{ fromJSON(steps.secrets.outputs.vault).gh-token }}
+    - name: retrieve generated official-images file
+      uses: actions/download-artifact@v4
+      with:
+        name: docker-official-images-release-file-${{ github.sha }}
+        path: /tmp
+    - name: Copy official-images.txt to repository
+      run: |
+        cp /tmp/official_images.txt library/sonarqube
+    - name: Create pull request
+      uses: peter-evans/create-pull-request@v4
+      with:
+        token: ${{ fromJSON(steps.secrets.outputs.vault).gh-token }}
+        commit-message: "DO-NOT-MERGE trying out automation of sonarqube releases"
+        title: "DO-NOT-MERGE trying out automation of sonarqube releases"
+        push-to-fork: ${{ github.repository_owner }}/official-images
+        body: ""
+        labels: automated-release
+      
