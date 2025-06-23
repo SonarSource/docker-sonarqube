@@ -3,13 +3,10 @@ package config_test // We use _test suffix to indicate this is an external test 
 
 import (
 	"encoding/json"
+	"github.com/SonarSource/docker-sonarqube/docker-official-images/internal/config"
 	"os"
 	"path/filepath"
 	"testing"
-)
-
-import (
-	"github.com/SonarSource/docker-sonarqube/docker-official-images/internal/config"
 )
 
 func TestParseSingleActiveVersionConfig(t *testing.T) {
@@ -298,9 +295,7 @@ func TestParseConfigFile(t *testing.T) {
 		t.Fatalf("Failed to write temp config file: %v", err)
 	}
 
-	// 2. Call the (future) function to parse the file
-	// We'll define ParseConfigFile in config.go later
-	configs, err := config.ParseConfigFile(configFilePath) // This function doesn't exist yet!
+	configs, err := config.ParseConfigFile(configFilePath)
 
 	// 3. Assertions
 	if err != nil {
