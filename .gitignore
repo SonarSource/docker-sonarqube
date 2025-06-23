@@ -33,3 +33,7 @@ Desktop.ini
 .directory
 
 *.zip
+
+# ---- Docker Official Images
+docker-official-images/official_images.txt
+docker-official-images/coverage.out

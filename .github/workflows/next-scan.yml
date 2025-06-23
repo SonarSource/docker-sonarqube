@@ -8,9 +8,16 @@ on:
     types: [opened, synchronize, reopened]
     
 name: Main Workflow
+permissions:
+  id-token: write
+  pull-requests: read
+  contents: read
 jobs:
+  go-test:
+    uses: ./.github/workflows/test-official-images-generator.yml
   next:
     runs-on: ubuntu-latest-large
+    needs: go-test
     permissions:
       id-token: write
       pull-requests: read
@@ -25,6 +32,11 @@ jobs:
       with:
         secrets: |
           development/kv/data/next token | sq_next_token;
+    - name: retrieve test coverage
+      uses: actions/download-artifact@v4
+      with:
+        name: docker-official-images-coverage-${{ github.sha }}
+        path: docker-official-images/
     - name: SonarQube Next Scan
       uses: sonarsource/sonarqube-scan-action@master
       env:

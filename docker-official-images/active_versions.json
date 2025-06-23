@@ -1,0 +1,21 @@
+[
+        {
+            "branch": "origin/master",
+            "type": "commercialEditions",
+            "isLatest": true
+        },
+        {
+            "branch": "origin/release/2025.1",
+            "type": "commercialEditions",
+            "isLatestLTATag": true
+        },
+        {
+            "branch": "origin/master",
+            "type": "communityBuild"
+        },
+        {
+            "branch": "origin/master",
+            "type": "legacy",
+            "isLatestLTSTag": true
+        }
+]

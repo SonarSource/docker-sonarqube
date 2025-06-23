@@ -1,0 +1,21 @@
+[
+        {
+            "branch": "0330278146e14fdbde39328ab2c9e10a66f9fbe8",
+            "type": "commercialEditions",
+            "isLatest": true
+        },
+        {
+            "branch": "31fac30f5087cc490c9cd266e2279729a2fbdd7c",
+            "type": "commercialEditions",
+            "isLatestLTATag": true
+        },
+        {
+            "branch": "0330278146e14fdbde39328ab2c9e10a66f9fbe8",
+            "type": "communityBuild"
+        },
+        {
+            "branch": "0330278146e14fdbde39328ab2c9e10a66f9fbe8",
+            "type": "legacy",
+            "isLatestLTSTag": true
+        }
+]
