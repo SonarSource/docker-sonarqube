@@ -12,8 +12,13 @@ import (
 
 // main is the entry point of the CLI application.
 func main() {
-	configFilePath := "active_versions.json"
+	var configFilePath string
+	configFilePath = "active_versions.json"
 
+	renderOfficialImagesTpl(configFilePath)
+}
+
+func renderOfficialImagesTpl(configFilePath string) {
 	activeConfigs, err := config.ParseConfigFile(configFilePath)
 	if err != nil {
 		log.Fatalf("Error reading or parsing active versions config: %v", err)
