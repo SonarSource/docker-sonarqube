@@ -117,7 +117,7 @@ func GetBuildMetadataFromConfig(cfg config.ActiveVersionConfig, fileFetcher fetc
 	if cfg.CommitSHA != "" {
 		branchOrCommit = cfg.CommitSHA
 	} else {
-		gotSHA, err := fetcher.NewGitFetcher().ResolveBranchToSHA(cfg.Branch)
+		gotSHA, err := fileFetcher.ResolveBranchToSHA(cfg.Branch)
 		if err == nil {
 			branchOrCommit = gotSHA
 		} else {
