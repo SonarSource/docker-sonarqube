@@ -226,5 +226,5 @@ func GenerateTags(version string, editionType string, isLatestLTSTag bool, isLat
 		return tags, nil
 	}
 
-	return nil, fmt.Errorf("ActiveVersion is empty")
+	return nil, fmt.Errorf("Unsupported activeVersiontype: %s", activeVersiontype)
 }
