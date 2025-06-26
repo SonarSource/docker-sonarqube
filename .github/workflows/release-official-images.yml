@@ -42,6 +42,7 @@ jobs:
       contents: write
       pages: write
       id-token: write
+      pull-requests: write
     needs: generate-release-file
     steps:
     - id: secrets
