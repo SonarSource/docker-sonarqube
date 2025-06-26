@@ -48,7 +48,7 @@ jobs:
       uses: SonarSource/vault-action-wrapper@v3
       with:
         secrets: |
-          development/github/token/${{ github.repository_owner }}-${{ github.event.repository.name }}-release-official token | gh-token
+          development/github/token/${{ github.repository_owner }}-${{ github.event.repository.name }}-release token | gh-token
     - name: actions/checkout
       uses: actions/checkout@v4
       with:
