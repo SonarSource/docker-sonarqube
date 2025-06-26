@@ -70,6 +70,6 @@ jobs:
         token: ${{ fromJSON(steps.secrets.outputs.vault).gh-token }}
         commit-message: "DO-NOT-MERGE trying out automation of sonarqube releases"
         title: "DO-NOT-MERGE trying out automation of sonarqube releases"
-        push-to-fork: ${{ github.repository_owner }}/official-images
+        # push-to-fork: ${{ github.repository_owner }}/official-images
         body: ""
         labels: automated-release
