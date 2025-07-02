@@ -50,8 +50,11 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        repository: docker-library/official-images
-        token: ${{ fromJSON(steps.secrets.outputs.vault).gh-public-token }}
+        # repository: docker-library/official-images
+        # token: ${{ fromJSON(steps.secrets.outputs.vault).gh-public-token }}
+        repository: ${{ github.repository_owner }}/official-images
+        token: ${{ fromJSON(steps.secrets.outputs.vault).gh-token }}
+
     - name: retrieve generated official-images file
       uses: actions/download-artifact@v4
       with:
@@ -63,11 +66,11 @@ jobs:
     - name: Create pull request
       uses: peter-evans/create-pull-request@v7
       with:
-        token: ${{ fromJSON(steps.secrets.outputs.vault).gh-public-token }}
+        # token: ${{ fromJSON(steps.secrets.outputs.vault).gh-public-token }}
+        token: ${{ fromJSON(steps.secrets.outputs.vault).gh-token }}
         branch-token: ${{ fromJSON(steps.secrets.outputs.vault).gh-token }}
         commit-message: "DO-NOT-MERGE trying out automation of sonarqube releases"
         title: "DO-NOT-MERGE trying out automation of sonarqube releases"
-        push-to-fork: ${{ github.repository_owner }}/official-images
+        # push-to-fork: ${{ github.repository_owner }}/official-images
         body: ""
-        labels: automated-release
       
