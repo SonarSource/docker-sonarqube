@@ -247,5 +247,5 @@ multi_arch_test_community_build_task:
   env:
     matrix:
       - test_name: docker
-        tag: $COMMUNITY_BUILD_VERSION-community
+        tag: $COMMUNITY_BUILD_VERSION-master-community
   depends_on: multi_arch_build_community_build
