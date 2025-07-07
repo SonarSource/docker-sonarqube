@@ -15,7 +15,7 @@ env:
   GCLOUD_PRODUCT_NAME: official-sonarqube-data-center-edition
   GCLOUD_STAGING_REGISTRY: gcr.io/sonarqube-marketplace-provider
   GCLOUD_STAGING_PRODUCT_NAME: sonarqube-dce-staging
-  CURRENT_VERSION: 2025.1.2
+  CURRENT_VERSION: 2025.1.3
 
 build_server_hw_template: &BUILD_SERVER_HW_TEMPLATE
   type: t2.xlarge
