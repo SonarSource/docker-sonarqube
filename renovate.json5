@@ -1,4 +1,10 @@
 {
+    "hostRules": [
+      {
+        "matchHost": "https://api.github.com/repos/SonarSource/sonar-enterprise",
+        "token": "{{ secrets.GITHUB_TOKEN_SONAR_ENTERPRISE }}"
+      }
+    ],
     "rebaseWhen": "behind-base-branch",
     "baseBranches": [
       "master",
