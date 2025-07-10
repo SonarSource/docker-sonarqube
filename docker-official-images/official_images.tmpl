@@ -10,5 +10,6 @@ Builder: buildkit
 Tags: {{ range $index, $tag := .Tags -}}{{ if $index }}, {{ end }}{{ $tag }}{{- end }}
 Directory: {{ .ImageDirectory }}
 GitCommit: {{ .GitCommit }}
+GitFetch: {{ .Branch }}
 {{- "\n" -}}
 {{- end -}}
