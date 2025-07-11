@@ -157,8 +157,13 @@ func GetBuildMetadataFromConfig(cfg config.ActiveVersionConfig, fileFetcher fetc
 			return nil, fmt.Errorf("GenerateTags(%q, %q, %t, %t, %t, %q) error = %v", version, editionType, cfg.IsLatestLTSTag, cfg.IsLatestLTATag, cfg.IsLatest, cfg.Type, err)
 		}
 
+		branch := cfg.Branch
+		if strings.HasPrefix(branch, "origin/") {
+			branch = strings.Replace(branch, "origin/", "refs/heads/", 1)
+		}
+
 		metadata := ImageBuildMetadata{
-			Branch:         cfg.Branch,
+			Branch:         branch,
 			Version:        version,
 			Architectures:  []string{"amd64", "arm64v8"},
 			GitCommit:      branchOrCommit,

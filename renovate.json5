@@ -1,10 +1,5 @@
 {
-    "hostRules": [
-      {
-        "matchHost": "https://api.github.com/",
-        "token": "{{ secrets.GITHUB_TOKEN_SONAR_ENTERPRISE }}"
-      }
-    ],
+
     "rebaseWhen": "behind-base-branch",
     "baseBranches": [
       "master",

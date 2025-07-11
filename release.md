@@ -9,7 +9,8 @@ We consider the **docker image** as part of the SonarQube Server **product**. Th
 Release of a new version of the official SonarQube Server Docker images is made of several operations. (Please note that in case of an LTA patch release that should not include the latest changes on master, you need to release from a new branch - e.g., `release/2025.4` - and propagate the changes to master afterwards).
 
 1. Set the new version of SonarQube Server (`SONARQUBE_VERSION`) to be released in the Dockerfiles. In case of community build, please remember to update `community-build/Dockerfile` only.
-2. If you are releasing a new LTA, set `CURRENT_LTA_VERSION` in `.cirrus/tasks.yml`. Otherwise, if you are releasing a Community build, set `COMMUNITY_BUILD_VERSION` only. In all the other cases where a paid edition is about to be releases, set `CURRENT_VERSION` (please note that the nightly build will fail before the public image becomes available).
+2. The step 2 is about updating `.cirrus/tasls/yml`, due to `renovate.json5` this step can be trigger automatically trought [renovate mend](https://developer.mend.io/) -> docker-sonarqube -> Actions -> Run Renovate Scan. Please note this is new and should be carefully reviewed before merging.
+    1. (Deprecated, Manual action) If you are releasing a new LTA, set `CURRENT_VERSION` in `.cirrus/tasks.yml` on the related lta branch. Otherwise, if you are releasing a Community build, set `COMMUNITY_BUILD_VERSION` only. In all the other cases where a paid edition is about to be releases, set `CURRENT_VERSION` (please note that the nightly build will fail before the public image becomes available).
 3. Update the docker hub SonarQube Server's documentation (if applicable)
 4. Update Docker Hub's SonarQube Server images
 5. Add a GIT tag for the new version (This needs to be done after the images become available on DockerHub)
@@ -40,9 +41,13 @@ For more and up to date documentation, see https://github.com/docker-library/doc
 
 ## Update Docker Hub's SonarQube Server images
 
-In order to update the Docker Hub images, a Pull Request must be created on the [official-images](https://github.com/docker-library/official-images) repository.
+In order to update the Docker Hub images, a Pull Request must be created on the [official-images](https://github.com/docker-library/official-images) repository. You can use your own personal fork or SonarSource fork.
 
-To do so you can use your own personal fork.
+Please use the go-tool [described here](./docker-official-images/README.md) that will automatically generate a `docker-official-images/official_images.txt` from all the versions in `docker-official-images/active_versions.json`.
+
+In the future, this will be automated trought github_actions.
+
+(Deprecated, Manual Action)
 
 Create a feature branch on the fork:
 
