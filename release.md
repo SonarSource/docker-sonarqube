@@ -6,11 +6,12 @@ We consider the **docker image** as part of the SonarQube Server **product**. Th
 
 ## Overview
 
-Release of a new version of the official SonarQube Server Docker images is made of several operations. (Please note that in case of an LTA patch release that should not include the latest changes on master, you need to release from a new branch - e.g., `release/2025.4` - and propagate the changes to master afterwards).
+Release of a new version of the official SonarQube Server Docker images is made of several operations. 
+
+> Please note that steps 1 and 2 are fully automated with [renovate](https://developer.mend.io/). When the SonarQube Server binaries are made available, please activate the Renovate scan to trigger a new release (i.e., `docker-sonarqube` -> `Actions` -> `Run Renovate Scan`).
 
 1. Set the new version of SonarQube Server (`SONARQUBE_VERSION`) to be released in the Dockerfiles. In case of community build, please remember to update `community-build/Dockerfile` only.
-2. The step 2 is about updating `.cirrus/tasls/yml`, due to `renovate.json5` this step can be trigger automatically trought [renovate mend](https://developer.mend.io/) -> docker-sonarqube -> Actions -> Run Renovate Scan. Please note this is new and should be carefully reviewed before merging.
-    1. (Deprecated, Manual action) If you are releasing a new LTA, set `CURRENT_VERSION` in `.cirrus/tasks.yml` on the related lta branch. Otherwise, if you are releasing a Community build, set `COMMUNITY_BUILD_VERSION` only. In all the other cases where a paid edition is about to be releases, set `CURRENT_VERSION` (please note that the nightly build will fail before the public image becomes available).
+2. Set the new version in `.cirrus/tasks.yml`. If you are releasing a new LTA, set `CURRENT_VERSION` in `.cirrus/tasks.yml` on the related lta branch. Otherwise, if you are releasing a Community build, set `COMMUNITY_BUILD_VERSION` only. In all the other cases where a paid edition is about to be releases, set `CURRENT_VERSION` (please note that the nightly build will fail before the public image becomes available).
 3. Update the docker hub SonarQube Server's documentation (if applicable)
 4. Update Docker Hub's SonarQube Server images
 5. Add a GIT tag for the new version (This needs to be done after the images become available on DockerHub)
@@ -24,7 +25,7 @@ The version of SonarQube Server is hardcoded in each Dockerfile of this reposito
 
 ## Update the docker hub SonarQube Server's documentation (if applicable)
 
-If needed, prepare PR of Docker Hub documentation [https://github.com/docker-library/docs](https://github.com/docker-library/docs)
+If needed, prepare PR of Docker Hub documentation [https://github.com/docker-library/docs](https://github.com/docker-library/docs).
 
 > Note: Please use your own fork like seen in [this closed PR](https://github.com/docker-library/docs/pull/1660)
 
@@ -41,20 +42,19 @@ For more and up to date documentation, see https://github.com/docker-library/doc
 
 ## Update Docker Hub's SonarQube Server images
 
-In order to update the Docker Hub images, a Pull Request must be created on the [official-images](https://github.com/docker-library/official-images) repository. You can use your own personal fork or SonarSource fork.
+In order to update the Docker Hub images, a Pull Request must be created on the [official-images](https://github.com/docker-library/official-images) repository. You can use your own personal fork or SonarSource's fork. The manifest (`library/sonarqube`) needs to be update in the following sections before opening a new PR.
 
-Please use the go-tool [described here](./docker-official-images/README.md) that will automatically generate a `docker-official-images/official_images.txt` from all the versions in `docker-official-images/active_versions.json`.
+> The following steps can be automated using the go-tool described [here](./docker-official-images/README.md). This tool generates a `docker-official-images/official_images.txt` from all the versions in `docker-official-images/active_versions.json`.
 
-In the future, this will be automated trought github_actions.
-
-(Deprecated, Manual Action)
-
-Create a feature branch on the fork:
+You need to update:
 
 * `GitCommit` must be updated to this repository master branch's HEAD.
 * `GitFetch` is the branch/tag (e.g., refs/tags/10.8.1) where the commit can be found. Setting this value is only needed if you are releasing from a branch different from master.
 * `Tags` and `Directory` must be added/updated appropriately for each edition
-* see https://github.com/docker-library/official-images/pull/8837/files as an example
+
+Please check the https://github.com/docker-library/official-images/pull/8837/files as an example.
+
+> In the future, also åthe folliwing steps will be also automated through github actions.
 
 Until SonarQube Server is released and the public artifacts are available, keep your PR a draft PR to make it clear it is not ready to be merged yet.
 
