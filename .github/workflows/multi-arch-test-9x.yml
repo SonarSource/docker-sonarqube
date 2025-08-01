@@ -6,7 +6,7 @@ on:
       - "Multi-arch build 9.x"
     types:
       - completed
-  push:
+  # push:
   schedule:
     # Nightly test equivalent (adjust time as needed)
     - cron: '0 4 * * *'

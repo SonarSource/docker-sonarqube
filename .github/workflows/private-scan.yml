@@ -7,6 +7,7 @@ on:
       - "Multi-arch build commercial editions"
     types:
       - completed
+  push:
   schedule:
     # Nightly scan equivalent (adjust time as needed)
     - cron: '0 3 * * *'
@@ -14,75 +15,15 @@ on:
 
 jobs:
   private-scan:
-    name: Private scan (${{ matrix.tag }})
-    runs-on: ubuntu-latest-large
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    name: Private scan
     permissions:
       id-token: write
       contents: read
-    strategy:
-      matrix:
-        include:
-          - tag: 9.9.9-master-datacenter-app
-          - tag: 2025.4.1-master-datacenter-app
-    
-    env:
-      STAGING_IMAGE_NAME: sonarsource/sonarqube
-      WS_PRODUCTNAME: SonarSource/docker-sonarqube
+    uses: ./.github/workflows/mend-scan-template.yml
+    with:
+      image_name: sonarsource/sonarqube
+      tags: '["9.9.9-master-datacenter-app", "2025.4.1-master-datacenter-app"]'
+      scan_type: private
       platform: amd64
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - id: secrets
-        name: Retrieve secrets from Vault
-        uses: SonarSource/vault-action-wrapper@v3
-        with:
-          secrets: |
-            development/kv/data/docker/sonardockerrw username | docker_username;
-            development/kv/data/docker/sonardockerrw access_token_rwd | docker_password;
-            development/kv/data/mend apikey | mend_api_key;
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ fromJSON(steps.secrets.outputs.vault).docker_username }}
-          password: ${{ fromJSON(steps.secrets.outputs.vault).docker_password }}
-
-      - name: Pull Docker image for scanning
-        env:
-          TAG: ${{ matrix.tag }}
-        run: |
-          echo "Scan the ${STAGING_IMAGE_NAME}:${TAG} image supporting linux/${platform}"
-          .cirrus/pull.sh "${STAGING_IMAGE_NAME}" "${TAG}" "${platform}"
-
-      - name: Set up Java for Mend agent
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '11'
-
-      - name: Download Mend Unified Agent
-        run: |
-          wget -O wss-unified-agent.jar https://github.com/whitesource/unified-agent-distribution/releases/latest/download/wss-unified-agent.jar
-
-      - name: Configure Mend scan
-        env:
-          TAG: ${{ matrix.tag }}
-        run: |
-          echo "docker.includes=${TAG}" >> .cirrus/wss-unified-agent.config
-
-      - name: Run Mend scan
-        env:
-          TAG: ${{ matrix.tag }}
-          MEND_API_KEY: ${{ fromJSON(steps.secrets.outputs.vault).mend_api_key }}
-          WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
-        run: |
-          java -jar wss-unified-agent.jar \
-            -c .cirrus/wss-unified-agent.config \
-            -apiKey "${MEND_API_KEY}" \
-            -product "${WS_PRODUCTNAME}" \
-            -project "${STAGING_IMAGE_NAME}:${TAG}" \
-            -wss.url "${WS_WSS_URL}" \
-            -docker.scanImages true
+      ws_product_name: SonarSource/docker-sonarqube
+      needs_docker_login: true
