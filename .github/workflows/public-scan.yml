@@ -1,0 +1,21 @@
+name: Public scan
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  public-scan:
+    name: Public scan
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/mend-scan-template.yml
+    with:
+      image_name: sonarqube
+      tags: '["9.9.9-datacenter-app", "2025.4.1-datacenter-app"]'
+      scan_type: public
+      platform: amd64
+      ws_product_name: SonarSource/docker-sonarqube
+      needs_docker_login: false

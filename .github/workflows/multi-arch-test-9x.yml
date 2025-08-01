@@ -1,0 +1,36 @@
+name: Multi-arch test 9.x
+
+on:
+  workflow_run:
+    workflows:
+      - "Multi-arch build 9.x"
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  multi-arch-test-9x:
+    name: Test 9.x (${{ matrix.test_name }}, ${{ matrix.architecture }})
+    permissions:
+      id-token: write
+      contents: read
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push' }}
+    uses: ./.github/workflows/multi-arch-test-template.yml
+    strategy:
+      matrix:
+        architecture: [amd64, arm64]
+        include:
+          - test_name: docker
+            tag: 9.9.9-master-community
+          - test_name: docker
+            tag: 9.9.9-master-developer
+          - test_name: docker
+            tag: 9.9.9-master-enterprise
+          - test_name: docker-compose
+            tag: 9.9.9-master-datacenter
+    with:
+      staging_image_name: sonarsource/sonarqube
+      tag: ${{ matrix.tag }}
+      test_name: ${{ matrix.test_name }}
+      architecture: ${{ matrix.architecture }}
+      runs_on: ${{ matrix.architecture == 'arm64' && 'ubuntu-24.04-arm-large' || 'ubuntu-24.04-large' }}

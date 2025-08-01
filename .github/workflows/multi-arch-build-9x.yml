@@ -1,0 +1,44 @@
+name: Multi-arch build 9.x
+
+on:
+  push:
+    paths:
+      - '9/**/*'
+      - '.cirrus/multi-arch-build.sh'
+      - '.github/workflows/multi-arch-build-9x.yml'
+      - '.github/workflows/multi-arch-build-template.yml'
+  pull_request:
+    paths:
+      - '9/**/*'
+      - '.cirrus/multi-arch-build.sh'
+      - '.github/workflows/multi-arch-build-9x.yml'
+      - '.github/workflows/multi-arch-build-template.yml'
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  multi-arch-build-9x:
+    permissions:
+      id-token: write
+      contents: read
+    name: Build 9.x (${{ matrix.version }})
+    uses: ./.github/workflows/multi-arch-build-template.yml
+    strategy:
+      matrix:
+        include:
+          - version: 9/community
+            tag: 9.9.9-master-community
+          - version: 9/developer
+            tag: 9.9.9-master-developer
+          - version: 9/enterprise
+            tag: 9.9.9-master-enterprise
+          - version: 9/datacenter/app
+            tag: 9.9.9-master-datacenter-app
+          - version: 9/datacenter/search
+            tag: 9.9.9-master-datacenter-search
+    with:
+      staging_image_name: sonarsource/sonarqube
+      tag: ${{ matrix.tag }}
+      version: ${{ matrix.version }}
+      runs_on: ubuntu-latest-large
