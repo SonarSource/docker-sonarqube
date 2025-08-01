@@ -1,22 +1,38 @@
 name: Private scan
 
 on:
-  workflow_run:
-    workflows:
-      - "Multi-arch build 9.x"
-      - "Multi-arch build commercial editions"
-    types:
-      - completed
+  push:
+    # For testing - will change back to workflow_run later
+    # paths:
+    #   - '9/**/*'
+    #   - 'commercial-editions/**/*'
+    #   - '.cirrus/*'
+    #   - '.github/workflows/private-scan.yml'
+  pull_request:
+    # For testing - will change back to workflow_run later  
+    # paths:
+    #   - '9/**/*'
+    #   - 'commercial-editions/**/*'
+    #   - '.cirrus/*'
+    #   - '.github/workflows/private-scan.yml'
   schedule:
     # Nightly scan equivalent (adjust time as needed)
     - cron: '0 3 * * *'
   workflow_dispatch:
 
+  # TODO: Change back to this once workflows are on default branch:
+  # workflow_run:
+  #   workflows:
+  #     - "Multi-arch build 9.x"
+  #     - "Multi-arch build commercial editions"
+  #   types:
+  #     - completed
+
 jobs:
   private-scan:
     name: Private scan (${{ matrix.tag }})
     runs-on: ubuntu-latest-large
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event_name == 'pull_request' }}
     permissions:
       id-token: write
       contents: read
