@@ -1,0 +1,56 @@
+name: GCP build production
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      trigger_type:
+        description: 'Trigger type'
+        required: false
+        default: 'dry-run'
+        type: choice
+        options:
+          - dry-run
+          - PUSH_GCP_PROD_IMAGES
+  release:
+    types: [published]
+
+jobs:
+  gcp-build-production-app:
+    permissions:
+      id-token: write
+      contents: read
+    name: GCP build production (app)
+    if: |
+      github.event_name == 'schedule' ||
+      github.event_name == 'release' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_PROD_IMAGES')
+    uses: ./.github/workflows/gcp-build-template.yml
+    with:
+      gcp_registry: gcr.io/sonarsource-public
+      gcp_product_name: official-sonarqube-data-center-edition
+      build_type: production
+      platforms: linux/amd64
+      current_version: 2025.4.1
+      public_image_name: sonarqube
+      component_type: app
+
+  gcp-build-production-search:
+    permissions:
+      id-token: write
+      contents: read
+    name: GCP build production (search)
+    if: |
+      github.event_name == 'schedule' ||
+      github.event_name == 'release' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_PROD_IMAGES')
+    uses: ./.github/workflows/gcp-build-template.yml
+    with:
+      gcp_registry: gcr.io/sonarsource-public
+      gcp_product_name: official-sonarqube-data-center-edition
+      build_type: production
+      platforms: linux/amd64
+      current_version: 2025.4.1
+      public_image_name: sonarqube
+      component_type: search

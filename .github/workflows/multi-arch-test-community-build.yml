@@ -1,0 +1,30 @@
+name: Multi-arch test community build
+
+on:
+  workflow_run:
+    workflows:
+      - "Multi-arch build community build"
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  multi-arch-test-community-build:
+    name: Test community build (${{ matrix.test_name }}, ${{ matrix.architecture }})
+    permissions:
+      id-token: write
+      contents: read
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push' }}
+    uses: ./.github/workflows/multi-arch-test-template.yml
+    strategy:
+      matrix:
+        architecture: [amd64, arm64]
+        include:
+          - test_name: docker
+            tag: 25.7.0.110598-master-community
+    with:
+      staging_image_name: sonarsource/sonarqube
+      tag: ${{ matrix.tag }}
+      test_name: ${{ matrix.test_name }}
+      architecture: ${{ matrix.architecture }}
+      runs_on: ${{ matrix.architecture == 'arm64' && 'ubuntu-24.04-arm-large' || 'ubuntu-24.04-large' }}

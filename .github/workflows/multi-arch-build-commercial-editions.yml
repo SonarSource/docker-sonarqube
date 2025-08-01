@@ -1,0 +1,42 @@
+name: Multi-arch build commercial editions
+
+on:
+  push:
+    paths:
+      - 'commercial-editions/**/*'
+      - '.cirrus/multi-arch-build.sh'
+      - '.github/workflows/multi-arch-build-commercial-editions.yml'
+      - '.github/workflows/multi-arch-build-template.yml'
+  pull_request:
+    paths:
+      - 'commercial-editions/**/*'
+      - '.cirrus/multi-arch-build.sh'
+      - '.github/workflows/multi-arch-build-commercial-editions.yml'
+      - '.github/workflows/multi-arch-build-template.yml'
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  multi-arch-build-commercial-editions:
+    name: Build commercial editions (${{ matrix.version }})
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/multi-arch-build-template.yml
+    strategy:
+      matrix:
+        include:
+          - version: commercial-editions/developer
+            tag: 2025.4.1-master-developer
+          - version: commercial-editions/enterprise
+            tag: 2025.4.1-master-enterprise
+          - version: commercial-editions/datacenter/app
+            tag: 2025.4.1-master-datacenter-app
+          - version: commercial-editions/datacenter/search
+            tag: 2025.4.1-master-datacenter-search
+    with:
+      staging_image_name: sonarsource/sonarqube
+      tag: ${{ matrix.tag }}
+      version: ${{ matrix.version }}
+      runs_on: ubuntu-latest-large

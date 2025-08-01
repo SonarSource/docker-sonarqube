@@ -1,0 +1,36 @@
+name: Multi-arch build community build
+
+on:
+  push:
+    paths:
+      - 'community-build/*'
+      - '.cirrus/multi-arch-build.sh'
+      - '.github/workflows/multi-arch-build-community-build.yml'
+      - '.github/workflows/multi-arch-build-template.yml'
+  pull_request:
+    paths:
+      - 'community-build/*'
+      - '.cirrus/multi-arch-build.sh'
+      - '.github/workflows/multi-arch-build-community-build.yml'
+      - '.github/workflows/multi-arch-build-template.yml'
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  multi-arch-build-community-build:
+    name: Build community build (${{ matrix.version }})
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/multi-arch-build-template.yml
+    strategy:
+      matrix:
+        include:
+          - version: community-build
+            tag: 25.7.0.110598-master-community
+    with:
+      staging_image_name: sonarsource/sonarqube
+      tag: ${{ matrix.tag }}
+      version: ${{ matrix.version }}
+      runs_on: ubuntu-latest-large
