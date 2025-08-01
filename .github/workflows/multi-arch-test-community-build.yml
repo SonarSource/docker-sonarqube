@@ -31,4 +31,4 @@ jobs:
       tag: ${{ matrix.tag }}
       test_name: ${{ matrix.test_name }}
       architecture: ${{ matrix.architecture }}
-      runs_on: ${{ matrix.architecture == 'arm64' && 'ubuntu-latest-large-arm64' || 'ubuntu-latest-large' }}
+      runs_on: ${{ matrix.architecture == 'arm64' && 'ubuntu-24.04-arm-large' || 'ubuntu-24.04-large' }}
