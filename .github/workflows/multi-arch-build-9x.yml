@@ -1,7 +1,7 @@
 name: Multi-arch build 9.x
 
 on:
-  push:
+  # push:
     # paths:
     #   - '9/**/*'
     #   - '.cirrus/*'

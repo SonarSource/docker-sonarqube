@@ -1,7 +1,7 @@
 name: Multi-arch build community build
 
 on:
-  push:
+  # push:
     # paths:
     #   - 'community-build/*'
     #   - '.cirrus/*'

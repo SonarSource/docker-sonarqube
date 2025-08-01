@@ -1,7 +1,7 @@
 name: Multi-arch build commercial editions
 
 on:
-  push:
+  # push:
     # paths:
     #   - 'commercial-editions/**/*'
     #   - '.cirrus/*'
