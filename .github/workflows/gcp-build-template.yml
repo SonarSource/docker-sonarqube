@@ -1,0 +1,166 @@
+name: GCP build template
+
+on:
+  workflow_call:
+    inputs:
+      gcp_registry:
+        required: true
+        type: string
+        description: "GCP registry URL (e.g., gcr.io/sonarsource-public)"
+      gcp_product_name:
+        required: true
+        type: string
+        description: "GCP product name"
+      build_type:
+        required: true
+        type: string
+        description: "Type of build: 'staging' or 'production'"
+      platforms:
+        required: false
+        type: string
+        description: "Platforms to build for"
+        default: "linux/amd64,linux/arm64"
+      extra_docker_build_args:
+        required: false
+        type: string
+        description: "Extra docker build arguments"
+        default: ""
+      current_version:
+        required: true
+        type: string
+        description: "Current version to build/promote"
+      public_image_name:
+        required: false
+        type: string
+        description: "Public image name for production builds"
+        default: "sonarqube"
+
+jobs:
+  gcp-build-staging:
+    name: GCP build staging (${{ matrix.version }})
+    if: ${{ inputs.build_type == 'staging' }}
+    runs-on: ubuntu-24.04-large
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        include:
+          - version: commercial-editions/datacenter/app
+            image_name: ${{ inputs.gcp_registry }}/${{ inputs.gcp_product_name }}
+            tag: ${{ inputs.current_version }}
+          - version: commercial-editions/datacenter/search
+            image_name: ${{ inputs.gcp_registry }}/${{ inputs.gcp_product_name }}/sonarqube-dce-search
+            tag: ${{ inputs.current_version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - id: secrets
+        name: Retrieve secrets from Vault
+        uses: SonarSource/vault-action-wrapper@v3
+        with:
+          secrets: |
+            development/team/sonarqube/kv/data/gcp-marketplace-registry-staging key | gcp_sa_key;
+
+      - name: Login to GCP registry
+        run: |
+          export DOCKER_GCLOUD_PASSWORD=$(echo '${{ fromJSON(steps.secrets.outputs.vault).gcp_sa_key }}' | base64 -d)
+          echo "${DOCKER_GCLOUD_PASSWORD}" | docker login -u _json_key --password-stdin https://${{ inputs.gcp_registry }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          name: multibuilder
+          driver: docker-container
+          install: true
+
+      - name: Set up QEMU for multi-arch builds
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build and push to GCP staging
+        env:
+          STAGING_IMAGE_NAME: ${{ matrix.image_name }}
+          TAG: ${{ matrix.tag }}
+          VERSION: ${{ matrix.version }}
+          EXTRA_DOCKER_BUILD_ARGS: ${{ inputs.extra_docker_build_args }}
+        run: |
+          export MINOR_TAG=$(echo ${TAG} | cut -d '.' -f 1,2)
+          echo "Build and promote the ${STAGING_IMAGE_NAME}:${TAG} and ${STAGING_IMAGE_NAME}:${MINOR_TAG} image supporting two architectures, linux/amd64 and linux/arm64"
+          .cirrus/multi-arch-build.sh "${STAGING_IMAGE_NAME}" "${TAG}" "${VERSION}"
+          .cirrus/multi-arch-build.sh "${STAGING_IMAGE_NAME}" "${MINOR_TAG}" "${VERSION}"
+
+  gcp-build-production:
+    name: GCP build production
+    if: ${{ inputs.build_type == 'production' }}
+    runs-on: ubuntu-24.04-large
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - id: secrets
+        name: Retrieve secrets from Vault
+        uses: SonarSource/vault-action-wrapper@v3
+        with:
+          secrets: |
+            development/team/sonarqube/kv/data/gcp-marketplace-registry-staging key | gcp_sa_key;
+
+      - name: Pull public datacenter images
+        env:
+          PUBLIC_IMAGE_NAME: ${{ inputs.public_image_name }}
+          CURRENT_VERSION: ${{ inputs.current_version }}
+        run: |
+          echo "Pull the ${PUBLIC_IMAGE_NAME} datacenter public images"
+          docker pull "${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-app"
+          docker pull "${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-search"
+
+      - name: Login to GCP registry
+        run: |
+          export DOCKER_GCLOUD_PASSWORD=$(echo '${{ fromJSON(steps.secrets.outputs.vault).gcp_sa_key }}' | base64 -d)
+          echo "${DOCKER_GCLOUD_PASSWORD}" | docker login -u _json_key --password-stdin https://${{ inputs.gcp_registry }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+
+      - name: Promote datacenter app image to GCP
+        env:
+          PUBLIC_IMAGE_NAME: ${{ inputs.public_image_name }}
+          CURRENT_VERSION: ${{ inputs.current_version }}
+          GCP_REGISTRY: ${{ inputs.gcp_registry }}
+          GCP_PRODUCT_NAME: ${{ inputs.gcp_product_name }}
+        run: |
+          export CURRENT_MINOR_VERSION=$(echo ${CURRENT_VERSION} | cut -d '.' -f 1,2)
+          echo "Promote the ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-app images supporting one architecture (linux/amd64) to the GCP registry ${GCP_REGISTRY}"
+          echo -e "FROM ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-app" | docker buildx build \
+            --platform linux/amd64 \
+            --provenance=false \
+            --annotation "manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog" \
+            --tag "${GCP_REGISTRY}/${GCP_PRODUCT_NAME}:${CURRENT_VERSION}" \
+            --tag "${GCP_REGISTRY}/${GCP_PRODUCT_NAME}:${CURRENT_MINOR_VERSION}" \
+            --push -
+
+      - name: Promote datacenter search image to GCP
+        env:
+          PUBLIC_IMAGE_NAME: ${{ inputs.public_image_name }}
+          CURRENT_VERSION: ${{ inputs.current_version }}
+          GCP_REGISTRY: ${{ inputs.gcp_registry }}
+          GCP_PRODUCT_NAME: ${{ inputs.gcp_product_name }}
+        run: |
+          export CURRENT_MINOR_VERSION=$(echo ${CURRENT_VERSION} | cut -d '.' -f 1,2)
+          echo "Promote the ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-search images supporting one architecture (linux/amd64) to the GCP registry ${GCP_REGISTRY}"
+          echo -e "FROM ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-search" | docker buildx build \
+            --platform linux/amd64 \
+            --provenance=false \
+            --annotation "manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog" \
+            --tag "${GCP_REGISTRY}/${GCP_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_VERSION}" \
+            --tag "${GCP_REGISTRY}/${GCP_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_MINOR_VERSION}" \
+            --push -
