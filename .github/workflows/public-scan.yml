@@ -3,7 +3,6 @@ name: Public scan
 on:
   push:
   schedule:
-    # Nightly scan only (equivalent to CIRRUS_CRON == 'nightly-mend-scan')
     - cron: '0 3 * * *'
   workflow_dispatch:
 

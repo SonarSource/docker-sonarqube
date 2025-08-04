@@ -2,21 +2,19 @@ name: GCP build production
 
 on:
   schedule:
-    # Nightly equivalent
     - cron: '0 2 * * *'
   workflow_dispatch:
     inputs:
       trigger_type:
         description: 'Trigger type'
         required: false
-        default: 'manual'
+        default: 'dry-run'
         type: choice
         options:
-          - manual
-          - PUSH_GCP_IMAGES
+          - dry-run
+          - PUSH_GCP_PROD_IMAGES
   release:
     types: [published]
-  # TODO: Add support for TRIGGER environment variable equivalent
 
 jobs:
   gcp-build-production:
@@ -24,11 +22,10 @@ jobs:
       id-token: write
       contents: read
     name: GCP build production
-    # Only run on nightly, manual trigger with specific type, or releases
     if: |
-      github.event_name == 'schedule' || 
+      github.event_name == 'schedule' ||
       github.event_name == 'release' ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_IMAGES')
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_PROD_IMAGES')
     uses: ./.github/workflows/gcp-build-template.yml
     with:
       gcp_registry: gcr.io/sonarsource-public

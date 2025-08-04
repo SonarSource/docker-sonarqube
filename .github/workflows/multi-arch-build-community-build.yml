@@ -1,20 +1,19 @@
 name: Multi-arch build community build
 
 on:
-  # push:
-    # paths:
-    #   - 'community-build/*'
-    #   - '.cirrus/*'
-    #   - '.github/workflows/multi-arch-build-community-build.yml'
-    #   - '.github/workflows/multi-arch-build-template.yml'
+  push:
+    paths:
+      - 'community-build/*'
+      - '.cirrus/multi-arch-build.sh'
+      - '.github/workflows/multi-arch-build-community-build.yml'
+      - '.github/workflows/multi-arch-build-template.yml'
   pull_request:
-    # paths:
-    #   - 'community-build/*'
-    #   - '.cirrus/*'
-    #   - '.github/workflows/multi-arch-build-community-build.yml'
-    #   - '.github/workflows/multi-arch-build-template.yml'
+    paths:
+      - 'community-build/*'
+      - '.cirrus/multi-arch-build.sh'
+      - '.github/workflows/multi-arch-build-community-build.yml'
+      - '.github/workflows/multi-arch-build-template.yml'
   schedule:
-    # Nightly scan equivalent (adjust time as needed)
     - cron: '0 2 * * *'
   workflow_dispatch:
 

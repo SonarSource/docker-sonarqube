@@ -1,29 +1,28 @@
 name: Multi-arch build 9.x
 
 on:
-  # push:
-    # paths:
-    #   - '9/**/*'
-    #   - '.cirrus/*'
-    #   - '.github/workflows/multi-arch-build-9x.yml'
-    #   - '.github/workflows/multi-arch-build-template.yml'
+  push:
+    paths:
+      - '9/**/*'
+      - '.cirrus/multi-arch-build.sh'
+      - '.github/workflows/multi-arch-build-9x.yml'
+      - '.github/workflows/multi-arch-build-template.yml'
   pull_request:
-    # paths:
-    #   - '9/**/*'
-    #   - '.cirrus/*'
-    #   - '.github/workflows/multi-arch-build-9x.yml'
-    #   - '.github/workflows/multi-arch-build-template.yml'
+    paths:
+      - '9/**/*'
+      - '.cirrus/multi-arch-build.sh'
+      - '.github/workflows/multi-arch-build-9x.yml'
+      - '.github/workflows/multi-arch-build-template.yml'
   schedule:
-    # Nightly scan equivalent (adjust time as needed)
     - cron: '0 2 * * *'
   workflow_dispatch:
 
 jobs:
   multi-arch-build-9x:
-    name: Build 9.x (${{ matrix.version }})
     permissions:
       id-token: write
       contents: read
+    name: Build 9.x (${{ matrix.version }})
     uses: ./.github/workflows/multi-arch-build-template.yml
     strategy:
       matrix:

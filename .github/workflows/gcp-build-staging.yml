@@ -1,28 +1,28 @@
 name: GCP build staging
 
 on:
-  push: 
+  push:
+    branches:
+      - main
   schedule:
-    # Nightly equivalent
     - cron: '0 2 * * *'
   workflow_dispatch:
     inputs:
       trigger_type:
         description: 'Trigger type'
         required: false
-        default: 'manual'
+        default: 'dry-run'
         type: choice
         options:
-          - manual
+          - dry-run
           - PUSH_GCP_STAGING_IMAGES
-  # TODO: Add trigger for commit message pattern once on main branch
-  # push:
-  #   branches:
-  #     - main
-  # if: contains(github.event.head_commit.message, 'Update docker-sonarqube-server-releases')
 
 jobs:
   gcp-build-staging:
+    if: |
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_STAGING_IMAGES') ||
+      (github.event_name == 'push' && contains(github.event.head_commit.message, 'Update docker-sonarqube-server-releases'))
     permissions:
       id-token: write
       contents: read
