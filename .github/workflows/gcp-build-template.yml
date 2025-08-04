@@ -52,7 +52,6 @@ jobs:
           - version: commercial-editions/datacenter/search
             image_name: ${{ inputs.gcp_registry }}/${{ inputs.gcp_product_name }}/sonarqube-dce-search
             tag: ${{ inputs.current_version }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

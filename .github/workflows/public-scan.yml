@@ -1,7 +1,6 @@
 name: Public scan
 
 on:
-  push:
   schedule:
     - cron: '0 3 * * *'
   workflow_dispatch:
