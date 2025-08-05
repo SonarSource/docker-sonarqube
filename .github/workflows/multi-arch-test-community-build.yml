@@ -1,6 +1,7 @@
 name: Multi-arch test community build
 
 on:
+  push:
   workflow_run:
     workflows:
       - "Multi-arch build community build"

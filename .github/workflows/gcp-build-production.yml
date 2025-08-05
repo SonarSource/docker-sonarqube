@@ -1,6 +1,7 @@
 name: GCP build production
 
 on:
+  push:
   schedule:
     - cron: '0 2 * * *'
   workflow_dispatch:
@@ -29,6 +30,7 @@ jobs:
     if: |
       github.event_name == 'schedule' ||
       github.event_name == 'release' ||
+      github.event_name == 'push' ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_PROD_IMAGES')
     uses: ./.github/workflows/gcp-build-template.yml
     with:
@@ -49,6 +51,7 @@ jobs:
     if: |
       github.event_name == 'schedule' ||
       github.event_name == 'release' ||
+      github.event_name == 'push' ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_PROD_IMAGES')
     uses: ./.github/workflows/gcp-build-template.yml
     with:

@@ -1,6 +1,7 @@
 name: Multi-arch test 9.x
 
 on:
+  push:
   workflow_run:
     workflows:
       - "Multi-arch build 9.x"

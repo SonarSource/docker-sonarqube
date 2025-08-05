@@ -2,19 +2,19 @@ name: Multi-arch build 9.x
 
 on:
   push:
-    paths:
-      - '9/**/*'
-      - '.cirrus/multi-arch-build.sh'
-      - '.github/workflows/multi-arch-build-9x.yml'
-      - '.github/workflows/multi-arch-build-template.yml'
-      - '.github/github_env.yaml'
-  pull_request:
-    paths:
-      - '9/**/*'
-      - '.cirrus/multi-arch-build.sh'
-      - '.github/workflows/multi-arch-build-9x.yml'
-      - '.github/workflows/multi-arch-build-template.yml'
-      - '.github/github_env.yaml'
+  #   paths:
+  #     - '9/**/*'
+  #     - '.cirrus/multi-arch-build.sh'
+  #     - '.github/workflows/multi-arch-build-9x.yml'
+  #     - '.github/workflows/multi-arch-build-template.yml'
+  #     - '.github/github_env.yaml'
+  # pull_request:
+  #   paths:
+  #     - '9/**/*'
+  #     - '.cirrus/multi-arch-build.sh'
+  #     - '.github/workflows/multi-arch-build-9x.yml'
+  #     - '.github/workflows/multi-arch-build-template.yml'
+  #     - '.github/github_env.yaml'
   schedule:
     - cron: '0 2 * * *'
   workflow_dispatch:

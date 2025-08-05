@@ -2,19 +2,19 @@ name: Multi-arch build commercial editions
 
 on:
   push:
-    paths:
-      - 'commercial-editions/**/*'
-      - '.cirrus/multi-arch-build.sh'
-      - '.github/workflows/multi-arch-build-commercial-editions.yml'
-      - '.github/workflows/multi-arch-build-template.yml'
-      - '.github/github_env.yaml'
-  pull_request:
-    paths:
-      - 'commercial-editions/**/*'
-      - '.cirrus/multi-arch-build.sh'
-      - '.github/workflows/multi-arch-build-commercial-editions.yml'
-      - '.github/workflows/multi-arch-build-template.yml'
-      - '.github/github_env.yaml'
+  #   paths:
+  #     - 'commercial-editions/**/*'
+  #     - '.cirrus/multi-arch-build.sh'
+  #     - '.github/workflows/multi-arch-build-commercial-editions.yml'
+  #     - '.github/workflows/multi-arch-build-template.yml'
+  #     - '.github/github_env.yaml'
+  # pull_request:
+  #   paths:
+  #     - 'commercial-editions/**/*'
+  #     - '.cirrus/multi-arch-build.sh'
+  #     - '.github/workflows/multi-arch-build-commercial-editions.yml'
+  #     - '.github/workflows/multi-arch-build-template.yml'
+  #     - '.github/github_env.yaml'
   schedule:
     - cron: '0 2 * * *'
   workflow_dispatch:

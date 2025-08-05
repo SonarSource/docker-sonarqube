@@ -2,8 +2,6 @@ name: GCP build staging
 
 on:
   push:
-    # branches:
-    #   - main
   schedule:
     - cron: '0 2 * * *'
   workflow_dispatch:
@@ -25,6 +23,7 @@ jobs:
     needs: load-config
     if: |
       github.event_name == 'schedule' ||
+      github.event_name == 'push' ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_STAGING_IMAGES') ||
       (github.event_name == 'push' && contains(github.event.head_commit.message, 'Update docker-sonarqube-server-releases'))
     permissions:
@@ -45,6 +44,7 @@ jobs:
     needs: load-config
     if: |
       github.event_name == 'schedule' ||
+      github.event_name == 'push' ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_STAGING_IMAGES') ||
       (github.event_name == 'push' && contains(github.event.head_commit.message, 'Update docker-sonarqube-server-releases'))
     permissions:

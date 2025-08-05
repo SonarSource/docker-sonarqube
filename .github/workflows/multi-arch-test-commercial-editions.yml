@@ -1,6 +1,7 @@
 name: Multi-arch test commercial editions
 
 on:
+  push:
   workflow_run:
     workflows:
       - "Multi-arch build commercial editions"
