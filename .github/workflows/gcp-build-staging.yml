@@ -2,8 +2,6 @@ name: GCP build staging
 
 on:
   push:
-    # branches:
-    #   - main
   schedule:
     - cron: '0 2 * * *'
   workflow_dispatch:
@@ -18,7 +16,11 @@ on:
           - PUSH_GCP_STAGING_IMAGES
 
 jobs:
+  load-config:
+    uses: ./.github/workflows/load-config.yml
+
   gcp-build-staging-app:
+    needs: load-config
     if: |
       github.event_name == 'schedule' ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_STAGING_IMAGES') ||
@@ -29,15 +31,16 @@ jobs:
     name: GCP build staging (app)
     uses: ./.github/workflows/gcp-build-template.yml
     with:
-      gcp_registry: gcr.io/sonarqube-marketplace-provider
-      gcp_product_name: sonarqube-dce-staging
+      gcp_registry: ${{ needs.load-config.outputs.gcp_staging_registry }}
+      gcp_product_name: ${{ needs.load-config.outputs.gcp_staging_product }}
       build_type: staging
       platforms: linux/amd64,linux/arm64
       extra_docker_build_args: "--provenance=false --annotation=manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog"
-      current_version: 2025.4.1
+      current_version: ${{ needs.load-config.outputs.current_version }}
       component_type: app
 
   gcp-build-staging-search:
+    needs: load-config
     if: |
       github.event_name == 'schedule' ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_STAGING_IMAGES') ||
@@ -48,10 +51,10 @@ jobs:
     name: GCP build staging (search)
     uses: ./.github/workflows/gcp-build-template.yml
     with:
-      gcp_registry: gcr.io/sonarqube-marketplace-provider
-      gcp_product_name: sonarqube-dce-staging
+      gcp_registry: ${{ needs.load-config.outputs.gcp_staging_registry }}
+      gcp_product_name: ${{ needs.load-config.outputs.gcp_staging_product }}
       build_type: staging
       platforms: linux/amd64,linux/arm64
       extra_docker_build_args: "--provenance=false --annotation=manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog"
-      current_version: 2025.4.1
+      current_version: ${{ needs.load-config.outputs.current_version }}
       component_type: search

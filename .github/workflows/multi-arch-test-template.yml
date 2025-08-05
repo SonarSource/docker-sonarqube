@@ -27,7 +27,7 @@ on:
 
 jobs:
   multi-arch-test:
-    name: Test ${{ inputs.architecture }}
+    name: Test ${{ inputs.staging_image_name }}:${{ inputs.tag }} (${{ inputs.test_name }}, ${{ inputs.architecture }})
     runs-on: ${{ inputs.runs_on }}
     steps:
       - name: Checkout repository

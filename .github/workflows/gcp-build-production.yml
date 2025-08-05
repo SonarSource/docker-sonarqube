@@ -17,7 +17,11 @@ on:
     types: [published]
 
 jobs:
+  load-config:
+    uses: ./.github/workflows/load-config.yml
+
   gcp-build-production-app:
+    needs: load-config
     permissions:
       id-token: write
       contents: read
@@ -28,15 +32,16 @@ jobs:
       (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_PROD_IMAGES')
     uses: ./.github/workflows/gcp-build-template.yml
     with:
-      gcp_registry: gcr.io/sonarsource-public
-      gcp_product_name: official-sonarqube-data-center-edition
+      gcp_registry: ${{ needs.load-config.outputs.gcp_public_registry }}
+      gcp_product_name: ${{ needs.load-config.outputs.gcp_public_product }}
       build_type: production
       platforms: linux/amd64
-      current_version: 2025.4.1
-      public_image_name: sonarqube
+      current_version: ${{ needs.load-config.outputs.current_version }}
+      public_image_name: ${{ needs.load-config.outputs.public_image }}
       component_type: app
 
   gcp-build-production-search:
+    needs: load-config
     permissions:
       id-token: write
       contents: read
@@ -47,10 +52,10 @@ jobs:
       (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_PROD_IMAGES')
     uses: ./.github/workflows/gcp-build-template.yml
     with:
-      gcp_registry: gcr.io/sonarsource-public
-      gcp_product_name: official-sonarqube-data-center-edition
+      gcp_registry: ${{ needs.load-config.outputs.gcp_public_registry }}
+      gcp_product_name: ${{ needs.load-config.outputs.gcp_public_product }}
       build_type: production
       platforms: linux/amd64
-      current_version: 2025.4.1
-      public_image_name: sonarqube
+      current_version: ${{ needs.load-config.outputs.current_version }}
+      public_image_name: ${{ needs.load-config.outputs.public_image }}
       component_type: search

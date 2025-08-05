@@ -69,12 +69,7 @@ jobs:
           TAG: ${{ matrix.tag }}
         run: |
           echo "Scan the ${IMAGE_NAME}:${TAG} image supporting linux/${platform}"
-          if [[ "${{ inputs.needs_docker_login }}" == "true" ]]; then
-            .cirrus/pull.sh "${IMAGE_NAME}" "${TAG}" "${platform}"
-          else
-            # For public images, use direct docker pull
-            docker pull --platform linux/"${platform}" "${IMAGE_NAME}:${TAG}"
-          fi
+          .cirrus/pull.sh "${IMAGE_NAME}" "${TAG}" "${platform}"
 
       - name: Set up Java for Mend agent
         uses: actions/setup-java@v4

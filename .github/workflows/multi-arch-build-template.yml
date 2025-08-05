@@ -28,7 +28,7 @@ on:
 
 jobs:
   multi-arch-build:
-    name: Multi-arch build
+    name: Build ${{ inputs.staging_image_name }}:${{ inputs.tag }} (${{ inputs.version }})
     runs-on: ${{ inputs.runs_on }}
     steps:
       - name: Checkout repository
