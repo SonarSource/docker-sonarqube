@@ -7,18 +7,24 @@ on:
       - '.cirrus/multi-arch-build.sh'
       - '.github/workflows/multi-arch-build-9x.yml'
       - '.github/workflows/multi-arch-build-template.yml'
+      - '.github/github_env.yaml'
   pull_request:
     paths:
       - '9/**/*'
       - '.cirrus/multi-arch-build.sh'
       - '.github/workflows/multi-arch-build-9x.yml'
       - '.github/workflows/multi-arch-build-template.yml'
+      - '.github/github_env.yaml'
   schedule:
     - cron: '0 2 * * *'
   workflow_dispatch:
 
 jobs:
+  load-config:
+    uses: ./.github/workflows/load-config.yml
+
   multi-arch-build-9x:
+    needs: load-config
     permissions:
       id-token: write
       contents: read
@@ -28,17 +34,17 @@ jobs:
       matrix:
         include:
           - version: 9/community
-            tag: 9.9.9-master-community
+            edition: community
           - version: 9/developer
-            tag: 9.9.9-master-developer
+            edition: developer
           - version: 9/enterprise
-            tag: 9.9.9-master-enterprise
+            edition: enterprise
           - version: 9/datacenter/app
-            tag: 9.9.9-master-datacenter-app
+            edition: datacenter-app
           - version: 9/datacenter/search
-            tag: 9.9.9-master-datacenter-search
+            edition: datacenter-search
     with:
-      staging_image_name: sonarsource/sonarqube
-      tag: ${{ matrix.tag }}
+      staging_image_name: ${{ needs.load-config.outputs.staging_image }}
+      tag: ${{ needs.load-config.outputs.previous_lta_version }}-master-${{ matrix.edition }}
       version: ${{ matrix.version }}
       runs_on: ubuntu-latest-large

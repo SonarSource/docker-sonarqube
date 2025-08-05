@@ -1,0 +1,43 @@
+# Central configuration for GitHub Actions workflows
+# This file contains all version numbers and common configurations used across workflows
+
+versions:
+  current: "2025.4.1"
+  previous_lta: "9.9.9"
+  community_build: "25.8.0.111929"
+
+images:
+  staging: "sonarsource/sonarqube"
+  public: "sonarqube"
+
+registries:
+  gcp_public: "gcr.io/sonarsource-public"
+  gcp_staging: "gcr.io/sonarqube-marketplace-provider"
+
+products:
+  gcp_public_name: "official-sonarqube-data-center-edition"
+  gcp_staging_name: "sonarqube-dce-staging"
+
+# Build matrix definitions
+matrix:
+  lta_builds:
+    - version: "9/community"
+      edition: "community"
+    - version: "9/developer" 
+      edition: "developer"
+    - version: "9/enterprise"
+      edition: "enterprise"
+    - version: "9/datacenter/app"
+      edition: "datacenter-app"
+    - version: "9/datacenter/search"
+      edition: "datacenter-search"
+  
+  current_builds:
+    - version: "commercial-editions/developer"
+      edition: "developer"
+    - version: "commercial-editions/enterprise"
+      edition: "enterprise"
+    - version: "commercial-editions/datacenter/app"
+      edition: "datacenter-app"
+    - version: "commercial-editions/datacenter/search"
+      edition: "datacenter-search"

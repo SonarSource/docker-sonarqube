@@ -7,18 +7,24 @@ on:
       - '.cirrus/multi-arch-build.sh'
       - '.github/workflows/multi-arch-build-commercial-editions.yml'
       - '.github/workflows/multi-arch-build-template.yml'
+      - '.github/github_env.yaml'
   pull_request:
     paths:
       - 'commercial-editions/**/*'
       - '.cirrus/multi-arch-build.sh'
       - '.github/workflows/multi-arch-build-commercial-editions.yml'
       - '.github/workflows/multi-arch-build-template.yml'
+      - '.github/github_env.yaml'
   schedule:
     - cron: '0 2 * * *'
   workflow_dispatch:
 
 jobs:
+  load-config:
+    uses: ./.github/workflows/load-config.yml
+
   multi-arch-build-commercial-editions:
+    needs: load-config
     name: Build commercial editions (${{ matrix.version }})
     permissions:
       id-token: write
@@ -28,15 +34,15 @@ jobs:
       matrix:
         include:
           - version: commercial-editions/developer
-            tag: 2025.4.1-master-developer
+            edition: developer
           - version: commercial-editions/enterprise
-            tag: 2025.4.1-master-enterprise
+            edition: enterprise
           - version: commercial-editions/datacenter/app
-            tag: 2025.4.1-master-datacenter-app
+            edition: datacenter-app
           - version: commercial-editions/datacenter/search
-            tag: 2025.4.1-master-datacenter-search
+            edition: datacenter-search
     with:
-      staging_image_name: sonarsource/sonarqube
-      tag: ${{ matrix.tag }}
+      staging_image_name: ${{ needs.load-config.outputs.staging_image }}
+      tag: ${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}
       version: ${{ matrix.version }}
       runs_on: ubuntu-latest-large
