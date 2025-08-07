@@ -1,0 +1,137 @@
+name: GCP build template
+
+on:
+  workflow_call:
+    inputs:
+      gcp_registry:
+        required: true
+        type: string
+        description: "GCP registry URL (e.g., gcr.io/sonarsource-public)"
+      gcp_product_name:
+        required: true
+        type: string
+        description: "GCP product name"
+      build_type:
+        required: true
+        type: string
+        description: "Type of build: 'staging' or 'production'"
+      platforms:
+        required: false
+        type: string
+        description: "Platforms to build for"
+        default: "linux/amd64,linux/arm64"
+      extra_docker_build_args:
+        required: false
+        type: string
+        description: "Extra docker build arguments"
+        default: ""
+      current_version:
+        required: true
+        type: string
+        description: "Current version to build/promote"
+      public_image_name:
+        required: false
+        type: string
+        description: "Public image name for production builds"
+        default: "sonarqube"
+      component_type:
+        required: true
+        type: string
+        description: "Component type: 'app' or 'search'"
+
+jobs:
+  gcp-build:
+    name: GCP build ${{ inputs.build_type }} (${{ inputs.component_type }})
+    runs-on: ubuntu-24.04-large
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up variables
+        id: vars
+        run: |
+          # Construct version path
+          VERSION_PATH="commercial-editions/datacenter/${{ inputs.component_type }}"
+          
+          # Construct image name based on component type
+          if [ "${{ inputs.component_type }}" == "search" ]; then
+            IMAGE_NAME="${{ inputs.gcp_registry }}/${{ inputs.gcp_product_name }}/sonarqube-dce-search"
+          else
+            IMAGE_NAME="${{ inputs.gcp_registry }}/${{ inputs.gcp_product_name }}"
+          fi
+          
+          # Calculate minor version
+          MINOR_VERSION=$(echo "${{ inputs.current_version }}" | cut -d '.' -f 1,2)
+          
+          echo "version_path=${VERSION_PATH}" >> $GITHUB_OUTPUT
+          echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
+          echo "minor_version=${MINOR_VERSION}" >> $GITHUB_OUTPUT
+
+      - id: secrets
+        name: Retrieve secrets from Vault
+        uses: SonarSource/vault-action-wrapper@v3
+        with:
+          secrets: |
+            development/team/sonarqube/kv/data/gcp-marketplace-registry-staging key | gcp_sa_key;
+
+      - name: Pull public datacenter images (production only)
+        if: ${{ inputs.build_type == 'production' }}
+        env:
+          PUBLIC_IMAGE_NAME: ${{ inputs.public_image_name }}
+          CURRENT_VERSION: ${{ inputs.current_version }}
+          COMPONENT_TYPE: ${{ inputs.component_type }}
+        run: |
+          echo "Pull the ${PUBLIC_IMAGE_NAME} datacenter public images"
+          docker pull "${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-${COMPONENT_TYPE}"
+
+      - name: Login to GCP registry
+        run: |
+          export DOCKER_GCLOUD_PASSWORD=$(echo '${{ fromJSON(steps.secrets.outputs.vault).gcp_sa_key }}' | base64 -d)
+          echo "${DOCKER_GCLOUD_PASSWORD}" | docker login -u _json_key --password-stdin https://${{ inputs.gcp_registry }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          name: multibuilder
+          driver: docker-container
+          install: true
+
+      - name: Set up QEMU for multi-arch builds (staging only)
+        if: ${{ inputs.build_type == 'staging' }}
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build and push to GCP staging
+        if: ${{ inputs.build_type == 'staging' }}
+        env:
+          STAGING_IMAGE_NAME: ${{ steps.vars.outputs.image_name }}
+          TAG: ${{ inputs.current_version }}
+          MINOR_TAG: ${{ steps.vars.outputs.minor_version }}
+          VERSION: ${{ steps.vars.outputs.version_path }}
+          EXTRA_DOCKER_BUILD_ARGS: ${{ inputs.extra_docker_build_args }}
+        run: |
+          echo "Build and promote the ${STAGING_IMAGE_NAME}:${TAG} and ${STAGING_IMAGE_NAME}:${MINOR_TAG} image supporting two architectures, linux/amd64 and linux/arm64"
+          .cirrus/multi-arch-build.sh "${STAGING_IMAGE_NAME}" "${TAG}" "${VERSION}"
+          .cirrus/multi-arch-build.sh "${STAGING_IMAGE_NAME}" "${MINOR_TAG}" "${VERSION}"
+
+      - name: Promote datacenter image to GCP production
+        if: ${{ inputs.build_type == 'production' }}
+        env:
+          PUBLIC_IMAGE_NAME: ${{ inputs.public_image_name }}
+          CURRENT_VERSION: ${{ inputs.current_version }}
+          CURRENT_MINOR_VERSION: ${{ steps.vars.outputs.minor_version }}
+          GCP_REGISTRY: ${{ inputs.gcp_registry }}
+          GCP_PRODUCT_NAME: ${{ inputs.gcp_product_name }}
+          COMPONENT_TYPE: ${{ inputs.component_type }}
+          TARGET_IMAGE_NAME: ${{ steps.vars.outputs.image_name }}
+        run: |
+          echo "Promote the ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-${COMPONENT_TYPE} images supporting one architecture (linux/amd64) to the GCP registry ${GCP_REGISTRY}"
+          echo -e "FROM ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-${COMPONENT_TYPE}" | docker buildx build \
+            --platform linux/amd64 \
+            --provenance=false \
+            --annotation "manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog" \
+            --tag "${TARGET_IMAGE_NAME}:${CURRENT_VERSION}" \
+            --tag "${TARGET_IMAGE_NAME}:${CURRENT_MINOR_VERSION}" \
+            --push -

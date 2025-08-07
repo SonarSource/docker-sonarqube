@@ -1,5 +1,4 @@
-{
-
+{    
     "rebaseWhen": "behind-base-branch",
     "baseBranches": [
       "master",
@@ -17,7 +16,7 @@
     "includePaths": [
       "commercial-editions/**",
       "community-build/Dockerfile",
-      ".cirrus/tasks.yml"
+      ".github/github_env.yaml"
     ],
     "enabledManagers": [
       "custom.regex"
@@ -59,14 +58,14 @@
       },
       {
         "customType": "regex",
-        "managerFilePatterns": [".cirrus/tasks.yml"],
+        "managerFilePatterns": [".github/github_env.yaml"],
         "datasourceTemplate":"github-releases",
         "depNameTemplate": "sonarqube-server",
         "versioningTemplate": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)",
         "extractVersionTemplate": "^sqs-(?<version>\\d+\\.\\d+\\.\\d+)\\.\\d+$",
         "packageNameTemplate": "SonarSource/sonar-enterprise",
         "matchStrings": [
-          "CURRENT_VERSION: (?<currentValue>.+)"
+          "current: \"(?<currentValue>.+)\""
         ]
       },
       {
@@ -82,13 +81,13 @@
       },
       {
         "customType": "regex",
-        "managerFilePatterns": [".cirrus/tasks.yml"],
+        "managerFilePatterns": [".github/github_env.yaml"],
         "datasourceTemplate":"github-releases",
         "depNameTemplate": "sonarqube-community-build",
         "versioningTemplate": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)",
         "packageNameTemplate": "SonarSource/sonarqube",
         "matchStrings": [
-          "COMMUNITY_BUILD_VERSION: (?<currentValue>.+)"
+          "community_build: \"(?<currentValue>.+)\""
         ]
       }
     ]

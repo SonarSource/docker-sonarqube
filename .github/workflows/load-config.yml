@@ -1,0 +1,85 @@
+name: Load Configuration
+
+on:
+  workflow_call:
+    outputs:
+      current_version:
+        description: "Current SonarQube version"
+        value: ${{ jobs.load-config.outputs.current_version }}
+      previous_lta_version:
+        description: "Previous LTA version"
+        value: ${{ jobs.load-config.outputs.previous_lta_version }}
+      community_build_version:
+        description: "Community build version"
+        value: ${{ jobs.load-config.outputs.community_build_version }}
+      staging_image:
+        description: "Staging image name"
+        value: ${{ jobs.load-config.outputs.staging_image }}
+      public_image:
+        description: "Public image name"
+        value: ${{ jobs.load-config.outputs.public_image }}
+      gcp_public_registry:
+        description: "GCP public registry"
+        value: ${{ jobs.load-config.outputs.gcp_public_registry }}
+      gcp_staging_registry:
+        description: "GCP staging registry"
+        value: ${{ jobs.load-config.outputs.gcp_staging_registry }}
+      gcp_public_product:
+        description: "GCP public product name"
+        value: ${{ jobs.load-config.outputs.gcp_public_product }}
+      gcp_staging_product:
+        description: "GCP staging product name"
+        value: ${{ jobs.load-config.outputs.gcp_staging_product }}
+
+jobs:
+  load-config:
+    runs-on: ubuntu-latest
+    outputs:
+      current_version: ${{ steps.config.outputs.current_version }}
+      previous_lta_version: ${{ steps.config.outputs.previous_lta_version }}
+      community_build_version: ${{ steps.config.outputs.community_build_version }}
+      staging_image: ${{ steps.config.outputs.staging_image }}
+      public_image: ${{ steps.config.outputs.public_image }}
+      gcp_public_registry: ${{ steps.config.outputs.gcp_public_registry }}
+      gcp_staging_registry: ${{ steps.config.outputs.gcp_staging_registry }}
+      gcp_public_product: ${{ steps.config.outputs.gcp_public_product }}
+      gcp_staging_product: ${{ steps.config.outputs.gcp_staging_product }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Load configuration
+        id: config
+        run: |
+          # Install yq for YAML parsing
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+          
+          # Extract values from github_env.yaml
+          CURRENT_VERSION=$(yq '.versions.current' .github/github_env.yaml)
+          PREVIOUS_LTA_VERSION=$(yq '.versions.previous_lta' .github/github_env.yaml)
+          COMMUNITY_BUILD_VERSION=$(yq '.versions.community_build' .github/github_env.yaml)
+          STAGING_IMAGE=$(yq '.images.staging' .github/github_env.yaml)
+          PUBLIC_IMAGE=$(yq '.images.public' .github/github_env.yaml)
+          GCP_PUBLIC_REGISTRY=$(yq '.registries.gcp_public' .github/github_env.yaml)
+          GCP_STAGING_REGISTRY=$(yq '.registries.gcp_staging' .github/github_env.yaml)
+          GCP_PUBLIC_PRODUCT=$(yq '.products.gcp_public_name' .github/github_env.yaml)
+          GCP_STAGING_PRODUCT=$(yq '.products.gcp_staging_name' .github/github_env.yaml)
+          
+          # Set outputs
+          echo "current_version=${CURRENT_VERSION}" >> $GITHUB_OUTPUT
+          echo "previous_lta_version=${PREVIOUS_LTA_VERSION}" >> $GITHUB_OUTPUT
+          echo "community_build_version=${COMMUNITY_BUILD_VERSION}" >> $GITHUB_OUTPUT
+          echo "staging_image=${STAGING_IMAGE}" >> $GITHUB_OUTPUT
+          echo "public_image=${PUBLIC_IMAGE}" >> $GITHUB_OUTPUT
+          echo "gcp_public_registry=${GCP_PUBLIC_REGISTRY}" >> $GITHUB_OUTPUT
+          echo "gcp_staging_registry=${GCP_STAGING_REGISTRY}" >> $GITHUB_OUTPUT
+          echo "gcp_public_product=${GCP_PUBLIC_PRODUCT}" >> $GITHUB_OUTPUT
+          echo "gcp_staging_product=${GCP_STAGING_PRODUCT}" >> $GITHUB_OUTPUT
+          
+          # Debug output
+          echo "Loaded configuration:"
+          echo "  Current version: ${CURRENT_VERSION}"
+          echo "  Previous LTA: ${PREVIOUS_LTA_VERSION}"
+          echo "  Community build: ${COMMUNITY_BUILD_VERSION}"
