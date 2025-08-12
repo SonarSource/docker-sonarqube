@@ -1,0 +1,48 @@
+name: Multi-arch build commercial editions
+
+on:
+  push:
+    paths:
+      - 'commercial-editions/**/*'
+      - '.cirrus/multi-arch-build.sh'
+      - '.github/workflows/multi-arch-build-commercial-editions.yml'
+      - '.github/workflows/multi-arch-build-template.yml'
+      - '.github/github_env.yaml'
+  pull_request:
+    paths:
+      - 'commercial-editions/**/*'
+      - '.cirrus/multi-arch-build.sh'
+      - '.github/workflows/multi-arch-build-commercial-editions.yml'
+      - '.github/workflows/multi-arch-build-template.yml'
+      - '.github/github_env.yaml'
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  load-config:
+    uses: ./.github/workflows/load-config.yml
+
+  multi-arch-build-commercial-editions:
+    needs: load-config
+    name: Build commercial editions (${{ matrix.version }})
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/multi-arch-build-template.yml
+    strategy:
+      matrix:
+        include:
+          - version: commercial-editions/developer
+            edition: developer
+          - version: commercial-editions/enterprise
+            edition: enterprise
+          - version: commercial-editions/datacenter/app
+            edition: datacenter-app
+          - version: commercial-editions/datacenter/search
+            edition: datacenter-search
+    with:
+      staging_image_name: ${{ needs.load-config.outputs.staging_image }}
+      tag: ${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}
+      version: ${{ matrix.version }}
+      runs_on: ubuntu-latest-large

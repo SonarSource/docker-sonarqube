@@ -1,0 +1,34 @@
+name: Multi-arch test community build
+
+on:
+  workflow_run:
+    workflows:
+      - "Multi-arch build community build"
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  load-config:
+    uses: ./.github/workflows/load-config.yml
+
+  multi-arch-test-community-build:
+    needs: load-config
+    name: Test community build (${{ matrix.test_name }}, ${{ matrix.architecture }})
+    permissions:
+      id-token: write
+      contents: read
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push' }}
+    uses: ./.github/workflows/multi-arch-test-template.yml
+    strategy:
+      matrix:
+        architecture: [amd64, arm64]
+        include:
+          - test_name: docker
+            edition: community
+    with:
+      staging_image_name: ${{ needs.load-config.outputs.staging_image }}
+      tag: ${{ needs.load-config.outputs.community_build_version }}-master-${{ matrix.edition }}
+      test_name: ${{ matrix.test_name }}
+      architecture: ${{ matrix.architecture }}
+      runs_on: ${{ matrix.architecture == 'arm64' && 'ubuntu-24.04-arm-large' || 'ubuntu-24.04-large' }}
