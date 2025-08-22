@@ -7,7 +7,7 @@ on:
 jobs:
   PullRequestMerged_job:
     name: Pull Request Merged
-    runs-on: ubuntu-latest-large
+    runs-on: github-ubuntu-latest-s
     permissions:
       id-token: write
       pull-requests: read

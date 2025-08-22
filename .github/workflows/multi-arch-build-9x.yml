@@ -47,4 +47,4 @@ jobs:
       staging_image_name: ${{ needs.load-config.outputs.staging_image }}
       tag: ${{ needs.load-config.outputs.previous_lta_version }}-master-${{ matrix.edition }}
       version: ${{ matrix.version }}
-      runs_on: ubuntu-latest-large
+      runs_on: github-ubuntu-latest-s

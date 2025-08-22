@@ -10,7 +10,7 @@ on:
 jobs:
   release:
     name: Upload Release Asset
-    runs-on: ubuntu-latest-large
+    runs-on: github-ubuntu-latest-s
     steps:
       - id: secrets
         uses: SonarSource/vault-action-wrapper@v3
