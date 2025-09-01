@@ -20,7 +20,7 @@ env:
   PREVIOUS_LTA_VERSION: 9.9.9
 
   # Must be in the format YY.MM.0.###### where ###### is the build number
-  COMMUNITY_BUILD_VERSION: 25.8.0.112029
+  COMMUNITY_BUILD_VERSION: 25.9.0.112764
 
 build_server_hw_template: &BUILD_SERVER_HW_TEMPLATE
   type: t2.xlarge

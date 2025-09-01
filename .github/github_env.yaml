@@ -4,7 +4,7 @@
 versions:
   current: "2025.4.2"
   previous_lta: "9.9.9"
-  community_build: "25.8.0.112029"
+  community_build: "25.9.0.112764"
 
 images:
   staging: "sonarsource/sonarqube"
