@@ -142,7 +142,6 @@ services:
       POSTGRES_DB: sonar
     volumes:
       - postgresql:/var/lib/postgresql
-      - postgresql_data:/var/lib/postgresql/data
   proxy:
     image: jwilder/nginx-proxy
     ports:
@@ -184,4 +183,3 @@ volumes:
   search_temp-3:
   sonarqube_temp:
   postgresql:
-  postgresql_data:

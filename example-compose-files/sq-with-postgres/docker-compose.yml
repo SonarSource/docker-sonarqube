@@ -35,7 +35,6 @@ services:
       POSTGRES_DB: sonar
     volumes:
       - postgresql:/var/lib/postgresql
-      - postgresql_data:/var/lib/postgresql/data
     networks:
       - ${NETWORK_TYPE:-ipv4}
 
@@ -45,7 +44,6 @@ volumes:
   sonarqube_extensions:
   sonarqube_logs:
   postgresql:
-  postgresql_data:
 
 networks:
   ipv4:
