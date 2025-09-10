@@ -7,7 +7,7 @@ on:
 jobs:
   PullRequestCreated_job:
     name: Pull Request Created
-    runs-on: ubuntu-latest-large
+    runs-on: github-ubuntu-latest-s
     permissions:
       id-token: write
     # For external PR, ticket should be created manually

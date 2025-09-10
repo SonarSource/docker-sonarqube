@@ -42,7 +42,7 @@ on:
 jobs:
   gcp-build:
     name: GCP build ${{ inputs.build_type }} (${{ inputs.component_type }})
-    runs-on: ubuntu-24.04-large
+    runs-on: github-ubuntu-latest-s
 
     steps:
       - name: Checkout repository

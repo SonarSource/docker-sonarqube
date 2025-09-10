@@ -34,7 +34,7 @@ on:
 jobs:
   mend-scan:
     name: Mend scan (${{ matrix.tag }})
-    runs-on: ubuntu-24.04-large
+    runs-on: github-ubuntu-latest-s
     strategy:
       matrix:
         tag: ${{ fromJSON(inputs.tags) }}

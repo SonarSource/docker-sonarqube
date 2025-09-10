@@ -23,7 +23,7 @@ on:
         required: false
         type: string
         description: "The runner to use"
-        default: "ubuntu-latest-large"
+        default: "github-ubuntu-latest-s"
 
 jobs:
   multi-arch-test:
