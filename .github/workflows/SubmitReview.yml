@@ -7,7 +7,7 @@ on:
 jobs:
   SubmitReview_job:
     name: Submit Review
-    runs-on: ubuntu-latest-large
+    runs-on: github-ubuntu-latest-s
     permissions:
       id-token: write
       pull-requests: read
