@@ -5,6 +5,10 @@
             "isLatest": true
         },
         {
+            "branch": "origin/release/2025.4",
+            "type": "commercialEditions"
+        },
+        {
             "branch": "origin/release/2025.1",
             "type": "commercialEditions",
             "isLatestLTATag": true

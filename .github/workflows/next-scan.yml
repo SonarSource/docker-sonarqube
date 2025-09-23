@@ -16,7 +16,7 @@ jobs:
   go-test:
     uses: ./.github/workflows/test-official-images-generator.yml
   next:
-    runs-on: ubuntu-latest-large
+    runs-on: github-ubuntu-latest-s
     needs: go-test
     permissions:
       id-token: write

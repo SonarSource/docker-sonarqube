@@ -3,7 +3,8 @@
     "baseBranches": [
       "master",
       "main",
-      "release/2025.1"
+      "release/2025.1",
+      "release/2025.4"
     ],
     "rollbackPrs": true,
     "labels": ["docker-release"],
@@ -42,7 +43,13 @@
         "matchBaseBranches": ["release/2025.1"],
         "matchUpdateTypes": ["major","minor"],
         "enabled": "false"
-      }
+      },
+      {
+        "matchManagers": ["custom.regex"],
+        "matchBaseBranches": ["release/2025.4"],
+        "matchUpdateTypes": ["major","minor"],
+        "enabled": "false"
+      },
     ],
     "customManagers": [
       {
