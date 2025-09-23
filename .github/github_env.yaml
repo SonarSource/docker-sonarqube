@@ -2,7 +2,7 @@
 # This file contains all version numbers and common configurations used across workflows
 
 versions:
-  current: "2025.4.2"
+  current: "2025.5.0"
   previous_lta: "9.9.9"
   community_build: "25.9.0.112764"
 
