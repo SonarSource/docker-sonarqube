@@ -16,10 +16,5 @@
         {
             "branch": "origin/master",
             "type": "communityBuild"
-        },
-        {
-            "branch": "origin/master",
-            "type": "legacy",
-            "isLatestLTSTag": true
         }
 ]
