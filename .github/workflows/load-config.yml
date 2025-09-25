@@ -6,9 +6,6 @@ on:
       current_version:
         description: "Current SonarQube version"
         value: ${{ jobs.load-config.outputs.current_version }}
-      previous_lta_version:
-        description: "Previous LTA version"
-        value: ${{ jobs.load-config.outputs.previous_lta_version }}
       community_build_version:
         description: "Community build version"
         value: ${{ jobs.load-config.outputs.community_build_version }}
@@ -36,7 +33,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       current_version: ${{ steps.config.outputs.current_version }}
-      previous_lta_version: ${{ steps.config.outputs.previous_lta_version }}
       community_build_version: ${{ steps.config.outputs.community_build_version }}
       staging_image: ${{ steps.config.outputs.staging_image }}
       public_image: ${{ steps.config.outputs.public_image }}
@@ -58,7 +54,6 @@ jobs:
           
           # Extract values from github_env.yaml
           CURRENT_VERSION=$(yq '.versions.current' .github/github_env.yaml)
-          PREVIOUS_LTA_VERSION=$(yq '.versions.previous_lta' .github/github_env.yaml)
           COMMUNITY_BUILD_VERSION=$(yq '.versions.community_build' .github/github_env.yaml)
           STAGING_IMAGE=$(yq '.images.staging' .github/github_env.yaml)
           PUBLIC_IMAGE=$(yq '.images.public' .github/github_env.yaml)
@@ -69,7 +64,6 @@ jobs:
           
           # Set outputs
           echo "current_version=${CURRENT_VERSION}" >> $GITHUB_OUTPUT
-          echo "previous_lta_version=${PREVIOUS_LTA_VERSION}" >> $GITHUB_OUTPUT
           echo "community_build_version=${COMMUNITY_BUILD_VERSION}" >> $GITHUB_OUTPUT
           echo "staging_image=${STAGING_IMAGE}" >> $GITHUB_OUTPUT
           echo "public_image=${PUBLIC_IMAGE}" >> $GITHUB_OUTPUT
@@ -81,5 +75,4 @@ jobs:
           # Debug output
           echo "Loaded configuration:"
           echo "  Current version: ${CURRENT_VERSION}"
-          echo "  Previous LTA: ${PREVIOUS_LTA_VERSION}"
           echo "  Community build: ${COMMUNITY_BUILD_VERSION}"

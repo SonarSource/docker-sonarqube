@@ -18,7 +18,7 @@ jobs:
     uses: ./.github/workflows/mend-scan-template.yml
     with:
       image_name: ${{ needs.load-config.outputs.public_image }}
-      tags: '["${{ needs.load-config.outputs.previous_lta_version }}-datacenter-app", "${{ needs.load-config.outputs.current_version }}-datacenter-app"]'
+      tags: '["${{ needs.load-config.outputs.current_version }}-datacenter-app"]'
       scan_type: public
       platform: amd64
       ws_product_name: SonarSource/docker-sonarqube

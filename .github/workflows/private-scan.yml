@@ -3,7 +3,6 @@ name: Private scan
 on:
   workflow_run:
     workflows:
-      - "Multi-arch build 9.x"
       - "Multi-arch build commercial editions"
     types:
       - completed
@@ -22,7 +21,7 @@ jobs:
     uses: ./.github/workflows/mend-scan-template.yml
     with:
       image_name: ${{ needs.load-config.outputs.staging_image }}
-      tags: '["${{ needs.load-config.outputs.previous_lta_version }}-master-datacenter-app", "${{ needs.load-config.outputs.current_version }}-master-datacenter-app"]'
+      tags: '["${{ needs.load-config.outputs.current_version }}-master-datacenter-app"]'
       scan_type: private
       platform: amd64
       ws_product_name: SonarSource/docker-sonarqube
