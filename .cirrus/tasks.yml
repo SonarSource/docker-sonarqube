@@ -16,8 +16,6 @@ env:
   GCLOUD_STAGING_REGISTRY: gcr.io/sonarqube-marketplace-provider
   GCLOUD_STAGING_PRODUCT_NAME: sonarqube-dce-staging
   CURRENT_VERSION: 2025.5.0
-  # We keep the previous LTA support for the next 6 months
-  PREVIOUS_LTA_VERSION: 9.9.9
 
   # Must be in the format YY.MM.0.###### where ###### is the build number
   COMMUNITY_BUILD_VERSION: 25.9.0.112764
@@ -94,22 +92,6 @@ multi_arch_build_task_template: &multi_arch_build_task_template
     - echo "Build the ${STAGING_IMAGE_NAME}:${tag} image supporting two architectures, linux/amd64 and linux/arm64"
     - .cirrus/multi-arch-build.sh ${STAGING_IMAGE_NAME} ${tag} ${version}
 
-multi_arch_build_9_x_task:
-  <<: *multi_arch_build_task_template
-  skip: "!changesInclude('9/**/*') && !changesInclude('.cirrus/*')"
-  env:
-    matrix:
-      - version: 9/community
-        tag: $PREVIOUS_LTA_VERSION-master-community
-      - version: 9/developer
-        tag: $PREVIOUS_LTA_VERSION-master-developer
-      - version: 9/enterprise
-        tag: $PREVIOUS_LTA_VERSION-master-enterprise
-      - version: 9/datacenter/app
-        tag: $PREVIOUS_LTA_VERSION-master-datacenter-app
-      - version: 9/datacenter/search
-        tag: $PREVIOUS_LTA_VERSION-master-datacenter-search
-
 multi_arch_build_commercial_editions_task:
   <<: *multi_arch_build_task_template
   alias: multi_arch_build_sonarqube_server
@@ -146,30 +128,6 @@ multi_arch_test_task_template: &multi_arch_test_task_template
     - sysctl -w vm.max_map_count=524288 # set the recommended memory for ES
     - ulimit -n 131072 # set the recommended number of opened file descriptors for ES
     - ./run-tests.sh "${STAGING_IMAGE_NAME}:${tag}" "${test_name}"
-
-multi_arch_test_9_x_task:
-  <<: *multi_arch_test_task_template
-  skip: "!changesInclude('9/**/*') && !changesInclude('.cirrus/*')"
-  matrix:
-    - env:
-        CIRRUS_ARCH: arm64
-        INSTANCE_TYPE: t4g.large
-        AMI_NAME: docker-builder-arm64-v*
-    - env:
-        CIRRUS_ARCH: amd64
-        INSTANCE_TYPE: t3.large
-        AMI_NAME: docker-builder-v*
-  env:
-    matrix:
-      - test_name: docker
-        tag: $PREVIOUS_LTA_VERSION-master-community
-      - test_name: docker
-        tag: $PREVIOUS_LTA_VERSION-master-developer
-      - test_name: docker
-        tag: $PREVIOUS_LTA_VERSION-master-enterprise
-      - test_name: docker-compose
-        tag: $PREVIOUS_LTA_VERSION-master-datacenter
-  depends_on: multi_arch_build_9_x
 
 multi_arch_test_commercial_editions_task:
   <<: *multi_arch_test_task_template
