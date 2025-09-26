@@ -35,7 +35,7 @@ ci_instance_scanner: &CI_SCANNER
   <<: *BUILD_SERVER_HW_TEMPLATE
 
 multi_arch_build_gcp_prod_task:
-  only_if: $CIRRUS_CRON == 'nightly-mend-scan' || $TRIGGER == 'PUSH_GCP_IMAGES' || $CIRRUS_RELEASE != ''
+  only_if: $TRIGGER == 'PUSH_GCP_IMAGES' || $CIRRUS_RELEASE != ''
   ec2_instance:
     <<: *VM_TEMPLATE
   pull_public_images_script:
@@ -54,7 +54,7 @@ multi_arch_build_gcp_prod_task:
     - echo -e "FROM ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-search" | docker buildx build --platform linux/amd64 --provenance=false --annotation "manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog" --tag "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_VERSION}" --tag "${GCLOUD_REGISTRY}/${GCLOUD_PRODUCT_NAME}/sonarqube-dce-search:${CURRENT_MINOR_VERSION}" --push -
 
 multi_arch_build_gcp_staging_task:
-  only_if: $CIRRUS_CRON == 'nightly-mend-scan' || $TRIGGER == 'PUSH_GCP_STAGING_IMAGES' || ($CIRRUS_CHANGE_MESSAGE =~ '.*Update docker-sonarqube-server-releases.*' && $CIRRUS_BASE_BRANCH == '')
+  only_if: $TRIGGER == 'PUSH_GCP_STAGING_IMAGES' || ($CIRRUS_CHANGE_MESSAGE =~ '.*Update docker-sonarqube-server-releases.*' && $CIRRUS_BASE_BRANCH == '')
   env:
     EXTRA_DOCKER_BUILD_ARGS: "--provenance=false --annotation=manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog"
     matrix:
@@ -96,7 +96,7 @@ multi_arch_build_task_template: &multi_arch_build_task_template
 
 multi_arch_build_9_x_task:
   <<: *multi_arch_build_task_template
-  skip: "!changesInclude('9/**/*') && !changesInclude('.cirrus/*') && $CIRRUS_CRON != 'nightly-mend-scan'"
+  skip: "!changesInclude('9/**/*') && !changesInclude('.cirrus/*')"
   env:
     matrix:
       - version: 9/community
@@ -113,7 +113,7 @@ multi_arch_build_9_x_task:
 multi_arch_build_commercial_editions_task:
   <<: *multi_arch_build_task_template
   alias: multi_arch_build_sonarqube_server
-  skip: "!changesInclude('commercial-editions/**/*') && !changesInclude('.cirrus/*')  && $CIRRUS_CRON != 'nightly-mend-scan'"
+  skip: "!changesInclude('commercial-editions/**/*') && !changesInclude('.cirrus/*')"
   env:
     matrix:
       - version: commercial-editions/developer
@@ -127,50 +127,11 @@ multi_arch_build_commercial_editions_task:
 
 multi_arch_build_community_build_task:
   <<: *multi_arch_build_task_template
-  skip: "!changesInclude('community-build/*') && !changesInclude('.cirrus/*')  && $CIRRUS_CRON != 'nightly-mend-scan'"
+  skip: "!changesInclude('community-build/*') && !changesInclude('.cirrus/*')"
   env:
     matrix:
       - version: community-build
         tag: $COMMUNITY_BUILD_VERSION-master-community
-
-private_scan_task:
-  env:
-    platform: amd64
-    MEND_API_KEY: VAULT[development/kv/data/mend data.apikey]
-    WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
-    matrix:
-      - tag: ${PREVIOUS_LTA_VERSION}-master-datacenter-app
-      - tag: ${CURRENT_VERSION}-master-datacenter-app
-  ec2_instance:
-    <<: *CI_SCANNER
-  login_script:
-    - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
-  scan_script:
-    - echo "docker.includes=${tag}" >> .cirrus/wss-unified-agent.config
-    - echo "Scan the ${STAGING_IMAGE_NAME}:${tag} image supporting linux/${platform}"
-    - .cirrus/pull.sh ${STAGING_IMAGE_NAME} ${tag} ${platform}
-    - java -jar /usr/local/bin/wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${STAGING_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
-  depends_on:
-    - multi_arch_build_9_x
-    - multi_arch_build_sonarqube_server
-
-public_scan_task:
-  only_if: $CIRRUS_CRON == 'nightly-mend-scan'
-  env:
-    platform: amd64
-    MEND_API_KEY: VAULT[development/kv/data/mend data.apikey]
-    WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
-    matrix:
-      - tag: $PREVIOUS_LTA_VERSION-datacenter-app
-      - tag: $CURRENT_VERSION-datacenter-app
-  ec2_instance:
-    <<: *CI_SCANNER
-  scan_script:
-    - echo "docker.includes=${tag}" >> .cirrus/wss-unified-agent.config
-    - echo "Scan the ${PUBLIC_IMAGE_NAME}:${tag} image"
-    - docker pull "${PUBLIC_IMAGE_NAME}:${tag}"
-    - .cirrus/pull.sh ${PUBLIC_IMAGE_NAME} ${tag} ${platform}
-    - java -jar /usr/local/bin/wss-unified-agent.jar -c .cirrus/wss-unified-agent.config -apiKey $MEND_API_KEY -product ${WS_PRODUCTNAME} -project ${PUBLIC_IMAGE_NAME}:${tag} -wss.url ${WS_WSS_URL} -docker.scanImages true
 
 multi_arch_test_task_template: &multi_arch_test_task_template
   ec2_instance:
@@ -188,7 +149,7 @@ multi_arch_test_task_template: &multi_arch_test_task_template
 
 multi_arch_test_9_x_task:
   <<: *multi_arch_test_task_template
-  skip: "!changesInclude('9/**/*') && !changesInclude('.cirrus/*')  && $CIRRUS_CRON != 'nightly-mend-scan'"
+  skip: "!changesInclude('9/**/*') && !changesInclude('.cirrus/*')"
   matrix:
     - env:
         CIRRUS_ARCH: arm64
@@ -212,7 +173,7 @@ multi_arch_test_9_x_task:
 
 multi_arch_test_commercial_editions_task:
   <<: *multi_arch_test_task_template
-  skip: "!changesInclude('commercial-editions/**/*') && !changesInclude('.cirrus/*')  && $CIRRUS_CRON != 'nightly-mend-scan'"
+  skip: "!changesInclude('commercial-editions/**/*') && !changesInclude('.cirrus/*')"
   matrix:
     - env:
         CIRRUS_ARCH: arm64
@@ -234,7 +195,7 @@ multi_arch_test_commercial_editions_task:
 
 multi_arch_test_community_build_task:
   <<: *multi_arch_test_task_template
-  skip: "!changesInclude('community-build/*') && !changesInclude('.cirrus/*')  && $CIRRUS_CRON != 'nightly-mend-scan'"
+  skip: "!changesInclude('community-build/*') && !changesInclude('.cirrus/*')"
   matrix:
     - env:
         CIRRUS_ARCH: arm64
