@@ -104,14 +104,6 @@ multi_arch_build_commercial_editions_task:
       - version: commercial-editions/datacenter/search
         tag: ${CURRENT_VERSION}-master-datacenter-search
 
-multi_arch_build_community_build_task:
-  <<: *multi_arch_build_task_template
-  skip: "!changesInclude('community-build/*') && !changesInclude('.cirrus/*')"
-  env:
-    matrix:
-      - version: community-build
-        tag: $COMMUNITY_BUILD_VERSION-master-community
-
 multi_arch_test_task_template: &multi_arch_test_task_template
   ec2_instance:
     <<: *VM_TEMPLATE
