@@ -15,11 +15,5 @@
             "branch": "origin/master",
             "commitSha": "0330278146e14fdbde39328ab2c9e10a66f9fbe8",
             "type": "communityBuild"
-        },
-        {
-            "branch": "origin/master",
-            "commitSha": "0330278146e14fdbde39328ab2c9e10a66f9fbe8",
-            "type": "legacy",
-            "isLatestLTSTag": true
         }
 ]

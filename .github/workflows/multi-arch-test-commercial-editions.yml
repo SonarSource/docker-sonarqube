@@ -46,4 +46,4 @@ jobs:
       tag: ${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}
       test_name: ${{ matrix.test_name }}
       architecture: ${{ matrix.architecture }}
-      runs_on: ${{ matrix.architecture == 'arm64' && 'ubuntu-24.04-arm-large' || 'ubuntu-24.04-large' }}
+      runs_on: ${{ matrix.architecture == 'arm64' && 'github-ubuntu-24.04-arm-s' || 'github-ubuntu-latest-s' }}
