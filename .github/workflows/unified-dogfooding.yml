@@ -1,0 +1,32 @@
+name: Unified Dogfooding scans
+on:
+  schedule:
+    # Run the workflow every day at 04:00 UTC
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+  pull_request:
+jobs:
+  build:
+    runs-on: github-ubuntu-latest-s
+    name: Build and run shadow scans
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
+        with:
+          version: 2025.7.12
+      - uses: SonarSource/ci-github-actions/build-maven@v1
+        with:
+          run-shadow-scans: true
+
+      - name: Run IRIS Analysis
+        uses: SonarSource/unified-dogfooding-actions/run-iris@v1
+        with:
+          primary_project_key: "SonarSource_docker-sonarqube_AYcnOvlJTpBOcQuGEdI5"
+          primary_platform: "Next"
+          shadow1_project_key: "SonarSource_docker-sonarqube_AYcnOvlJTpBOcQuGEdI5"
+          shadow1_platform: "SQC-EU"
+          shadow2_project_key: "SonarSource_docker-sonarqube_AYcnOvlJTpBOcQuGEdI5"
+          shadow2_platform: "SQC-US"
