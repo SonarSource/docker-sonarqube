@@ -14,7 +14,7 @@ on:
       version:
         required: true
         type: string
-        description: "The version/path to build (e.g., 9/community, commercial-editions/developer)"
+        description: "The version/path to build (e.g., commercial-editions/developer)"
       extra_docker_build_args:
         required: false
         type: string
