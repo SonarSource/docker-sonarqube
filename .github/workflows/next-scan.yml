@@ -14,7 +14,7 @@ permissions:
   contents: read
 jobs:
   go-test:
-    uses: ./.github/workflows/test-official-images-generator.yml
+    uses: ./.github/workflows/go-test-template.yml
   next:
     runs-on: github-ubuntu-latest-s
     needs: go-test

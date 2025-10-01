@@ -113,8 +113,8 @@ jobs:
           EXTRA_DOCKER_BUILD_ARGS: ${{ inputs.extra_docker_build_args }}
         run: |
           echo "Build and promote the ${STAGING_IMAGE_NAME}:${TAG} and ${STAGING_IMAGE_NAME}:${MINOR_TAG} image supporting two architectures, linux/amd64 and linux/arm64"
-          .cirrus/multi-arch-build.sh "${STAGING_IMAGE_NAME}" "${TAG}" "${VERSION}"
-          .cirrus/multi-arch-build.sh "${STAGING_IMAGE_NAME}" "${MINOR_TAG}" "${VERSION}"
+          .github/workflows/scripts/multi-arch-build.sh "${STAGING_IMAGE_NAME}" "${TAG}" "${VERSION}"
+          .github/workflows/scripts/multi-arch-build.sh "${STAGING_IMAGE_NAME}" "${MINOR_TAG}" "${VERSION}"
 
       - name: Promote datacenter image to GCP production
         if: ${{ inputs.build_type == 'production' }}
