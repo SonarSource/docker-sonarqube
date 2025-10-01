@@ -1,8 +1,10 @@
-name: GCP build production
+name: Release - Production Deployment
 
 on:
+  release:
+    types: [published]
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
   workflow_dispatch:
     inputs:
       trigger_type:
@@ -13,8 +15,6 @@ on:
         options:
           - dry-run
           - PUSH_GCP_PROD_IMAGES
-  release:
-    types: [published]
 
 jobs:
   load-config:
@@ -22,14 +22,14 @@ jobs:
 
   gcp-build-production-app:
     needs: load-config
-    permissions:
-      id-token: write
-      contents: read
-    name: GCP build production (app)
     if: |
       github.event_name == 'schedule' ||
       github.event_name == 'release' ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_PROD_IMAGES')
+    permissions:
+      id-token: write
+      contents: read
+    name: GCP build production (app)
     uses: ./.github/workflows/gcp-build-template.yml
     with:
       gcp_registry: ${{ needs.load-config.outputs.gcp_public_registry }}
@@ -42,14 +42,14 @@ jobs:
 
   gcp-build-production-search:
     needs: load-config
-    permissions:
-      id-token: write
-      contents: read
-    name: GCP build production (search)
     if: |
       github.event_name == 'schedule' ||
       github.event_name == 'release' ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_PROD_IMAGES')
+    permissions:
+      id-token: write
+      contents: read
+    name: GCP build production (search)
     uses: ./.github/workflows/gcp-build-template.yml
     with:
       gcp_registry: ${{ needs.load-config.outputs.gcp_public_registry }}
