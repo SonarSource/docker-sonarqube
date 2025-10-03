@@ -3,7 +3,7 @@
 
 versions:
   current: "2025.5.0"
-  community_build: "25.9.0.112764"
+  community_build: "25.10.0.114319"
 
 images:
   staging: "sonarsource/sonarqube"

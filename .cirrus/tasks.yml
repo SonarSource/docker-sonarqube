@@ -18,7 +18,7 @@ env:
   CURRENT_VERSION: 2025.5.0
 
   # Must be in the format YY.MM.0.###### where ###### is the build number
-  COMMUNITY_BUILD_VERSION: 25.9.0.112764
+  COMMUNITY_BUILD_VERSION: 25.10.0.114319
 
 build_server_hw_template: &BUILD_SERVER_HW_TEMPLATE
   type: t2.xlarge
