@@ -8,39 +8,39 @@ port=9000
 
 print_usage() {
     cat << EOF
-usage: $0 [IMAGE...]
+usage: ${0} [IMAGE...]
 
 examples:
-       $0
-       $0 7.4-community
-       $0 7.4-community-alpine
+       ${0}
+       ${0} 7.4-community
+       ${0} 7.4-community-alpine
 EOF
 }
 
 warn() {
-    echo "[warn] $@" >&2
+    echo "[warn] $*" >&2
 }
 
 fatal() {
-    echo "[error] $@" >&2
+    echo "[error] $*" >&2
     exit 1
 }
 
 require() {
     local prog missing=()
     for prog; do
-        if ! type "$prog" &>/dev/null; then
-            missing+=("$prog")
+        if ! type "${prog}" &>/dev/null; then
+            missing+=("${prog}")
         fi
     done
 
-    [[ ${#missing[@]} = 0 ]] || fatal "could not find required programs on the path: ${missing[@]}"
+    [[ ${#missing[@]} = 0 ]] || fatal "could not find required programs on the path: ${missing[*]}"
 }
 
 require docker
 
 for arg; do
-    if [[ $arg == "-h" ]] || [[ $arg == "--help" ]]; then
+    if [[ "${arg}" == "-h" ]] || [[ "${arg}" == "--help" ]]; then
         print_usage
         exit
     fi
@@ -51,12 +51,12 @@ if [[ $# = 0 ]]; then
     exit 1
 fi
 
-image=$1
-image=${image%/}
-if ! [[ -d "$image" ]]; then
-    warn "not a valid image, directory does not exist: $image"
+image="${1}"
+image="${image%/}"
+if ! [[ -d "${image}" ]]; then
+    warn "not a valid image, directory does not exist: ${image}"
     exit 1
 fi
-name=sqtest:$image
-docker build -t "$name" -f "$image/Dockerfile" "$PWD/$image"
-docker run -p $port:9000 "$name"
+name="sqtest:${image}"
+docker build -t "${name}" -f "${image}/Dockerfile" "${PWD}/${image}"
+docker run -p "${port}:9000" "${name}"

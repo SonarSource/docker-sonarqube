@@ -5,7 +5,7 @@ shopt -s globstar
 # Reset the Option Index in case getopts has been used previously in the same shell.
 OPTIND=1 
 
-function show_help() {
+show_help() {
     echo "update.sh help"
     echo ""
     echo "This Script will update a given Version in all Dockerfiles present under the current directory"
@@ -29,10 +29,10 @@ NEW_VERSION=""
 while getopts ":h:o:n:" o; do
     case "${o}" in
         o)
-            OLD_VERSION=${OPTARG}
+            OLD_VERSION="${OPTARG}"
             ;;
         n)
-            NEW_VERSION=${OPTARG}
+            NEW_VERSION="${OPTARG}"
             ;;
         h)
             show_help
@@ -45,5 +45,5 @@ done
 shift $((OPTIND-1))
 
 for i in ./**/Dockerfile; do 
-    sed -i "s/${OLD_VERSION}/${NEW_VERSION}/g" $i
+    sed -i "s/${OLD_VERSION}/${NEW_VERSION}/g" "${i}"
 done

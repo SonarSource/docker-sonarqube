@@ -7,13 +7,13 @@ IP=$(ip -6 address show scope global | grep inet | awk '{ print $2 }' | head -n 
 
 declare -a sq_opts=()
 set_prop() {
-  if [[ "$2" ]]; then
-    sq_opts+=("-D$1=$2")
+  if [[ "${2}" ]]; then
+    sq_opts+=("-D${1}=${2}")
   fi
 }
 
 # if nothing is passed, assume we want to run sonarqube server
-if [[ "$#" == 0 ]]; then
+if [[ $# == 0 ]]; then
   set -- /opt/sonarqube/docker/sonar.sh
 fi
 
@@ -22,7 +22,7 @@ if [[ "${1:0:1}" = '-' ]]; then
     set -- /opt/sonarqube/docker/sonar.sh "$@"
 fi
 
-if [[ "$1" = '/opt/sonarqube/docker/sonar.sh' ]]; then
+if [[ "${1}" = '/opt/sonarqube/docker/sonar.sh' ]]; then
 
     #
     # Set mandatory properties
