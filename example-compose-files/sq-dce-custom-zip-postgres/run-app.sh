@@ -7,7 +7,7 @@ IP=$(ip -6 address show scope global | grep inet | awk '{ print $2 }' | head -n 
 
 declare -a sq_opts=()
 set_prop() {
-  if [ "$2" ]; then
+  if [[ "$2" ]]; then
     sq_opts+=("-D$1=$2")
   fi
 }
