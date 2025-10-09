@@ -6,9 +6,6 @@ concurrency:
 
 on:
   push:
-    branches: 
-      - master
-      - 'release/**'
     paths:
       - 'commercial-editions/**/*'
       - 'community-build/*'
@@ -175,9 +172,6 @@ jobs:
   # GCP staging builds - only on master or release branches, after tests pass
   gcp-build-staging-app:
     needs: [load-config, test-commercial-editions, test-community-build]
-    if: |
-      (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/')) ||
-      (always() && github.event_name == 'workflow_dispatch' && inputs.run_gcp_staging)
     permissions:
       id-token: write
       contents: read
@@ -194,9 +188,6 @@ jobs:
 
   gcp-build-staging-search:
     needs: [load-config, test-commercial-editions, test-community-build]
-    if: |
-      (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/')) ||
-      (always() && github.event_name == 'workflow_dispatch' && inputs.run_gcp_staging)
     permissions:
       id-token: write
       contents: read

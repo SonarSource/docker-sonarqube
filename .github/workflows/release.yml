@@ -1,6 +1,7 @@
 name: Release - Production Deployment
 
 on:
+  push:
   release:
     types: [published]
   schedule:
@@ -22,10 +23,6 @@ jobs:
 
   gcp-build-production-app:
     needs: load-config
-    if: |
-      github.event_name == 'schedule' ||
-      github.event_name == 'release' ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_PROD_IMAGES')
     permissions:
       id-token: write
       contents: read
@@ -42,10 +39,6 @@ jobs:
 
   gcp-build-production-search:
     needs: load-config
-    if: |
-      github.event_name == 'schedule' ||
-      github.event_name == 'release' ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_PROD_IMAGES')
     permissions:
       id-token: write
       contents: read
