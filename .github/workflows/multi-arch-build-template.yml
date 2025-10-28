@@ -68,4 +68,4 @@ jobs:
           EXTRA_DOCKER_BUILD_ARGS: ${{ inputs.extra_docker_build_args }}
         run: |
           echo "Build the ${STAGING_IMAGE_NAME}:${TAG} image supporting two architectures, linux/amd64 and linux/arm64"
-          .cirrus/multi-arch-build.sh "${STAGING_IMAGE_NAME}" "${TAG}" "${VERSION}"
+          .github/workflows/scripts/multi-arch-build.sh "${STAGING_IMAGE_NAME}" "${TAG}" "${VERSION}"
