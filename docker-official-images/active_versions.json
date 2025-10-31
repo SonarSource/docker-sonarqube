@@ -6,7 +6,8 @@
         },
         {
             "branch": "origin/release/2025.4",
-            "type": "commercialEditions"
+            "type": "commercialEditions",
+            "isLatestLTATag": true
         },
         {
             "branch": "origin/release/2025.1",

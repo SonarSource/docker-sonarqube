@@ -223,7 +223,12 @@ func GenerateTags(version string, editionType string, isLatestLTSTag bool, isLat
 			fmt.Sprintf("%s.%s-%s", majorVersion, minorVersion, editionType),
 		}
 		if isLatestLTATag {
-			tags = append(tags, fmt.Sprintf("%s-lta-%s", majorVersion, editionType))
+			// Special case for 2025.1 - use major version only for LTA tag
+			if majorVersion == "2025" && minorVersion == "1" {
+				tags = append(tags, fmt.Sprintf("%s-lta-%s", majorVersion, editionType))
+			} else {
+				tags = append(tags, fmt.Sprintf("%s.%s-lta-%s", majorVersion, minorVersion, editionType))
+			}
 		}
 		if isLatest {
 			tags = append(tags, fmt.Sprintf("%s", editionType))
