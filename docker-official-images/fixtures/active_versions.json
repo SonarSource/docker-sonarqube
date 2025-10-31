@@ -1,19 +1,25 @@
 [
         {
             "branch": "origin/master",
-            "commitSha": "0330278146e14fdbde39328ab2c9e10a66f9fbe8",
+            "commitSha": "06e86ae1851cf8e491e9becc8c5f994b70972508",
             "type": "commercialEditions",
             "isLatest": true
         },
         {
+            "branch": "origin/release/2025.4",
+            "commitSha": "ef0050f30ef75089692a0808b6a002359083fb5a",
+            "type": "commercialEditions",
+            "isLatestLTATag": true
+        },
+        {
             "branch": "origin/release/2025.1",
-            "commitSha": "31fac30f5087cc490c9cd266e2279729a2fbdd7c",
+            "commitSha": "5e2621e56095f67b6a28edd3016ef2f10bca2947",
             "type": "commercialEditions",
             "isLatestLTATag": true
         },
         {
             "branch": "origin/master",
-            "commitSha": "0330278146e14fdbde39328ab2c9e10a66f9fbe8",
+            "commitSha": "06e86ae1851cf8e491e9becc8c5f994b70972508",
             "type": "communityBuild"
         }
 ]
