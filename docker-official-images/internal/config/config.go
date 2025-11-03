@@ -30,7 +30,7 @@ func (c ActiveVersionConfig) Validate() error {
 	}
 
 	// Check if Type is one of the allowed values
-	allowedTypes := []string{"commercialEditions", "communityBuild", "legacy"}
+	allowedTypes := []string{"commercialEditions", "communityBuild"}
 	typeIsValid := false
 	for _, allowedType := range allowedTypes {
 		if c.Type == allowedType {

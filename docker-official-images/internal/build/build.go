@@ -39,14 +39,6 @@ func GetDockerfilePaths(editionType string) []string {
 		return []string{
 			"community-build/Dockerfile",
 		}
-	case "legacy":
-		return []string{
-			"9/community/Dockerfile",
-			"9/developer/Dockerfile",
-			"9/enterprise/Dockerfile",
-			"9/datacenter/app/Dockerfile",
-			"9/datacenter/search/Dockerfile",
-		}
 	default:
 		return []string{}
 	}
@@ -85,9 +77,6 @@ func GetEditionTypeFromPath(dockerfilePath string) (string, error) {
 		return "community", nil
 	}
 
-	// For other cases (developer, enterprise, legacy community/developer/enterprise, etc.),
-	// the last part is the edition type.
-	// This also covers `9/community` where `community` is the last part.
 	return lastPart, nil
 }
 
@@ -195,20 +184,6 @@ func GenerateTags(version string, editionType string, isLatestLTSTag bool, isLat
 	patchVersion := strings.Split(version, ".")[2]
 	buildNumber := strings.Split(version, ".")[3]
 
-	if activeVersiontype == "legacy" {
-		tags := []string{
-			fmt.Sprintf("%s.%s.%s-%s", majorVersion, minorVersion, patchVersion, editionType),
-			fmt.Sprintf("%s.%s-%s", majorVersion, minorVersion, editionType),
-			fmt.Sprintf("%s-%s", majorVersion, editionType),
-		}
-		if isLatestLTSTag && editionType == "community" {
-			tags = append(tags, "lts")
-		}
-		if isLatestLTSTag {
-			tags = append(tags, fmt.Sprintf("lts-%s", editionType))
-		}
-		return tags, nil
-	}
 	if activeVersiontype == "communityBuild" {
 		tags := []string{
 			fmt.Sprintf("%s.%s.%s.%s-%s", majorVersion, minorVersion, patchVersion, buildNumber, editionType),
