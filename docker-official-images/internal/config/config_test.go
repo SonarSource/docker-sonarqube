@@ -92,7 +92,7 @@ func TestParseMultipleActiveVersionConfigs(t *testing.T) {
         },
         {
             "branch": "release/1.0",
-            "type": "legacy"
+            "type": "commercialEditions"
         }
     ]`
 
@@ -144,9 +144,6 @@ func TestParseMultipleActiveVersionConfigs(t *testing.T) {
 	// Verify the third config
 	if configs[2].Branch != "release/1.0" {
 		t.Errorf("Expected third config's branch to be 'release/1.0', got '%s'", configs[2].Branch)
-	}
-	if configs[2].Type != "legacy" {
-		t.Errorf("Expected third config's type to be 'legacy', got '%s'", configs[2].Type)
 	}
 	// ... add more assertions as needed for the third object
 }
@@ -225,14 +222,6 @@ func TestValidationTypeField(t *testing.T) {
 			cfg: config.ActiveVersionConfig{
 				Branch: "main",
 				Type:   "commercialEditions",
-			},
-			wantErr: false,
-		},
-		{
-			name: "Valid Type: legacy",
-			cfg: config.ActiveVersionConfig{
-				Branch: "main",
-				Type:   "legacy",
 			},
 			wantErr: false,
 		},

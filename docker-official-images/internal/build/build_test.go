@@ -36,17 +36,6 @@ func TestGetDockerfilePaths(t *testing.T) {
 			},
 		},
 		{
-			name:        "Legacy Build",
-			editionType: "legacy",
-			wantPaths: []string{
-				"9/community/Dockerfile",
-				"9/developer/Dockerfile",
-				"9/enterprise/Dockerfile",
-				"9/datacenter/app/Dockerfile",
-				"9/datacenter/search/Dockerfile",
-			},
-		},
-		{
 			name:        "Unknown Type",
 			editionType: "someOtherType",
 			wantPaths:   []string{},
@@ -172,18 +161,6 @@ func TestGetBuildMetadataFromConfig(t *testing.T) {
 			expectedCommit:    "",
 		},
 		{
-			name: "Legacy - Release 9.9 Branch",
-			activeConfig: config.ActiveVersionConfig{
-				Branch: "408a6865f494736d3a428e31d964271785f67d77",
-				Type:   "legacy",
-			},
-			fetcher:           gitFetcher,
-			wantMetadataCount: 5, // 5 Dockerfiles for legacy
-			wantErr:           false,
-			expectedVersion:   SONAR_EXPECTED_LTS_VERSION,
-			expectedCommit:    "",
-		},
-		{
 			name: "Commercial Edition - Specific Commit",
 			activeConfig: config.ActiveVersionConfig{
 				Branch:    "ignored-branch", // Branch is ignored if CommitSHA is present
@@ -300,24 +277,6 @@ func TestGetEditionTypeFromPath(t *testing.T) {
 			wantErr:     false,
 		},
 		{
-			name:        "Legacy Community (9/community)",
-			filePath:    "9/community/Dockerfile",
-			wantEdition: "community",
-			wantErr:     false,
-		},
-		{
-			name:        "Legacy Developer (9/developer)",
-			filePath:    "9/developer/Dockerfile",
-			wantEdition: "developer",
-			wantErr:     false,
-		},
-		{
-			name:        "Legacy Datacenter App (9/datacenter/app)",
-			filePath:    "9/datacenter/app/Dockerfile",
-			wantEdition: SONAR_DATACENTER_STRING,
-			wantErr:     false,
-		},
-		{
 			name:        "Malformed Path (no Dockerfile suffix)",
 			filePath:    "commercial-editions/developer",
 			wantEdition: "",
@@ -404,26 +363,6 @@ func TestGenerateTags(t *testing.T) {
 			isLatestLTATag:    false,
 			activeVersiontype: "communityBuild",
 			wantTags:          []string{"25.6.0.109173-community", "community", "latest"},
-			wantErr:           false,
-		},
-		{
-			name:              "Legacy Edition - Community (9.9.8)",
-			version:           SONAR_EXPECTED_LTS_VERSION,
-			editionType:       "community",
-			isLatestLTSTag:    true,
-			isLatestLTATag:    false,
-			activeVersiontype: "legacy",
-			wantTags:          []string{"9.9.8-community", "9.9-community", "9-community", "lts", "lts-community"},
-			wantErr:           false,
-		},
-		{
-			name:              "Legacy Edition - Developer (9.9.8)",
-			version:           SONAR_EXPECTED_LTS_VERSION,
-			editionType:       "developer",
-			isLatestLTSTag:    true,
-			isLatestLTATag:    false,
-			activeVersiontype: "legacy",
-			wantTags:          []string{"9.9.8-developer", "9.9-developer", "9-developer", "lts-developer"},
 			wantErr:           false,
 		},
 		{
