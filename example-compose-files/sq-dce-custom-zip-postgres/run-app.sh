@@ -3,7 +3,7 @@
 set -euo pipefail
 
 HOSTNAME=$(hostname)
-IP=$(ip -6 address show scope global | grep inet | awk '{ print $2 }' | head -n 1 | cut -d \/ -f 1)
+IP=$(ip -4 address show scope global | grep inet | awk '{ print $2 }' | head -n 1 | cut -d \/ -f 1)
 
 declare -a sq_opts=()
 set_prop() {
