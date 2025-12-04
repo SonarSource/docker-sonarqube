@@ -49,7 +49,8 @@ RUN set -eux; \
     # sub   2048R/06855C1D 2015-05-25
     for server in $(shuf -e hkps://keys.openpgp.org \
                             hkps://keyserver.ubuntu.com) ; do \
-        gpg --batch --keyserver "${server}" --recv-keys 679F1EE92B19609DE816FDE81DB198F93525EC1A && break || : ; \
+        gpg --batch --keyserver "${server}" --recv-keys 679F1EE92B19609DE816FDE81DB198F93525EC1A && \
+        gpg --batch --keyserver "${server}" --refresh-keys 679F1EE92B19609DE816FDE81DB198F93525EC1A && break || : ; \
     done; \
     mkdir --parents /opt; \
     cd /opt; \
