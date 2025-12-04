@@ -44,8 +44,7 @@ RUN set -eux; \
     #       Key fingerprint = F118 2E81 C792 9289 21DB  CAB4 CFCA 4A29 D264 68DE
     # uid                  sonarsource_deployer (Sonarsource Deployer) <infra@sonarsource.com>
     # sub   2048R/06855C1D 2015-05-25
-    for server in $(shuf -e hkps://keys.openpgp.org \
-                            hkps://keyserver.ubuntu.com) ; do \
+    for server in $(shuf -e hkps://keyserver.ubuntu.com) ; do \
         gpg --batch --keyserver "${server}" --recv-keys 679F1EE92B19609DE816FDE81DB198F93525EC1A && break || : ; \
     done; \
     mkdir --parents /opt; \
