@@ -10,10 +10,10 @@ import (
 // from the current working directory's Git repository.
 func TestGitFetcherFetch(t *testing.T) {
 	// Define the exact commit SHA and content from your repository
-	const testCommitSHA = "408a6865f494736d3a428e31d964271785f67d77"
+	const testCommitSHA = "08c53884fb331f184f41b07cb502160ca40ea426"
 	const testFilePath = "NOTICE.txt"
 	const expectedContent = `docker-sonarqube
-Copyright (C) 2015-2025 SonarSource SA
+Copyright (C) 2015-2025 SonarSource Sàrl
 mailto:info AT sonarsource DOT com
 
 This product includes software developed at
