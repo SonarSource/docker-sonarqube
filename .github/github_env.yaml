@@ -2,7 +2,7 @@
 # This file contains all version numbers and common configurations used across workflows
 
 versions:
-  current: "2025.6.0"
+  current: "2025.6.1"
   community_build: "25.12.0.117093"
 
 images:
