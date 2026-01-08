@@ -42,7 +42,7 @@ require() {
 wait_for_sonarqube() {
     local image="${1}" i web_up=no sonarqube_up=no
 
-    for ((i = 0; i < 15; i++)); do
+    for ((i = 0; i < 30; i++)); do
         info "${image}: waiting for web server to start ..."
         if curl -sI "localhost:${port}" | grep '^HTTP/.* 200'; then
             web_up=yes
@@ -53,7 +53,7 @@ wait_for_sonarqube() {
 
     [[ "${web_up}" = yes ]] || return 1
 
-    for ((i = 0; i < 30; i++)); do
+    for ((i = 0; i < 60; i++)); do
         info "${image}: waiting for sonarqube to be ready ..."
         if curl -s "localhost:${port}/api/system/status" | grep '"status":"UP"'; then
             sonarqube_up=yes
@@ -68,7 +68,7 @@ wait_for_sonarqube() {
 wait_for_sonarqube_dce() {
     local image="${1}-app" i web_up=no sonarqube_up=no
 
-    for ((i = 0; i < 90; i++)); do
+    for ((i = 0; i < 180; i++)); do
         info "${image}: waiting for web server to start ..."
         if curl -sI "localhost:${port}" | grep '^HTTP/.* 200'; then
             web_up=yes
@@ -79,7 +79,7 @@ wait_for_sonarqube_dce() {
 
     [[ "${web_up}" = yes ]] || return 1
 
-    for ((i = 0; i < 90; i++)); do
+    for ((i = 0; i < 180; i++)); do
         info "${image}: waiting for sonarqube to be ready ..."
         if curl -s "localhost:${port}/api/system/status" | grep '"status":"UP"'; then
             sonarqube_up=yes
