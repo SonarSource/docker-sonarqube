@@ -40,7 +40,8 @@ RUN set -eux; \
         fonts-dejavu \
         gnupg \
         iproute2 \
-        unzip; \
+        unzip \
+        wget; \
     echo "networkaddress.cache.ttl=5" >> "${JAVA_HOME}/conf/security/java.security"; \
     sed --in-place --expression="s?securerandom.source=file:/dev/random?securerandom.source=file:/dev/urandom?g" "${JAVA_HOME}/conf/security/java.security"; \
     # pub   2048R/D26468DE 2015-05-25
