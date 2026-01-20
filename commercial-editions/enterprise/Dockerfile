@@ -50,8 +50,8 @@ RUN set -eux; \
     done; \
     mkdir --parents /opt; \
     cd /opt; \
-    curl --fail --location --output sonarqube.zip --silent --show-error "${SONARQUBE_ZIP_URL}"; \
-    curl --fail --location --output sonarqube.zip.asc --silent --show-error "${SONARQUBE_ZIP_URL}.asc"; \
+    curl --proto "=https" --fail --output sonarqube.zip --silent --show-error "${SONARQUBE_ZIP_URL}"; \
+    curl --proto "=https" --fail --output sonarqube.zip.asc --silent --show-error "${SONARQUBE_ZIP_URL}.asc"; \
     gpg --batch --verify sonarqube.zip.asc sonarqube.zip; \
     unzip -q sonarqube.zip; \
     mv "sonarqube-${SONARQUBE_VERSION}" sonarqube; \
