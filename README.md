@@ -1,4 +1,10 @@
-# About this Repo [![Build Status](https://api.cirrus-ci.com/github/SonarSource/docker-sonarqube.svg)](https://cirrus-ci.com/github/SonarSource/docker-sonarqube)
+
+# SonarQube Docker images
+
+[![CI - Build and Test](https://github.com/SonarSource/docker-sonarqube/actions/workflows/push_and_pr.yml/badge.svg)](https://github.com/SonarSource/docker-sonarqube/actions/workflows/push_and_pr.yml) [![Quality Gate Status](https://next.sonarqube.com/sonarqube/api/project_badges/measure?project=SonarSource_docker-sonarqube_AYcnOvlJTpBOcQuGEdI5&metric=alert_status&token=sqb_352337cc82cd0ba5dd1026de82ff553dd511afc2)](https://next.sonarqube.com/sonarqube/dashboard?id=SonarSource_docker-sonarqube_AYcnOvlJTpBOcQuGEdI5)
+
+About this Repo
+-----------------
 
 This is the Git repo of the official Docker image for [SonarQube](https://registry.hub.docker.com/_/sonarqube/). See the Hub page for the full readme on how to use the Docker image and for information regarding contributing and issues.
 
