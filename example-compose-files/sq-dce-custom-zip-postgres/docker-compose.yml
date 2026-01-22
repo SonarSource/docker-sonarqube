@@ -134,6 +134,8 @@ services:
       - sonarqube_logs:/opt/sonarqube/logs
       - search_temp-1:/opt/sonarqube/temp
       - search_logs-1:/opt/sonarqube/logs
+    tmpfs:
+      - /tmp:size=256M,mode=1777
     healthcheck:
         test: wget --no-proxy -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
         interval: 25s
@@ -173,6 +175,8 @@ services:
       - sonarqube_logs:/opt/sonarqube/logs
       - search_temp-2:/opt/sonarqube/temp
       - search_logs-2:/opt/sonarqube/logs
+    tmpfs:
+      - /tmp:size=256M,mode=1777
     healthcheck:
         test: wget --no-proxy -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
         interval: 25s
