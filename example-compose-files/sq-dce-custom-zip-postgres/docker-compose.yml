@@ -4,7 +4,7 @@ services:
     ports:
       - "9001:9000"
     healthcheck:
-      test: curl -sf --noproxy '*' http://$$SONAR_CLUSTER_NODE_NAME:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
+      test: wget --no-proxy -qO- http://$$SONAR_CLUSTER_NODE_NAME:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
       interval: 25s
       timeout: 1s
       retries: 3
@@ -54,7 +54,7 @@ services:
     ports:
       - "9002:9000"
     healthcheck:
-      test: curl -sf --noproxy '*' http://$$SONAR_CLUSTER_NODE_NAME:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
+      test: wget --no-proxy -qO- http://$$SONAR_CLUSTER_NODE_NAME:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
       interval: 25s
       timeout: 1s
       retries: 3
@@ -137,7 +137,7 @@ services:
     tmpfs:
       - /tmp:size=256M,mode=1777
     healthcheck:
-        test: curl -sf --noproxy '*' "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
+        test: wget --no-proxy -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
         interval: 25s
         timeout: 1s
         retries: 3
@@ -178,7 +178,7 @@ services:
     tmpfs:
       - /tmp:size=256M,mode=1777
     healthcheck:
-        test: curl -sf --noproxy '*' "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
+        test: wget --no-proxy -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
         interval: 25s
         timeout: 1s
         retries: 3
