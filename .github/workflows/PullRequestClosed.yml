@@ -5,8 +5,8 @@ on:
     types: [closed]
 
 jobs:
-  PullRequestMerged_job:
-    name: Pull Request Merged
+  PullRequestClosed_job:
+    name: Pull Request Closed
     runs-on: github-ubuntu-latest-s
     permissions:
       id-token: write
