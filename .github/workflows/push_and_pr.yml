@@ -231,3 +231,17 @@ jobs:
         with:
           jobs: ${{ toJSON(needs) }}
           allowed-skips: 'build-commercial-editions,build-community-build,test-commercial-editions,test-community-build,gcp-build-staging-app,gcp-build-staging-search'
+
+  notify-slack-on-failure:
+    name: Notify on Failure
+    needs: [ qa-validator ]
+    if: >-
+      always() &&
+      (needs.qa-validator.result == 'failure') &&
+      github.event_name != 'pull_request' &&
+      github.event_name != 'pull_request_review' &&
+      (github.ref_name == github.event.repository.default_branch ||
+      startsWith(github.ref_name, 'release/'))
+    permissions:
+      id-token: write
+    uses: ./.github/workflows/slack_notify.yml

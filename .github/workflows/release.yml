@@ -59,3 +59,16 @@ jobs:
       current_version: ${{ needs.load-config.outputs.current_version }}
       public_image_name: ${{ needs.load-config.outputs.public_image }}
       component_type: search
+
+
+  notify-slack-on-failure:
+    name: Notify on Failure
+    needs: [ gcp-build-production-app, gcp-build-production-search ]
+    if: >-
+      always() &&
+      (needs.gcp-build-production-app.result == 'failure' || needs.gcp-build-production-search.result == 'failure') &&
+      (github.ref_name == github.event.repository.default_branch ||
+      startsWith(github.ref_name, 'release/'))
+    permissions:
+      id-token: write
+    uses: ./.github/workflows/slack_notify.yml

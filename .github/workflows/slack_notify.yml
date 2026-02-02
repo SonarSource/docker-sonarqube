@@ -1,24 +1,32 @@
 ---
-name: Slack Notifications
+name: Notify Slack on Failure
 on:
-  check_suite:
-    types: [completed]
-
-permissions:
-  actions: read
-  contents: read
-  checks: read
-  id-token: write
+  workflow_call:
 
 jobs:
   slack-notifications:
-    if: >-
-      contains(fromJSON('["main", "master"]'), github.event.check_suite.head_branch) || startsWith(github.event.check_suite.head_branch, 'dogfood-') || startsWith(github.event.check_suite.head_branch, 'branch-')
+    name: Slack Notification
+    permissions:
+      id-token: write
     runs-on: github-ubuntu-latest-s
     steps:
-      - name: Send Slack Notification
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        uses: SonarSource/gh-action_slack-notify@v1
+      - name: Vault Secrets
+        id: secrets
+        uses: SonarSource/vault-action-wrapper@v3
         with:
-          slackChannel: squad-sq-platform-build-notification
+          secrets: |
+            development/kv/data/slack token | SLACK_TOKEN;
+      - name: Send Slack Notification
+        uses: rtCamp/action-slack-notify@e31e87e03dd19038e411e38ae27cbad084a90661 # v2.3.3
+        env:
+          SLACK_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).SLACK_TOKEN }}
+          SLACK_CHANNEL: squad-sq-platform-build-notification
+          SLACK_TITLE: Build Failed
+          SLACK_MESSAGE: |
+            Workflow failed in ${{ github.repository }} 🚨
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+          SLACK_USERNAME: BuildBot
+          SLACK_COLOR: danger
+
