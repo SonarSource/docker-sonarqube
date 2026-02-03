@@ -5,8 +5,10 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/master' && !startsWith(github.ref, 'refs/heads/release/') }}
 
 on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2AM UTC
   push:
-    branches: 
+    branches:
       - master
       - 'release/**'
     paths:
