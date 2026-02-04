@@ -1,4 +1,4 @@
-name: Release - Production Deployment
+name: CI Scheduled (Release - Deployment to GCP nightly)
 
 on:
   release:

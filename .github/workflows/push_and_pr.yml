@@ -5,8 +5,6 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/master' && !startsWith(github.ref, 'refs/heads/release/') }}
 
 on:
-  schedule:
-    - cron: '0 2 * * *'  # Daily at 2AM UTC
   push:
     branches:
       - master
@@ -32,6 +30,33 @@ on:
       - '.github/github_env.yaml'
       - 'run-tests.sh'
       - 'docker-official-images/**/*'
+  workflow_call:
+    inputs:
+      run_builds:
+        description: 'Run build jobs'
+        required: false
+        default: true
+        type: boolean
+      run_tests:
+        description: 'Run test jobs'
+        required: false
+        default: true
+        type: boolean
+      run_go_tests:
+        description: 'Run Go tests'
+        required: false
+        default: true
+        type: boolean
+      run_gcp_staging:
+        description: 'Run GCP staging builds (force on any branch)'
+        required: false
+        default: false
+        type: boolean
+      editions:
+        description: 'Which editions to build/test'
+        required: false
+        default: 'all'
+        type: string
   workflow_dispatch:
     inputs:
       run_builds:
