@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jre-noble AS copier
+FROM eclipse-temurin:21-jdk-noble AS copier
 ARG SONARQUBE_VERSION
 
 COPY sonarqube-datacenter-${SONARQUBE_VERSION}.zip /opt/sonarqube.zip
@@ -9,7 +9,7 @@ RUN cd /opt; \
     unzip -q sonarqube.zip;
 
 
-FROM sonarqube:2025.1.0-datacenter-app
+FROM sonarqube:2026.1.0-datacenter-app
 ARG SONARQUBE_VERSION
 ENV SONAR_VERSION=${SONARQUBE_VERSION}
 
@@ -17,7 +17,7 @@ USER root
 
 RUN rm -rf /opt/sonarqube*;
 
-COPY --from=sonarqube:2025.1.0-datacenter-app --chown=root:root --chmod=555 ${SONARQUBE_HOME}/docker/sonar.sh ${SONARQUBE_HOME}/docker/
+COPY --from=sonarqube:2026.1.0-datacenter-app --chown=root:root --chmod=555 ${SONARQUBE_HOME}/docker/sonar.sh ${SONARQUBE_HOME}/docker/
 COPY --chown=root:root --chmod=555 ./run-app.sh ${SONARQUBE_HOME}/docker/run.sh
 COPY --from=copier /opt/sonarqube-${SONARQUBE_VERSION} /opt/sonarqube
 
