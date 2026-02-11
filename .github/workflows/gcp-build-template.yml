@@ -131,7 +131,7 @@ jobs:
           echo -e "FROM ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-${COMPONENT_TYPE}" | docker buildx build \
             --platform linux/amd64 \
             --provenance=false \
-            --annotation "manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog" \
+            --sbom=false \
+            --output "type=image,push=true,oci-mediatypes=false,annotation-manifest.com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog" \
             --tag "${TARGET_IMAGE_NAME}:${CURRENT_VERSION}" \
-            --tag "${TARGET_IMAGE_NAME}:${CURRENT_MINOR_VERSION}" \
-            --push -
+            --tag "${TARGET_IMAGE_NAME}:${CURRENT_MINOR_VERSION}" -
