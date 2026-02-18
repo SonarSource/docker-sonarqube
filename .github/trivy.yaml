@@ -1,0 +1,37 @@
+# Trivy Configuration File
+# Reference: https://aquasecurity.github.io/trivy/latest/docs/references/configuration/config-file/
+
+# Scan settings
+scan:
+  # Skip scanning of specific directories
+  skip-dirs:
+    - "node_modules"
+    - "vendor"
+    - ".git"
+
+# Vulnerability settings
+vulnerability:
+  # Types of vulnerabilities to detect
+  type:
+    - os
+    - library
+
+# Report settings
+report:
+  # Format of the output
+  format: table
+
+# Severity levels to report
+severity:
+  - CRITICAL
+  - HIGH
+  - MEDIUM
+  - LOW
+
+# Database settings
+db:
+  # Skip database update (useful for offline environments)
+  skip-update: false
+
+# Timeout settings
+timeout: 10m
