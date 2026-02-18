@@ -25,51 +25,6 @@ jobs:
   load-config:
     uses: ./.github/workflows/load-config.yml
 
-  trivy-scan-dockerfiles:
-    name: Scan Dockerfile - ${{ matrix.edition }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - edition: developer
-            dockerfile: commercial-editions/developer/Dockerfile
-          - edition: enterprise
-            dockerfile: commercial-editions/enterprise/Dockerfile
-          - edition: datacenter-app
-            dockerfile: commercial-editions/datacenter/app/Dockerfile
-          - edition: datacenter-search
-            dockerfile: commercial-editions/datacenter/search/Dockerfile
-          - edition: community
-            dockerfile: community-build/Dockerfile
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Run Trivy filesystem scan
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: 'config'
-          scan-ref: ${{ matrix.dockerfile }}
-          format: 'sarif'
-          output: 'trivy-dockerfile-${{ matrix.edition }}.sarif'
-          severity: 'MEDIUM,HIGH,CRITICAL'
-
-      - name: Upload Trivy results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-dockerfile-${{ matrix.edition }}.sarif'
-          category: 'dockerfile-${{ matrix.edition }}'
-
-      - name: Run Trivy filesystem scan (table format)
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: 'config'
-          scan-ref: ${{ matrix.dockerfile }}
-          format: 'table'
-          severity: 'MEDIUM,HIGH,CRITICAL'
-
   build-and-scan-images:
     name: Build & Scan Image - ${{ matrix.edition }}
     needs: load-config
@@ -113,7 +68,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.34.0
         with:
           image-ref: 'sonarqube-${{ matrix.edition }}:${{ github.sha }}'
           format: 'sarif'
@@ -129,7 +84,7 @@ jobs:
           category: 'image-${{ matrix.edition }}'
 
       - name: Run Trivy vulnerability scanner (table format for console)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.34.0
         with:
           image-ref: 'sonarqube-${{ matrix.edition }}:${{ github.sha }}'
           format: 'table'
