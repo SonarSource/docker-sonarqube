@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jdk-noble
+FROM eclipse-temurin:25-jdk-noble
 
 LABEL io.k8s.description="SonarQube Server is a self-managed, automatic code review tool that systematically helps you deliver Clean Code."
 LABEL io.openshift.min-cpu=400m
@@ -37,7 +37,8 @@ RUN set -eux; \
         fonts-dejavu \
         gnupg \
         iproute2 \
-        unzip; \
+        unzip \
+        wget; \
     echo "networkaddress.cache.ttl=5" >> "${JAVA_HOME}/conf/security/java.security"; \
     sed --in-place --expression="s?securerandom.source=file:/dev/random?securerandom.source=file:/dev/urandom?g" "${JAVA_HOME}/conf/security/java.security"; \
     # pub   2048R/D26468DE 2015-05-25
