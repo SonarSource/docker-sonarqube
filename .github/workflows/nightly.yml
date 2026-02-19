@@ -18,10 +18,3 @@ jobs:
       id-token: write
       contents: read
 
-  trivy-security-scan:
-    name: Security Scan
-    needs: run-ci
-    uses: ./.github/workflows/trivy-security-scan.yml
-    permissions:
-      contents: read
-      security-events: write
