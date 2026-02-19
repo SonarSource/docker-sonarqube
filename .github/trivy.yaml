@@ -13,8 +13,7 @@ scan:
 vulnerability:
   # Types of vulnerabilities to detect
   type:
-    - os
-    - library
+    - os  # Only scan OS packages (excludes application libraries like JAR, npm, etc.)
 
 # Report settings
 report:

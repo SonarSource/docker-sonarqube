@@ -27,7 +27,8 @@ The workflow scans all SonarQube Docker images:
 
 ### 2. Image Vulnerability Scan
 - Builds the Docker image
-- Scans OS packages and libraries for known vulnerabilities
+- Scans **OS packages only** (base image and system packages)
+- **Does NOT scan** application-level dependencies (JAR, npm, etc.)
 - Reports CVEs from the National Vulnerability Database (NVD)
 
 ## Understanding Results
