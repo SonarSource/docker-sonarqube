@@ -199,6 +199,57 @@ jobs:
       architecture: ${{ matrix.architecture }}
       runs_on: ${{ matrix.architecture == 'arm64' && 'github-ubuntu-24.04-arm-s' || 'github-ubuntu-latest-s' }}
 
+  # Security scanning - runs after builds complete
+  trivy-scan-datacenter-app:
+    needs: [load-config, build-commercial-editions]
+    if: |
+      always() &&
+      (github.event_name != 'workflow_dispatch' || inputs.editions == 'all' || inputs.editions == 'commercial-only')
+    name: Security Scan (datacenter-app)
+    runs-on: github-ubuntu-latest-s
+    permissions:
+      id-token: write
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - id: secrets
+        name: Retrieve secrets from Vault
+        uses: SonarSource/vault-action-wrapper@v3
+        with:
+          secrets: |
+            development/kv/data/docker/sonardockerrw username | docker_username;
+            development/kv/data/docker/sonardockerrw access_token_rwd | docker_password;
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ fromJSON(steps.secrets.outputs.vault).docker_username }}
+          password: ${{ fromJSON(steps.secrets.outputs.vault).docker_password }}
+
+      - name: Pull staging image
+        run: |
+          docker pull ${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-datacenter-app
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.34.0
+        with:
+          image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-datacenter-app'
+          format: 'sarif'
+          output: 'trivy-datacenter-app.sarif'
+          severity: 'LOW,MEDIUM,HIGH,CRITICAL'
+          vuln-type: 'os'
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-datacenter-app.sarif'
+          category: 'image-datacenter-app'
+
   # GCP staging builds - only on master or release branches, after tests pass
   gcp-build-staging-app:
     needs: [load-config, test-commercial-editions, test-community-build]
@@ -247,6 +298,7 @@ jobs:
       - build-community-build
       - test-commercial-editions
       - test-community-build
+      - trivy-scan-datacenter-app
       - gcp-build-staging-app
       - gcp-build-staging-search
     runs-on: github-ubuntu-latest-s
@@ -257,7 +309,7 @@ jobs:
         id: alls-green
         with:
           jobs: ${{ toJSON(needs) }}
-          allowed-skips: 'load-config,build-commercial-editions,build-community-build,test-commercial-editions,test-community-build,gcp-build-staging-app,gcp-build-staging-search'
+          allowed-skips: 'load-config,build-commercial-editions,build-community-build,test-commercial-editions,test-community-build,trivy-scan-datacenter-app,gcp-build-staging-app,gcp-build-staging-search'
 
   notify-slack-on-failure:
     name: Notify on Failure

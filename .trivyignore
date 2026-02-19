@@ -1,0 +1,6 @@
+# Trivy Ignore File
+# Add CVE IDs here that you want to ignore (with justification comments)
+# Example:
+# CVE-2023-12345  # False positive - not applicable to our use case
+# CVE-2023-67890  # Accepted risk - documented in SECURITY.md
+
