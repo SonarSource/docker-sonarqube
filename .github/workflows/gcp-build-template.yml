@@ -46,7 +46,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v6.0.2
 
       - name: Set up variables
         id: vars
@@ -70,7 +70,7 @@ jobs:
 
       - id: secrets
         name: Retrieve secrets from Vault
-        uses: SonarSource/vault-action-wrapper@v3
+        uses: SonarSource/vault-action-wrapper@545e7cfbb5528e7009a1edcc83e073898d292627 # v3.2.0
         with:
           secrets: |
             development/team/sonarqube/kv/data/gcp-marketplace-registry-staging key | gcp_sa_key;
@@ -91,7 +91,7 @@ jobs:
           echo "${DOCKER_GCLOUD_PASSWORD}" | docker login -u _json_key --password-stdin https://${{ inputs.gcp_registry }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
         with:
           name: multibuilder
           driver: docker-container
@@ -99,7 +99,7 @@ jobs:
 
       - name: Set up QEMU for multi-arch builds (staging only)
         if: ${{ inputs.build_type == 'staging' }}
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
         with:
           platforms: all
 
