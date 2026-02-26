@@ -13,7 +13,7 @@ services:
       context: .
       dockerfile: Dockerfile-app
       args:
-        SONARQUBE_VERSION: ${SONARQUBE_VERSION}
+        SONARQUBE_VERSION: 2026.2-SNAPSHOT
     read_only: true
     depends_on:
       search-1:
@@ -63,7 +63,7 @@ services:
       context: .
       dockerfile: Dockerfile-app
       args:
-        SONARQUBE_VERSION: ${SONARQUBE_VERSION}
+        SONARQUBE_VERSION: 2026.2-SNAPSHOT
     read_only: true
     hostname: "sonarqube-2"
     depends_on:
@@ -106,7 +106,7 @@ services:
       context: .
       dockerfile: Dockerfile-search
       args:
-        SONARQUBE_VERSION: ${SONARQUBE_VERSION}
+        SONARQUBE_VERSION: 2026.2-SNAPSHOT
     read_only: true
     hostname: "search-1"
     cpus: 0.5
@@ -147,7 +147,7 @@ services:
       context: .
       dockerfile: Dockerfile-search
       args:
-        SONARQUBE_VERSION: ${SONARQUBE_VERSION}
+        SONARQUBE_VERSION: 2026.2-SNAPSHOT
     read_only: true
     hostname: "search-2"
     cpus: 0.5

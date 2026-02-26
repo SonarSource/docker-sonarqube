@@ -1,0 +1,27 @@
+name: Renovate
+on:
+  workflow_dispatch:
+
+jobs:
+  renovate:
+    runs-on: github-ubuntu-latest-s
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - id: secrets
+        uses: SonarSource/vault-action-wrapper@545e7cfbb5528e7009a1edcc83e073898d292627 # v3.2.0
+        with:
+          secrets: |
+            development/github/token/{REPO_OWNER_NAME_DASH}-renovate token | renovate_token;
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt-hotspot'
+          java-version: '11'
+      - name: Self-hosted Renovate
+        uses: renovatebot/github-action@8d75b92f43899d483728e9a8a7fd44238020f6e6 # v46.1.2
+        with:
+          configurationFile: .github/config.js
+          token: ${{ fromJSON(steps.secrets.outputs.vault).renovate_token }}

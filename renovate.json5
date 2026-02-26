@@ -1,18 +1,17 @@
-{    
+{
+    "extends": ["config:base", ":preserveSemverRanges"],
+    "onboarding": false,
+    "requireConfig": "optional",
     "rebaseWhen": "behind-base-branch",
     "baseBranches": [
       "master",
       "main",
       "release/2025.1",
-      "release/2025.4"
+      "release/2025.4",
+      "release/2026.1"
     ],
     "rollbackPrs": true,
     "labels": ["docker-release"],
-    "assignees": [
-      "jCOTINEAU",
-      "carminevassallo",
-      "davividal"
-    ],
     "automerge": false,
     "includePaths": [
       "commercial-editions/**",
