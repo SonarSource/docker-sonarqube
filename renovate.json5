@@ -1,4 +1,4 @@
-{    
+{
     "rebaseWhen": "behind-base-branch",
     "baseBranches": [
       "master",
@@ -16,39 +16,47 @@
     "automerge": false,
     "includePaths": [
       "commercial-editions/**",
-      "community-build/Dockerfile",
+      "community-build/**",
+      "example-compose-files/**",
+      "tests/**",
       ".github/github_env.yaml",
       ".cirrus/tasks.yml"
     ],
     "enabledManagers": [
-      "custom.regex"
+      "custom.regex",
+      "dockerfile",
+      "docker-compose"
     ],
     "packageRules": [
       {
         "matchManagers": ["custom.regex"],
         "groupName": "docker-sonarqube-server-releases",
-        "groupSlug": "docker-sonarqube-server-releases",
         "matchDepNames": ["sonarqube-server"],
         "labels": ["sonarqube-server"]
       },
       {
         "matchManagers": ["custom.regex"],
         "groupName": "docker-sonarqube-community-build-releases",
-        "groupSlug": "docker-sonarqube-community-build-releases",
         "matchDepNames": ["sonarqube-community-build"],
         "labels": ["sonarqube-community-build"]
       },
       {
         "matchManagers": ["custom.regex"],
-        "matchBaseBranches": ["release/2025.1"],
-        "matchUpdateTypes": ["major","minor"],
-        "enabled": "false"
+        "matchBaseBranches": ["release/2025.1", "release/2025.4"],
+        "matchUpdateTypes": ["major", "minor"],
+        "enabled": false
       },
       {
-        "matchManagers": ["custom.regex"],
-        "matchBaseBranches": ["release/2025.4"],
-        "matchUpdateTypes": ["major","minor"],
-        "enabled": "false"
+        "matchManagers": ["dockerfile", "docker-compose"],
+        "matchPackageNames": ["eclipse-temurin", "postgres", "nginx", "jwilder/nginx-proxy"],
+        "groupName": "docker-base-runtime-updates",
+        "labels": ["docker-base-images"]
+      },
+      {
+        "matchManagers": ["dockerfile", "docker-compose"],
+        "matchBaseBranches": ["release/2025.1", "release/2025.4"],
+        "matchUpdateTypes": ["major", "minor"],
+        "enabled": false
       },
     ],
     "customManagers": [
