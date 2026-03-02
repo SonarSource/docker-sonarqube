@@ -1,0 +1,326 @@
+name: CI - Build and Test
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' && !startsWith(github.ref, 'refs/heads/release/') }}
+
+on:
+  push:
+    branches:
+      - master
+      - 'release/**'
+    paths:
+      - 'commercial-editions/**/*'
+      - 'community-build/*'
+      - '.github/workflows/scripts/multi-arch-build.sh'
+      - '.github/workflows/push_and_pr.yml'
+      - '.github/workflows/multi-arch-build-template.yml'
+      - '.github/workflows/multi-arch-test-template.yml'
+      - '.github/github_env.yaml'
+      - 'run-tests.sh'
+      - 'docker-official-images/**/*'
+  pull_request:
+    paths:
+      - 'commercial-editions/**/*'
+      - 'community-build/*'
+      - '.github/workflows/scripts/multi-arch-build.sh'
+      - '.github/workflows/push_and_pr.yml'
+      - '.github/workflows/multi-arch-build-template.yml'
+      - '.github/workflows/multi-arch-test-template.yml'
+      - '.github/github_env.yaml'
+      - 'run-tests.sh'
+      - 'docker-official-images/**/*'
+  workflow_call:
+    inputs:
+      run_builds:
+        description: 'Run build jobs'
+        required: false
+        default: true
+        type: boolean
+      run_tests:
+        description: 'Run test jobs'
+        required: false
+        default: true
+        type: boolean
+      run_go_tests:
+        description: 'Run Go tests'
+        required: false
+        default: true
+        type: boolean
+      run_gcp_staging:
+        description: 'Run GCP staging builds (force on any branch)'
+        required: false
+        default: false
+        type: boolean
+      editions:
+        description: 'Which editions to build/test'
+        required: false
+        default: 'all'
+        type: string
+  workflow_dispatch:
+    inputs:
+      run_builds:
+        description: 'Run build jobs'
+        required: false
+        default: true
+        type: boolean
+      run_tests:
+        description: 'Run test jobs'
+        required: false
+        default: true
+        type: boolean
+      run_go_tests:
+        description: 'Run Go tests'
+        required: false
+        default: true
+        type: boolean
+      run_gcp_staging:
+        description: 'Run GCP staging builds (force on any branch)'
+        required: false
+        default: false
+        type: boolean
+      editions:
+        description: 'Which editions to build/test'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - commercial-only
+          - community-only
+
+jobs:
+  load-config:
+    uses: ./.github/workflows/load-config.yml
+
+  # Build phase - all editions in parallel
+  build-commercial-editions:
+    needs: load-config
+    if: |
+      (github.event_name != 'workflow_dispatch' || inputs.run_builds) &&
+      (github.event_name != 'workflow_dispatch' || inputs.editions == 'all' || inputs.editions == 'commercial-only')
+    name: Build commercial edition (${{ matrix.edition }})
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/multi-arch-build-template.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - version: commercial-editions/developer
+            edition: developer
+          - version: commercial-editions/enterprise
+            edition: enterprise
+          - version: commercial-editions/datacenter/app
+            edition: datacenter-app
+          - version: commercial-editions/datacenter/search
+            edition: datacenter-search
+    with:
+      staging_image_name: ${{ needs.load-config.outputs.staging_image }}
+      tag: ${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}
+      version: ${{ matrix.version }}
+      runs_on: github-ubuntu-latest-s
+
+  build-community-build:
+    needs: load-config
+    if: |
+      (github.event_name != 'workflow_dispatch' || inputs.run_builds) &&
+      (github.event_name != 'workflow_dispatch' || inputs.editions == 'all' || inputs.editions == 'community-only')
+    name: Build community edition
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/multi-arch-build-template.yml
+    with:
+      staging_image_name: ${{ needs.load-config.outputs.staging_image }}
+      tag: ${{ needs.load-config.outputs.community_build_version }}-master-community
+      version: community-build
+      runs_on: github-ubuntu-latest-s
+
+  # Test phase - runs immediately after builds complete (no workflow_run delay)
+  test-commercial-editions:
+    needs: [load-config, build-commercial-editions]
+    if: |
+      (github.event_name != 'workflow_dispatch' || (always() && inputs.run_tests)) &&
+      (github.event_name != 'workflow_dispatch' || (always() && (inputs.editions == 'all' || inputs.editions == 'commercial-only')))
+    name: Test commercial edition (${{ matrix.test_name }}, ${{ matrix.architecture }})
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/multi-arch-test-template.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - test_name: docker
+            edition: developer
+            architecture: amd64
+          - test_name: docker
+            edition: developer
+            architecture: arm64
+          - test_name: docker
+            edition: enterprise
+            architecture: amd64
+          - test_name: docker
+            edition: enterprise
+            architecture: arm64
+          - test_name: docker-compose
+            edition: datacenter
+            architecture: amd64
+          - test_name: docker-compose
+            edition: datacenter
+            architecture: arm64
+    with:
+      staging_image_name: ${{ needs.load-config.outputs.staging_image }}
+      tag: ${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}
+      test_name: ${{ matrix.test_name }}
+      architecture: ${{ matrix.architecture }}
+      runs_on: ${{ matrix.architecture == 'arm64' && 'github-ubuntu-24.04-arm-s' || 'github-ubuntu-latest-s' }}
+
+  test-community-build:
+    needs: [load-config, build-community-build]
+    if: |
+      (github.event_name != 'workflow_dispatch' || (always() && inputs.run_tests)) &&
+      (github.event_name != 'workflow_dispatch' || (always() && (inputs.editions == 'all' || inputs.editions == 'community-only')))
+    name: Test community edition (${{ matrix.architecture }})
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/multi-arch-test-template.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture: [amd64, arm64]
+    with:
+      staging_image_name: ${{ needs.load-config.outputs.staging_image }}
+      tag: ${{ needs.load-config.outputs.community_build_version }}-master-community
+      test_name: docker
+      architecture: ${{ matrix.architecture }}
+      runs_on: ${{ matrix.architecture == 'arm64' && 'github-ubuntu-24.04-arm-s' || 'github-ubuntu-latest-s' }}
+
+  # Security scanning - runs after builds complete
+  trivy-scan-datacenter-app:
+    needs: [load-config, build-commercial-editions]
+    if: |
+      always() &&
+      (github.event_name != 'workflow_dispatch' || inputs.editions == 'all' || inputs.editions == 'commercial-only')
+    name: Security Scan (datacenter-app)
+    runs-on: github-ubuntu-latest-s
+    permissions:
+      id-token: write
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v6.0.2
+
+      - id: secrets
+        name: Retrieve secrets from Vault
+        uses: SonarSource/vault-action-wrapper@545e7cfbb5528e7009a1edcc83e073898d292627 # v3.2.0
+        with:
+          secrets: |
+            development/kv/data/docker/sonardockerrw username | docker_username;
+            development/kv/data/docker/sonardockerrw access_token_rwd | docker_password;
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          username: ${{ fromJSON(steps.secrets.outputs.vault).docker_username }}
+          password: ${{ fromJSON(steps.secrets.outputs.vault).docker_password }}
+
+      - name: Pull staging image
+        run: |
+          docker pull ${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-datacenter-app
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@e368e328979b113139d6f9068e03accaed98a518 # v0.34.1
+        with:
+          image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-datacenter-app'
+          format: 'sarif'
+          output: 'trivy-datacenter-app.sarif'
+          severity: 'LOW,MEDIUM,HIGH,CRITICAL'
+          vuln-type: 'os'
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@5e7a52feb2a3dfb87f88be2af33b9e2275f48de6 # v4.32.4
+        if: always()
+        with:
+          sarif_file: 'trivy-datacenter-app.sarif'
+          category: 'image-datacenter-app'
+
+  # GCP staging builds - only on master or release branches, after tests pass
+  gcp-build-staging-app:
+    needs: [load-config, test-commercial-editions, test-community-build]
+    if: |
+      (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/')) ||
+      (always() && github.event_name == 'workflow_dispatch' && inputs.run_gcp_staging)
+    permissions:
+      id-token: write
+      contents: read
+    name: GCP build staging (app)
+    uses: ./.github/workflows/gcp-build-template.yml
+    with:
+      gcp_registry: ${{ needs.load-config.outputs.gcp_staging_registry }}
+      gcp_product_name: ${{ needs.load-config.outputs.gcp_staging_product }}
+      build_type: staging
+      platforms: linux/amd64,linux/arm64
+      extra_docker_build_args: "--provenance=false --annotation=manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog"
+      current_version: ${{ needs.load-config.outputs.current_version }}
+      component_type: app
+
+  gcp-build-staging-search:
+    needs: [load-config, test-commercial-editions, test-community-build]
+    if: |
+      (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/')) ||
+      (always() && github.event_name == 'workflow_dispatch' && inputs.run_gcp_staging)
+    permissions:
+      id-token: write
+      contents: read
+    name: GCP build staging (search)
+    uses: ./.github/workflows/gcp-build-template.yml
+    with:
+      gcp_registry: ${{ needs.load-config.outputs.gcp_staging_registry }}
+      gcp_product_name: ${{ needs.load-config.outputs.gcp_staging_product }}
+      build_type: staging
+      platforms: linux/amd64,linux/arm64
+      extra_docker_build_args: "--provenance=false --annotation=manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog"
+      current_version: ${{ needs.load-config.outputs.current_version }}
+      component_type: search
+
+  qa-validator:
+    if: always()
+    name: QA Validator
+    needs:
+      - load-config
+      - build-commercial-editions
+      - build-community-build
+      - test-commercial-editions
+      - test-community-build
+      - trivy-scan-datacenter-app
+      - gcp-build-staging-app
+      - gcp-build-staging-search
+    runs-on: github-ubuntu-latest-s
+    outputs:
+      SUCCESS: ${{ steps.alls-green.outputs.success }}
+    steps:
+      - uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
+        id: alls-green
+        with:
+          jobs: ${{ toJSON(needs) }}
+          allowed-skips: 'load-config,build-commercial-editions,build-community-build,test-commercial-editions,test-community-build,trivy-scan-datacenter-app,gcp-build-staging-app,gcp-build-staging-search'
+
+  notify-slack-on-failure:
+    name: Notify on Failure
+    needs: [ qa-validator ]
+    if: >-
+      always() &&
+      (needs.qa-validator.result == 'failure') &&
+      github.event_name != 'pull_request' &&
+      github.event_name != 'pull_request_review' &&
+      (github.ref_name == github.event.repository.default_branch ||
+      startsWith(github.ref_name, 'release/'))
+    permissions:
+      id-token: write
+    uses: ./.github/workflows/slack_notify.yml

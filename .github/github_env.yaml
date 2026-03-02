@@ -1,0 +1,19 @@
+# Central configuration for GitHub Actions workflows
+# This file contains all version numbers and common configurations used across workflows
+
+versions:
+  current: "2026.1.0"
+  community_build: "26.2.0.119303"
+
+images:
+  staging: "sonarsource/sonarqube"
+  public: "sonarqube"
+
+registries:
+  gcp_public: "gcr.io/sonarsource-public"
+  gcp_staging: "gcr.io/sonarqube-marketplace-provider"
+
+products:
+  gcp_public_name: "official-sonarqube-data-center-edition"
+  gcp_staging_name: "sonarqube-dce-staging"
+

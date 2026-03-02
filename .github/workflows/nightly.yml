@@ -1,0 +1,19 @@
+name: CI Scheduled (master nightly)
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2AM UTC
+
+jobs:
+  run-ci:
+    name: CI
+    uses: ./.github/workflows/push_and_pr.yml
+    with:
+      run_builds: true
+      run_tests: true
+      run_go_tests: true
+      run_gcp_staging: false
+      editions: 'all'
+    permissions:
+      id-token: write
+      contents: read
