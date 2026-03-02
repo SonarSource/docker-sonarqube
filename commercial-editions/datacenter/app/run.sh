@@ -7,9 +7,14 @@ IP=$(ip -4 address show scope global | grep inet | awk '{ print $2 }' | head -n 
 
 declare -a sq_opts=()
 set_prop() {
-  if [ "$2" ]; then
-    sq_opts+=("-D$1=$2")
+  local name="$1"
+  local value="$2"
+
+  if [[ "$value" ]]; then
+    sq_opts+=("-D$name=$value")
   fi
+
+  return 0
 }
 
 # if nothing is passed, assume we want to run sonarqube server
