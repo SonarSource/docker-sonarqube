@@ -11,7 +11,6 @@ on:
       - 'release/**'
     paths:
       - 'commercial-editions/**/*'
-      - 'community-build/*'
       - '.github/workflows/scripts/multi-arch-build.sh'
       - '.github/workflows/push_and_pr.yml'
       - '.github/workflows/multi-arch-build-template.yml'
@@ -22,7 +21,6 @@ on:
   pull_request:
     paths:
       - 'commercial-editions/**/*'
-      - 'community-build/*'
       - '.github/workflows/scripts/multi-arch-build.sh'
       - '.github/workflows/push_and_pr.yml'
       - '.github/workflows/multi-arch-build-template.yml'
@@ -122,22 +120,6 @@ jobs:
       version: ${{ matrix.version }}
       runs_on: github-ubuntu-latest-s
 
-  build-community-build:
-    needs: load-config
-    if: |
-      (github.event_name != 'workflow_dispatch' || inputs.run_builds) &&
-      (github.event_name != 'workflow_dispatch' || inputs.editions == 'all' || inputs.editions == 'community-only')
-    name: Build community edition
-    permissions:
-      id-token: write
-      contents: read
-    uses: ./.github/workflows/multi-arch-build-template.yml
-    with:
-      staging_image_name: ${{ needs.load-config.outputs.staging_image }}
-      tag: ${{ needs.load-config.outputs.community_build_version }}-master-community
-      version: community-build
-      runs_on: github-ubuntu-latest-s
-
   # Test phase - runs immediately after builds complete (no workflow_run delay)
   test-commercial-editions:
     needs: [load-config, build-commercial-editions]
@@ -175,27 +157,6 @@ jobs:
       staging_image_name: ${{ needs.load-config.outputs.staging_image }}
       tag: ${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}
       test_name: ${{ matrix.test_name }}
-      architecture: ${{ matrix.architecture }}
-      runs_on: ${{ matrix.architecture == 'arm64' && 'github-ubuntu-24.04-arm-s' || 'github-ubuntu-latest-s' }}
-
-  test-community-build:
-    needs: [load-config, build-community-build]
-    if: |
-      (github.event_name != 'workflow_dispatch' || (always() && inputs.run_tests)) &&
-      (github.event_name != 'workflow_dispatch' || (always() && (inputs.editions == 'all' || inputs.editions == 'community-only')))
-    name: Test community edition (${{ matrix.architecture }})
-    permissions:
-      id-token: write
-      contents: read
-    uses: ./.github/workflows/multi-arch-test-template.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        architecture: [amd64, arm64]
-    with:
-      staging_image_name: ${{ needs.load-config.outputs.staging_image }}
-      tag: ${{ needs.load-config.outputs.community_build_version }}-master-community
-      test_name: docker
       architecture: ${{ matrix.architecture }}
       runs_on: ${{ matrix.architecture == 'arm64' && 'github-ubuntu-24.04-arm-s' || 'github-ubuntu-latest-s' }}
 
@@ -252,7 +213,7 @@ jobs:
 
   # GCP staging builds - only on master or release branches, after tests pass
   gcp-build-staging-app:
-    needs: [load-config, test-commercial-editions, test-community-build]
+    needs: [load-config, test-commercial-editions]
     if: |
       (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/')) ||
       (always() && github.event_name == 'workflow_dispatch' && inputs.run_gcp_staging)
@@ -271,7 +232,7 @@ jobs:
       component_type: app
 
   gcp-build-staging-search:
-    needs: [load-config, test-commercial-editions, test-community-build]
+    needs: [load-config, test-commercial-editions]
     if: |
       (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/')) ||
       (always() && github.event_name == 'workflow_dispatch' && inputs.run_gcp_staging)
@@ -295,9 +256,7 @@ jobs:
     needs:
       - load-config
       - build-commercial-editions
-      - build-community-build
       - test-commercial-editions
-      - test-community-build
       - trivy-scan-datacenter-app
       - gcp-build-staging-app
       - gcp-build-staging-search
@@ -309,7 +268,7 @@ jobs:
         id: alls-green
         with:
           jobs: ${{ toJSON(needs) }}
-          allowed-skips: 'load-config,build-commercial-editions,build-community-build,test-commercial-editions,test-community-build,trivy-scan-datacenter-app,gcp-build-staging-app,gcp-build-staging-search'
+          allowed-skips: 'load-config,build-commercial-editions,test-commercial-editions,trivy-scan-datacenter-app,gcp-build-staging-app,gcp-build-staging-search'
 
   notify-slack-on-failure:
     name: Notify on Failure

@@ -16,11 +16,8 @@ permissions:
   pull-requests: read
   contents: read
 jobs:
-  go-test:
-    uses: ./.github/workflows/go-test-template.yml
   sonarqube:
     runs-on: github-ubuntu-latest-s
-    needs: go-test
     permissions:
       id-token: write
       pull-requests: read
@@ -37,11 +34,6 @@ jobs:
           development/kv/data/next token | sq_next_token;
           development/kv/data/sonarcloud token | sq_cloud_eu_token;
           development/kv/data/sonarqube-us token | sq_cloud_us_token;
-    - name: retrieve test coverage
-      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
-      with:
-        name: docker-official-images-coverage-${{ github.sha }}
-        path: docker-official-images/
     - name: SonarQube Next Scan
       uses: sonarsource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9 # v7.0.0
       env:
