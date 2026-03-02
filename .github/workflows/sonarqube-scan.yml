@@ -1,0 +1,66 @@
+on:
+  # Trigger analysis when pushing in master or pull requests, and when creating
+  # a pull request. 
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened]
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+    
+name: CI Scheduled (SonarQube scans nightly)
+permissions:
+  id-token: write
+  pull-requests: read
+  contents: read
+jobs:
+  sonarqube:
+    runs-on: github-ubuntu-latest-s
+    permissions:
+      id-token: write
+      pull-requests: read
+      contents: read
+    steps:
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      with:
+        # Disabling shallow clone is recommended for improving relevancy of reporting
+        fetch-depth: 0
+    - id: secrets
+      uses: SonarSource/vault-action-wrapper@545e7cfbb5528e7009a1edcc83e073898d292627 # v3.2.0
+      with:
+        secrets: |
+          development/kv/data/next token | sq_next_token;
+          development/kv/data/sonarcloud token | sq_cloud_eu_token;
+          development/kv/data/sonarqube-us token | sq_cloud_us_token;
+    - name: SonarQube Next Scan
+      uses: sonarsource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9 # v7.0.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).sq_next_token }}
+        SONAR_HOST_URL: https://next.sonarqube.com/sonarqube/
+    - name: SonarQube Cloud EU Scan
+      if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+      uses: sonarsource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9 # v7.0.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).sq_cloud_eu_token }}
+        SONAR_HOST_URL: https://sonarcloud.io
+    - name: SonarQube Cloud US Scan
+      if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+      uses: sonarsource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9 # v7.0.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).sq_cloud_us_token }}
+        SONAR_HOST_URL: https://sonarqube.us
+    - name: Run IRIS Analysis
+      if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+      uses: SonarSource/unified-dogfooding-actions/run-iris@b256ed29572b02741155dad9e6f20735076080e4 # v1
+      with:
+        primary_project_key: "SonarSource_docker-sonarqube_AYcnOvlJTpBOcQuGEdI5"
+        primary_platform: "Next"
+        shadow1_project_key: "SonarSource_docker-sonarqube_AYcnOvlJTpBOcQuGEdI5"
+        shadow1_platform: "SQC-EU"
+        shadow2_project_key: "SonarSource_docker-sonarqube_AYcnOvlJTpBOcQuGEdI5"
+        shadow2_platform: "SQC-US"
