@@ -16,11 +16,11 @@ ls -al
 11:33 Dockerfile-search
 11:39 README
 11:37 docker-compose.yml
-11:33 sonarqube-datacenter-2025.1.0.102418.zip
+11:33 sonarqube-datacenter-2025.1.6.120460.zip
 11:33 unrestricted_client_body_size.conf
 ```
 
-You need to specify the SonarQube Server version that will be used either with an export like this `export SONARQUBE_VERSION=2025.1.0.102418` or by changing the docker-compose file.
+You need to specify the SonarQube Server version that will be used either with an export like this `export SONARQUBE_VERSION=2025.1.6.120460` or by changing the docker-compose file.
 
 You can then run this command to start the SonarQube Server instance:
 

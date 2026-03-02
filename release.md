@@ -13,7 +13,7 @@ Release of a new version of the official SonarQube Server Docker images is made 
 3. Update the docker hub SonarQube Server's documentation (if applicable)
 4. Update Docker Hub's SonarQube Server images
 5. Add a GIT tag for the new version (This needs to be done after the images become available on DockerHub)
-   1. If you are releasing a SonarQube Server version, you need to [Add a New Release](https://github.com/SonarSource/docker-sonarqube/releases/new), where the name matches "SonarQube Server", followed by the release version, e.g., "SonarQube Server 2025.1.0".
+   1. If you are releasing a SonarQube Server version, you need to [Add a New Release](https://github.com/SonarSource/docker-sonarqube/releases/new), where the name matches "SonarQube Server", followed by the release version, e.g., "SonarQube Server 2025.1.6".
    2. Likewise, if you are releasing a Community Build, the release name should match "Community Build", followed by the release version, e.g., "Community Build 25.1.0.102122".
    3. The Git tag for the SonarQube Community Build release must be the full version, e.g., `25.1.0.102122`.
 
