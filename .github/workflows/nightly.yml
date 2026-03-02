@@ -1,0 +1,19 @@
+name: CI Scheduled (branch-2025.1 nightly)
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # Daily at 3AM UTC
+
+jobs:
+  run-ci:
+    name: CI
+    uses: ./.github/workflows/push_and_pr.yml
+    with:
+      run_builds: true
+      run_tests: true
+      run_go_tests: true
+      run_gcp_staging: false
+      editions: 'all'
+    permissions:
+      id-token: write
+      contents: read

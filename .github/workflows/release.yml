@@ -1,57 +1,74 @@
-name: Release SBOM Assets
+name: CI Scheduled (Release - Deployment to GCP nightly)
 
 on:
   release:
-    types:
-      - created
+    types: [published]
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+  workflow_dispatch:
+    inputs:
+      trigger_type:
+        description: 'Trigger type'
+        required: false
+        default: 'dry-run'
+        type: choice
+        options:
+          - dry-run
+          - PUSH_GCP_PROD_IMAGES
 
 jobs:
-  release-9-x:
-    name: Upload Release Assets for 9-X releases
-    if: contains(github.event.release.name, '9.')
+  load-config:
+    uses: ./.github/workflows/load-config.yml
+
+  gcp-build-production-app:
+    needs: load-config
+    if: |
+      github.event_name == 'schedule' ||
+      github.event_name == 'release' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_PROD_IMAGES')
     permissions:
-      contents: write
       id-token: write
-    strategy:
-      fail-fast: false
-      matrix:
-        tag:
-          - 9-community
-          - 9-developer
-          - 9-enterprise
-          - 9-datacenter-app
-          - 9-datacenter-search
-    uses: ./.github/workflows/release-template.yml
+      contents: read
+    name: GCP build production (app)
+    uses: ./.github/workflows/gcp-build-template.yml
     with:
-      tag: ${{ matrix.tag }}
-  release-2025-x:
-    name: Upload Release Assets for 2025.X releases
-    if: contains(github.event.release.name, 'SonarQube Server 2025.')
+      gcp_registry: ${{ needs.load-config.outputs.gcp_public_registry }}
+      gcp_product_name: ${{ needs.load-config.outputs.gcp_public_product }}
+      build_type: production
+      platforms: linux/amd64
+      current_version: ${{ needs.load-config.outputs.current_version }}
+      public_image_name: ${{ needs.load-config.outputs.public_image }}
+      component_type: app
+
+  gcp-build-production-search:
+    needs: load-config
+    if: |
+      github.event_name == 'schedule' ||
+      github.event_name == 'release' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_PROD_IMAGES')
     permissions:
-      contents: write
       id-token: write
-    strategy:
-      fail-fast: false
-      matrix:
-        tag:
-          - 2025.3-developer
-          - 2025.3-enterprise
-          - 2025.3-datacenter-app
-          - 2025.3-datacenter-search
-    uses: ./.github/workflows/release-template.yml
+      contents: read
+    name: GCP build production (search)
+    uses: ./.github/workflows/gcp-build-template.yml
     with:
-      tag: ${{ matrix.tag }}
-  release-community-build:
-    name: Upload Release Assets for community-build release
-    if: contains(github.event.release.name, 'Community Build')
+      gcp_registry: ${{ needs.load-config.outputs.gcp_public_registry }}
+      gcp_product_name: ${{ needs.load-config.outputs.gcp_public_product }}
+      build_type: production
+      platforms: linux/amd64
+      current_version: ${{ needs.load-config.outputs.current_version }}
+      public_image_name: ${{ needs.load-config.outputs.public_image }}
+      component_type: search
+
+
+  notify-slack-on-failure:
+    name: Notify on Failure
+    needs: [ gcp-build-production-app, gcp-build-production-search ]
+    if: >-
+      always() &&
+      (needs.gcp-build-production-app.result == 'failure' || needs.gcp-build-production-search.result == 'failure') &&
+      (github.ref_name == github.event.repository.default_branch ||
+      startsWith(github.ref_name, 'release/'))
     permissions:
-      contents: write
       id-token: write
-    strategy:
-      fail-fast: false
-      matrix:
-        tag:
-          - community
-    uses: ./.github/workflows/release-template.yml
-    with:
-      tag: ${{ matrix.tag }}
+    uses: ./.github/workflows/slack_notify.yml
