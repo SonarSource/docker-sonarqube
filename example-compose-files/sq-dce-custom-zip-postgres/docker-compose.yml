@@ -4,7 +4,7 @@ services:
     ports:
       - "9001:9000"
     healthcheck:
-      test: curl -s http://$$SONAR_CLUSTER_NODE_NAME:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
+      test: wget -qO- http://$$SONAR_CLUSTER_NODE_NAME:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
       interval: 25s
       timeout: 1s
       retries: 3
@@ -32,6 +32,7 @@ services:
     mem_limit: 4096M
     mem_reservation: 4096M
     environment:
+      SONAR_WEB_CONTEXT: /sonarqube
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
@@ -54,7 +55,7 @@ services:
     ports:
       - "9002:9000"
     healthcheck:
-      test: curl -s http://$$SONAR_CLUSTER_NODE_NAME:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
+      test: wget -qO- http://$$SONAR_CLUSTER_NODE_NAME:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
       interval: 25s
       timeout: 1s
       retries: 3
@@ -83,6 +84,7 @@ services:
     mem_limit: 4096M
     mem_reservation: 4096M
     environment:
+      SONAR_WEB_CONTEXT: /sonarqube
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
@@ -128,6 +130,7 @@ services:
       SONAR_CLUSTER_ES_HOSTS: "search-1,search-2"
       SONAR_CLUSTER_ES_DISCOVERY_SEED_HOSTS: "search"
       SONAR_CLUSTER_NODE_NAME: "search-1"
+      SONAR_SEARCH_JAVAADDITIONALOPTS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
       JAVA_TOOL_OPTIONS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
     volumes:
       - search_data-1:/opt/sonarqube/data
@@ -137,7 +140,7 @@ services:
     tmpfs:
       - /tmp:size=256M,mode=1777
     healthcheck:
-        test: curl -s "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
+        test: wget -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
         interval: 25s
         timeout: 1s
         retries: 3
@@ -169,6 +172,7 @@ services:
       SONAR_CLUSTER_ES_HOSTS: "search-1,search-2"
       SONAR_CLUSTER_ES_DISCOVERY_SEED_HOSTS: "search"
       SONAR_CLUSTER_NODE_NAME: "search-2"
+      SONAR_SEARCH_JAVAADDITIONALOPTS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
       JAVA_TOOL_OPTIONS: '-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true'
     volumes:
       - search_data-2:/opt/sonarqube/data
@@ -178,7 +182,7 @@ services:
     tmpfs:
       - /tmp:size=256M,mode=1777
     healthcheck:
-        test: curl -s "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
+        test: wget -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
         interval: 25s
         timeout: 1s
         retries: 3

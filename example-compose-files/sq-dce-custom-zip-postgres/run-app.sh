@@ -3,7 +3,7 @@
 set -euo pipefail
 
 HOSTNAME=$(hostname)
-IP=$(ip -6 address show scope global | grep inet | awk '{ print $2 }' | head -n 1 | cut -d \/ -f 1)
+IP=$(ip -4 address show scope global | grep inet | awk '{ print $2 }' | head -n 1 | cut -d \/ -f 1)
 
 declare -a sq_opts=()
 set_prop() {
@@ -40,7 +40,6 @@ if [[ "${1}" = '/opt/sonarqube/docker/sonar.sh' ]]; then
     #
     # Set mandatory properties
     #
-    set_prop "sonar.web.host" "${IP:-}"
     set_prop "sonar.cluster.node.host" "${IP:-}"
     set_prop "sonar.path.logs" "${SONAR_CLUSTER_PATH_LOGS:-}"
     if [[ "${#sq_opts[@]}" -ne 0 ]]; then
