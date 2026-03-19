@@ -6,8 +6,6 @@ on:
       - master
   pull_request:
     types: [opened, synchronize, reopened]
-  schedule:
-    - cron: '0 4 * * *'
   workflow_dispatch:
 
 name: CI Scheduled (SonarQube scans nightly)
