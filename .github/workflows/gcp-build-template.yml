@@ -42,11 +42,11 @@ on:
 jobs:
   gcp-build:
     name: GCP build ${{ inputs.build_type }} (${{ inputs.component_type }})
-    runs-on: ubuntu-24.04-large
+    runs-on: github-ubuntu-latest-s
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Set up variables
         id: vars
@@ -70,7 +70,7 @@ jobs:
 
       - id: secrets
         name: Retrieve secrets from Vault
-        uses: SonarSource/vault-action-wrapper@v3
+        uses: SonarSource/vault-action-wrapper@545e7cfbb5528e7009a1edcc83e073898d292627 # v3.2.0
         with:
           secrets: |
             development/team/sonarqube/kv/data/gcp-marketplace-registry-staging key | gcp_sa_key;
@@ -91,7 +91,7 @@ jobs:
           echo "${DOCKER_GCLOUD_PASSWORD}" | docker login -u _json_key --password-stdin https://${{ inputs.gcp_registry }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
         with:
           name: multibuilder
           driver: docker-container
@@ -99,7 +99,7 @@ jobs:
 
       - name: Set up QEMU for multi-arch builds (staging only)
         if: ${{ inputs.build_type == 'staging' }}
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
         with:
           platforms: all
 
@@ -113,8 +113,8 @@ jobs:
           EXTRA_DOCKER_BUILD_ARGS: ${{ inputs.extra_docker_build_args }}
         run: |
           echo "Build and promote the ${STAGING_IMAGE_NAME}:${TAG} and ${STAGING_IMAGE_NAME}:${MINOR_TAG} image supporting two architectures, linux/amd64 and linux/arm64"
-          .cirrus/multi-arch-build.sh "${STAGING_IMAGE_NAME}" "${TAG}" "${VERSION}"
-          .cirrus/multi-arch-build.sh "${STAGING_IMAGE_NAME}" "${MINOR_TAG}" "${VERSION}"
+          .github/workflows/scripts/multi-arch-build.sh "${STAGING_IMAGE_NAME}" "${TAG}" "${VERSION}"
+          .github/workflows/scripts/multi-arch-build.sh "${STAGING_IMAGE_NAME}" "${MINOR_TAG}" "${VERSION}"
 
       - name: Promote datacenter image to GCP production
         if: ${{ inputs.build_type == 'production' }}
@@ -131,7 +131,7 @@ jobs:
           echo -e "FROM ${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-${COMPONENT_TYPE}" | docker buildx build \
             --platform linux/amd64 \
             --provenance=false \
-            --annotation "manifest,manifest-descriptor:com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog" \
+            --sbom=false \
+            --output "type=image,push=true,oci-mediatypes=false,annotation-manifest.com.googleapis.cloudmarketplace.product.service.name=services/official-sonarqube-data-center-edition.endpoints.sonarsource-public.cloud.goog" \
             --tag "${TARGET_IMAGE_NAME}:${CURRENT_VERSION}" \
-            --tag "${TARGET_IMAGE_NAME}:${CURRENT_MINOR_VERSION}" \
-            --push -
+            --tag "${TARGET_IMAGE_NAME}:${CURRENT_MINOR_VERSION}" -
