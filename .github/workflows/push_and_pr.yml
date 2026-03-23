@@ -17,7 +17,6 @@ on:
       - '.github/workflows/multi-arch-test-template.yml'
       - '.github/github_env.yaml'
       - 'run-tests.sh'
-      - 'docker-official-images/**/*'
   pull_request:
     paths:
       - 'commercial-editions/**/*'
@@ -27,7 +26,6 @@ on:
       - '.github/workflows/multi-arch-test-template.yml'
       - '.github/github_env.yaml'
       - 'run-tests.sh'
-      - 'docker-official-images/**/*'
   workflow_call:
     inputs:
       run_builds:
