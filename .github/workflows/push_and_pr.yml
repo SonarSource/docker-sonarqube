@@ -13,25 +13,21 @@ on:
       - 'release/**'
     paths:
       - 'commercial-editions/**/*'
-      - 'community-build/*'
       - '.github/workflows/scripts/multi-arch-build.sh'
       - '.github/workflows/push_and_pr.yml'
       - '.github/workflows/multi-arch-build-template.yml'
       - '.github/workflows/multi-arch-test-template.yml'
       - '.github/github_env.yaml'
       - 'run-tests.sh'
-      - 'docker-official-images/**/*'
   pull_request:
     paths:
       - 'commercial-editions/**/*'
-      - 'community-build/*'
       - '.github/workflows/scripts/multi-arch-build.sh'
       - '.github/workflows/push_and_pr.yml'
       - '.github/workflows/multi-arch-build-template.yml'
       - '.github/workflows/multi-arch-test-template.yml'
       - '.github/github_env.yaml'
       - 'run-tests.sh'
-      - 'docker-official-images/**/*'
   workflow_dispatch:
     inputs:
       run_builds:
