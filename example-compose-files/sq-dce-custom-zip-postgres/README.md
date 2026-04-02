@@ -1,4 +1,4 @@
-# Example of SonarQube DCE running on an IPv6 environment.
+# Example of SonarQube DCE with custom zip and PostgreSQL
 
 You need Docker and docker-compose installed.
 
@@ -42,6 +42,13 @@ sq-dce-custom-zip-postgres-sonarqube-2   sq-dce-custom-zip-postgres-sonarqube  s
 ```
 
 You can access your SonarQube Server instance through the reverse proxy with this url `http://sonarqube.dev.local/`. (the DNS entry `127.0.0.1 sonarqube.dev.local` needs to be set on your `/etc/hosts`).
+
+## Configuration
+
+| Variable | Default | Description |
+|---|---|---|
+| `USE_IPV6` | `false` | Set to `true` to run in IPv6 mode. Automatically sets the required JVM flags on all nodes. |
+| `SONAR_WEB_CONTEXT` | _(empty)_ | Set to run SonarQube under a sub-path, e.g. `/sonarqube`. |
 
 ## Troubleshooting
 
