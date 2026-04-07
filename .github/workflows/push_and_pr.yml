@@ -218,7 +218,7 @@ jobs:
 
       - id: secrets
         name: Retrieve secrets from Vault
-        uses: SonarSource/vault-action-wrapper@545e7cfbb5528e7009a1edcc83e073898d292627 # v3.2.0
+        uses: SonarSource/vault-action-wrapper@v3
         with:
           secrets: |
             development/kv/data/docker/sonardockerrw username | docker_username;
