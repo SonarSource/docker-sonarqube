@@ -11,7 +11,7 @@ Release of a new version of the official SonarQube Server Docker images is made 
 > Please note that steps 1 and 2 are fully automated with [renovate](https://developer.mend.io/). When the SonarQube Server binaries are made available, please activate the Renovate scan to trigger a new release (i.e., `docker-sonarqube` -> `Actions` -> `Run Renovate Scan`).
 
 1. Set the new version of SonarQube Server (`SONARQUBE_VERSION`) to be released in the Dockerfiles. In case of community build, please remember to update `community-build/Dockerfile` only.
-2. Set the new version in `.cirrus/tasks.yml`. If you are releasing a new LTA, set `CURRENT_VERSION` in `.cirrus/tasks.yml` on the related lta branch. Otherwise, if you are releasing a Community build, set `COMMUNITY_BUILD_VERSION` only. In all the other cases where a paid edition is about to be releases, set `CURRENT_VERSION` (please note that the nightly build will fail before the public image becomes available).
+2. Set the new version in `.github/github_env.yaml`. If you are releasing a new LTA, set `versions.current` in `.github/github_env.yaml` on the related lta branch. Otherwise, if you are releasing a Community build, set `versions.community_build` only. In all the other cases where a paid edition is about to be releases, set `versions.current` (please note that the nightly build will fail before the public image becomes available).
 3. Update the docker hub SonarQube Server's documentation (if applicable)
 4. Update Docker Hub's SonarQube Server images
 5. Add a GIT tag for the new version (This needs to be done after the images become available on DockerHub)
