@@ -43,21 +43,21 @@ jobs:
         name: docker-official-images-coverage-${{ github.sha }}
         path: docker-official-images/
     - name: SonarQube Next Scan
-      uses: sonarsource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9 # v7.0.0
+      uses: sonarsource/sonarqube-scan-action@v7
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).sq_next_token }}
         SONAR_HOST_URL: https://next.sonarqube.com/sonarqube/
     - name: SonarQube Cloud EU Scan
       if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-      uses: sonarsource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9 # v7.0.0
+      uses: sonarsource/sonarqube-scan-action@v7
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).sq_cloud_eu_token }}
         SONAR_HOST_URL: https://sonarcloud.io
     - name: SonarQube Cloud US Scan
       if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-      uses: sonarsource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9 # v7.0.0
+      uses: sonarsource/sonarqube-scan-action@v7
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).sq_cloud_us_token }}
