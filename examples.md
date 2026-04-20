@@ -55,3 +55,63 @@ To restart SonarQube container (for example after upgrading or installing a plug
 ```bash
 $ docker-compose restart sonarqube
 ```
+
+## Run SonarQube with MCP Server
+
+The [SonarQube MCP Server](https://github.com/SonarSource/sonarqube-mcp-server) enables AI-powered code analysis through the [Model Context Protocol](https://modelcontextprotocol.io). SonarQube Server (SQS) can be configured to connect to the MCP server at startup.
+
+### Docker Compose (SQS Docker image + MCP)
+
+A reference compose file is available at [example-compose-files/sq-with-mcp-postgres](example-compose-files/sq-with-mcp-postgres). It starts a SonarQube Enterprise instance alongside an MCP server and a PostgreSQL database:
+
+```bash
+$ cd example-compose-files/sq-with-mcp-postgres
+$ docker-compose up
+```
+
+> **Note:** The PostgreSQL database included in this compose file is intended for **testing and evaluation only**. For production deployments, provide your own external database via `SONAR_JDBC_URL`, `SONAR_JDBC_USERNAME`, and `SONAR_JDBC_PASSWORD`.
+
+The compose file sets the following MCP-related environment variables on the SonarQube container:
+
+```yaml
+environment:
+  SONAR_MCP_ENABLED: "true"
+  SONAR_MCP_SERVER_URL: "http://mcp:8080/mcp"
+  SONAR_MCP_HEALTHCHECK_INTERVAL: "30s"
+```
+
+#### SQS MCP environment variables
+
+| Variable | Java property | Description |
+|---|---|---|
+| `SONAR_MCP_ENABLED` | `sonar.mcp.enabled` | Set to `"true"` to enable the MCP integration. |
+| `SONAR_MCP_SERVER_URL` | `sonar.mcp.serverUrl` | Full URL of the MCP HTTP endpoint (e.g. `http://mcp:8080/mcp`). |
+| `SONAR_MCP_HEALTHCHECK_INTERVAL` | `sonar.mcp.healthCheck.interval` | How often SQS polls the MCP server health endpoint (e.g. `30s`). |
+
+### Connecting an MCP client (e.g. Claude)
+
+Once SonarQube and the MCP server are running, you need a **user token** to authenticate MCP requests.
+
+**1. Generate a user token in SonarQube:**
+
+Go to **My Account → Security → Generate Token** in the SonarQube UI (`http://localhost:9000`), create a token of type *User Token*, and copy the value.
+
+**2. Add the MCP server to your Claude configuration:**
+
+Edit your Claude MCP configuration (e.g. `claude_desktop_config.json`) and add the `sonarqube` entry under `mcpServers`:
+
+```json
+{
+  "mcpServers": {
+    "sonarqube": {
+      "type": "http",
+      "url": "http://localhost:9000/mcp",
+      "headers": {
+        "Authorization": "Bearer <your-user-token>"
+      }
+    }
+  }
+}
+```
+
+Replace `<your-user-token>` with the token generated in the previous step. Restart Claude after saving the configuration.
