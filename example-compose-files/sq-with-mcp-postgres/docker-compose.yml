@@ -18,7 +18,7 @@ services:
       SONAR_JDBC_PASSWORD: sonar
       SONAR_MCP_ENABLED: "true"
       SONAR_MCP_SERVERURL: "http://mcp:8080"
-      SONAR_MCP_HEALTHCHECKINTERVAL: "30s"
+      SONAR_MCP_HEALTHCHECKINTERVAL: "30"
     volumes:
       - sonarqube_data:/opt/sonarqube/data
       - sonarqube_extensions:/opt/sonarqube/extensions

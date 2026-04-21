@@ -77,7 +77,7 @@ The compose file sets the following MCP-related environment variables on the Son
 environment:
   SONAR_MCP_ENABLED: "true"
   SONAR_MCP_SERVERURL: "http://mcp:8080"
-  SONAR_MCP_HEALTHCHECKINTERVAL: "30s"
+  SONAR_MCP_HEALTHCHECKINTERVAL: "30"
 ```
 
 #### SQS MCP environment variables
