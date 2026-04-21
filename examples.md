@@ -76,7 +76,7 @@ The compose file sets the following MCP-related environment variables on the Son
 ```yaml
 environment:
   SONAR_MCP_ENABLED: "true"
-  SONAR_MCP_SERVER_URL: "http://mcp:8080/mcp"
+  SONAR_MCP_SERVERURL: "http://mcp:8080/mcp"
   SONAR_MCP_HEALTHCHECK_INTERVAL: "30s"
 ```
 
@@ -85,8 +85,21 @@ environment:
 | Variable | Java property | Description |
 |---|---|---|
 | `SONAR_MCP_ENABLED` | `sonar.mcp.enabled` | Set to `"true"` to enable the MCP integration. |
-| `SONAR_MCP_SERVER_URL` | `sonar.mcp.serverUrl` | Full URL of the MCP HTTP endpoint (e.g. `http://mcp:8080/mcp`). |
+| `SONAR_MCP_SERVERURL` | `sonar.mcp.serverUrl` | Full URL of the MCP HTTP endpoint (e.g. `http://mcp:8080/mcp`). |
 | `SONAR_MCP_HEALTHCHECK_INTERVAL` | `sonar.mcp.healthCheck.interval` | How often SQS polls the MCP server health endpoint (e.g. `30s`). |
+
+### Docker Compose (SQS Data Center Edition + MCP)
+
+A reference compose file is available at [example-compose-files/sq-dce-with-mcp-postgres](example-compose-files/sq-dce-with-mcp-postgres). It starts a SonarQube Data Center Edition cluster (two application nodes + three search nodes) alongside an MCP server, an nginx reverse proxy, and a PostgreSQL database:
+
+```bash
+$ cd example-compose-files/sq-dce-with-mcp-postgres
+$ docker-compose up
+```
+
+The two application nodes are not exposed directly; they sit behind an nginx reverse proxy ([`jwilder/nginx-proxy`](https://github.com/nginx-proxy/nginx-proxy)) published on port `80`. The proxy routes requests to the app nodes via the `VIRTUAL_HOST: sonarqube.dev.local` setting, so SonarQube is reachable at `http://sonarqube.dev.local` once that hostname is added to `/etc/hosts`. Both nodes are reachable internally via the `sonarqube` Docker network alias, which is what the MCP server uses to connect (`http://sonarqube:9000`).
+
+> **Note:** The PostgreSQL database included in this compose file is intended for **testing and evaluation only**. For production deployments, provide your own external database via `SONAR_JDBC_URL`, `SONAR_JDBC_USERNAME`, and `SONAR_JDBC_PASSWORD`.
 
 ### Connecting an MCP client (e.g. Claude)
 
@@ -98,7 +111,9 @@ Go to **My Account → Security → Generate Token** in the SonarQube UI (`http:
 
 **2. Add the MCP server to your Claude configuration:**
 
-Edit your Claude MCP configuration (e.g. `claude_desktop_config.json`) and add the `sonarqube` entry under `mcpServers`:
+Add the `sonarqube` entry under `mcpServers` in your Claude configuration file:
+- Claude Code (CLI): `~/.claude.json`
+- Claude Desktop (app): `claude_desktop_config.json` (typically `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS)
 
 ```json
 {
