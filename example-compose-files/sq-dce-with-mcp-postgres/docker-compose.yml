@@ -39,7 +39,7 @@ services:
       SONAR_CLUSTER_KUBERNETES: true
       SONAR_AUTH_JWTBASE64HS256SECRET: "dZ0EB0KxnF++nr5+4vfTCaun/eWbv6gOoXodiAMqcFo="
       SONAR_MCP_ENABLED: "true"
-      SONAR_MCP_SERVERURL: "http://mcp:8080/mcp"
+      SONAR_MCP_SERVERURL: "http://mcp:8080"
       SONAR_MCP_HEALTHCHECK_INTERVAL: "30s"
       VIRTUAL_HOST: sonarqube.dev.local
       VIRTUAL_PORT: 9000
