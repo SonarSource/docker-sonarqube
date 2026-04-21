@@ -120,7 +120,8 @@ Add the `sonarqube` entry under `mcpServers` in your Claude configuration file:
   "mcpServers": {
     "sonarqube": {
       "type": "http",
-      "url": "http://localhost:9000/mcp",
+      // SonarQube Server (SQS) proxies MCP requests via the /mcp endpoint. (In this example, http://localhost:9000/mcp)
+      "url": "${SONARQUBE_URL}/mcp",
       "headers": {
         "Authorization": "Bearer <your-user-token>"
       }
