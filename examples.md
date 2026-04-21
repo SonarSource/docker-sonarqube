@@ -77,7 +77,7 @@ The compose file sets the following MCP-related environment variables on the Son
 environment:
   SONAR_MCP_ENABLED: "true"
   SONAR_MCP_SERVERURL: "http://mcp:8080"
-  SONAR_MCP_HEALTHCHECK_INTERVAL: "30s"
+  SONAR_MCP_HEALTHCHECKINTERVAL: "30s"
 ```
 
 #### SQS MCP environment variables
@@ -86,7 +86,7 @@ environment:
 |---|---|---|
 | `SONAR_MCP_ENABLED` | `sonar.mcp.enabled` | Set to `"true"` to enable the MCP integration. |
 | `SONAR_MCP_SERVERURL` | `sonar.mcp.serverUrl` | Full URL of the MCP HTTP endpoint (e.g. `http://mcp:8080`). |
-| `SONAR_MCP_HEALTHCHECK_INTERVAL` | `sonar.mcp.healthCheck.interval` | How often SQS polls the MCP server health endpoint (e.g. `30s`). |
+| `SONAR_MCP_HEALTHCHECKINTERVAL` | `sonar.mcp.healthCheck.interval` | How often SQS polls the MCP server health endpoint (e.g. `30s`). |
 
 ### Docker Compose (SQS Data Center Edition + MCP)
 
