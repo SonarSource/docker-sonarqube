@@ -10,7 +10,6 @@ jobs:
     runs-on: github-ubuntu-latest-s
     permissions:
       id-token: write
-      pull-requests: read
     # For external PR, ticket should be moved manually
     if: |
         github.event.pull_request.head.repo.full_name == github.repository
@@ -21,10 +20,11 @@ jobs:
         uses: SonarSource/vault-action-wrapper@v3
         with:
           secrets: |
+            development/github/token/{REPO_OWNER_NAME_DASH}-jira token | GITHUB_TOKEN;
             development/kv/data/jira user | JIRA_USER;
             development/kv/data/jira token | JIRA_TOKEN;
       - uses: sonarsource/gh-action-lt-backlog/SubmitReview@v2
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
+          github-token: ${{ fromJSON(steps.secrets.outputs.vault).GITHUB_TOKEN }}
           jira-user: ${{ fromJSON(steps.secrets.outputs.vault).JIRA_USER }}
           jira-token: ${{ fromJSON(steps.secrets.outputs.vault).JIRA_TOKEN }}
