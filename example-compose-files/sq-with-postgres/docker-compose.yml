@@ -36,7 +36,7 @@ services:
       POSTGRES_PASSWORD: sonar
       POSTGRES_DB: sonar
     volumes:
-      - postgresql:/var/lib/postgresql
+      - postgresql:/var/lib/postgresql/data
     networks:
       - ${NETWORK_TYPE:-ipv4}
 
