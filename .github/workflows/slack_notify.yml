@@ -8,7 +8,7 @@ jobs:
     name: Slack Notification
     permissions:
       id-token: write
-    runs-on: github-ubuntu-latest-s
+    runs-on: warp-custom-ubuntu-24-04
     steps:
       - name: Vault Secrets
         id: secrets
