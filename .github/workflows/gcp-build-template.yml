@@ -42,7 +42,7 @@ on:
 jobs:
   gcp-build:
     name: GCP build ${{ inputs.build_type }} (${{ inputs.component_type }})
-    runs-on: github-ubuntu-latest-s
+    runs-on: warp-custom-ubuntu-24-04
 
     steps:
       - name: Checkout repository
