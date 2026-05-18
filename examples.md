@@ -86,7 +86,7 @@ environment:
 |---|---|---|
 | `SONAR_MCP_ENABLED` | `sonar.mcp.enabled` | Set to `"true"` to enable the MCP integration. |
 | `SONAR_MCP_SERVERURL` | `sonar.mcp.serverUrl` | Full URL of the MCP HTTP endpoint (e.g. `http://mcp:8080`). |
-| `SONAR_MCP_HEALTHCHECKINTERVAL` | `sonar.mcp.healthCheck.interval` | How often SQS polls the MCP server health endpoint (e.g. `30s`). |
+| `SONAR_MCP_HEALTHCHECKINTERVAL` | `sonar.mcp.healthCheck.interval` | How often SQS polls the MCP server health endpoint, in seconds (e.g. `30`). |
 
 ### Docker Compose (SQS Data Center Edition + MCP)
 
