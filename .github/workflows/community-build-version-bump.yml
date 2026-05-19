@@ -51,28 +51,21 @@ jobs:
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
           git checkout -b "$BRANCH"
 
-          CURRENT_DOCKERFILE_VERSION=$(grep -oP '^ARG SONARQUBE_VERSION=\K.*' community-build/Dockerfile || true)
-          CURRENT_ENV_VERSION=$(grep -oP '^  community_build: "\K[^"]+' .github/github_env.yaml || true)
-
-          if [ -z "$CURRENT_DOCKERFILE_VERSION" ] || [ -z "$CURRENT_ENV_VERSION" ]; then
-            echo "Error: could not locate current version in community-build/Dockerfile or .github/github_env.yaml."
-            echo "Check that the regex patterns still match the current file formatting."
-            exit 1
-          fi
-
-          if [ "$CURRENT_DOCKERFILE_VERSION" = "$NEW_VERSION" ] && [ "$CURRENT_ENV_VERSION" = "$NEW_VERSION" ]; then
-            echo "No changes needed (version already at ${NEW_VERSION}). Exiting."
-            exit 0
-          fi
-
           sed -i "s/^ARG SONARQUBE_VERSION=.*/ARG SONARQUBE_VERSION=${NEW_VERSION}/" \
             community-build/Dockerfile
           sed -i "s/^  community_build: \".*\"/  community_build: \"${NEW_VERSION}\"/" \
             .github/github_env.yaml
 
-          if git diff --quiet; then
-            echo "Error: sed substitution produced no changes despite version mismatch. Investigate file formatting."
+          if ! grep -q "^ARG SONARQUBE_VERSION=${NEW_VERSION}$" community-build/Dockerfile \
+             || ! grep -q "^  community_build: \"${NEW_VERSION}\"$" .github/github_env.yaml; then
+            echo "Error: post-sed verification failed. Expected lines not present in target files."
+            echo "Check that the sed patterns still match the current file formatting."
             exit 1
+          fi
+
+          if git diff --quiet; then
+            echo "No changes needed (version already at ${NEW_VERSION}). Exiting."
+            exit 0
           fi
 
           git add community-build/Dockerfile .github/github_env.yaml
