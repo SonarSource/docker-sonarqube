@@ -25,7 +25,7 @@ jobs:
             development/github/token/{REPO_OWNER_NAME_DASH}-release-automation token | GITHUB_TOKEN;
 
       - name: 'Checkout repository'
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v6.0.2
         with:
           persist-credentials: true
           token: ${{ fromJSON(steps.secrets.outputs.vault).GITHUB_TOKEN }}
@@ -40,11 +40,30 @@ jobs:
             exit 1
           fi
 
+          if ! echo "$NEW_VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Error: NEW_VERSION '${NEW_VERSION}' does not match expected format X.Y.Z.BUILD"
+            exit 1
+          fi
+
           BRANCH="task/bump-community-build-version-${NEW_VERSION}"
 
           git config user.name "${GITHUB_ACTOR}"
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
           git checkout -b "$BRANCH"
+
+          CURRENT_DOCKERFILE_VERSION=$(grep -oP '^ARG SONARQUBE_VERSION=\K.*' community-build/Dockerfile || true)
+          CURRENT_ENV_VERSION=$(grep -oP '^  community_build: "\K[^"]+' .github/github_env.yaml || true)
+
+          if [ -z "$CURRENT_DOCKERFILE_VERSION" ] || [ -z "$CURRENT_ENV_VERSION" ]; then
+            echo "Error: could not locate current version in community-build/Dockerfile or .github/github_env.yaml."
+            echo "Check that the regex patterns still match the current file formatting."
+            exit 1
+          fi
+
+          if [ "$CURRENT_DOCKERFILE_VERSION" = "$NEW_VERSION" ] && [ "$CURRENT_ENV_VERSION" = "$NEW_VERSION" ]; then
+            echo "No changes needed (version already at ${NEW_VERSION}). Exiting."
+            exit 0
+          fi
 
           sed -i "s/^ARG SONARQUBE_VERSION=.*/ARG SONARQUBE_VERSION=${NEW_VERSION}/" \
             community-build/Dockerfile
@@ -52,14 +71,15 @@ jobs:
             .github/github_env.yaml
 
           if git diff --quiet; then
-            echo "No changes detected (version already at ${NEW_VERSION}). Exiting."
-            exit 0
+            echo "Error: sed substitution produced no changes despite version mismatch. Investigate file formatting."
+            exit 1
           fi
 
           git add community-build/Dockerfile .github/github_env.yaml
           git commit -m "NO-JIRA Bump SonarQube Community Build to ${NEW_VERSION}"
           git push --set-upstream origin "$BRANCH"
           gh pr create \
+            --head "$BRANCH" \
             --base master \
             --title "Bump SonarQube Community Build to ${NEW_VERSION}" \
             --body "Automated version bump triggered by community-build release in sonar-enterprise."
