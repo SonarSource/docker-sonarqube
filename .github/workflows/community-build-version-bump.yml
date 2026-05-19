@@ -1,0 +1,78 @@
+name: Community Build Version Bump
+
+on:
+  repository_dispatch:
+    types: [sonarqube-community-build-released]
+  workflow_dispatch:
+    inputs:
+      community_build_version:
+        description: 'SonarQube Community Build version (e.g., 26.5.0.122743)'
+        required: true
+
+jobs:
+  bump-version:
+    name: Bump SONARQUBE_VERSION and open PR
+    runs-on: github-ubuntu-latest-s
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - id: secrets
+        uses: SonarSource/vault-action-wrapper@v3
+        with:
+          secrets: |
+            development/github/token/{REPO_OWNER_NAME_DASH}-release-automation token | GITHUB_TOKEN;
+
+      - name: 'Checkout repository'
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v6.0.2
+        with:
+          persist-credentials: true
+          token: ${{ fromJSON(steps.secrets.outputs.vault).GITHUB_TOKEN }}
+
+      - name: 'Bump SONARQUBE_VERSION and create PR'
+        env:
+          GITHUB_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).GITHUB_TOKEN }}
+          NEW_VERSION: ${{ github.event.client_payload.community_build_version || github.event.inputs.community_build_version }}
+        run: |
+          if [ -z "$NEW_VERSION" ]; then
+            echo "Error: community_build_version is empty in the dispatch payload."
+            exit 1
+          fi
+
+          if ! echo "$NEW_VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Error: NEW_VERSION '${NEW_VERSION}' does not match expected format X.Y.Z.BUILD"
+            exit 1
+          fi
+
+          BRANCH="task/bump-community-build-version-${NEW_VERSION}"
+
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+
+          sed -i "s/^ARG SONARQUBE_VERSION=.*/ARG SONARQUBE_VERSION=${NEW_VERSION}/" \
+            community-build/Dockerfile
+          sed -i "s/^  community_build: \".*\"/  community_build: \"${NEW_VERSION}\"/" \
+            .github/github_env.yaml
+
+          if ! grep -q "^ARG SONARQUBE_VERSION=${NEW_VERSION}$" community-build/Dockerfile \
+             || ! grep -q "^  community_build: \"${NEW_VERSION}\"$" .github/github_env.yaml; then
+            echo "Error: post-sed verification failed. Expected lines not present in target files."
+            echo "Check that the sed patterns still match the current file formatting."
+            exit 1
+          fi
+
+          if git diff --quiet; then
+            echo "No changes needed (version already at ${NEW_VERSION}). Exiting."
+            exit 0
+          fi
+
+          git add community-build/Dockerfile .github/github_env.yaml
+          git commit -m "NO-JIRA Bump SonarQube Community Build to ${NEW_VERSION}"
+          git push --set-upstream origin "$BRANCH"
+          gh pr create \
+            --head "$BRANCH" \
+            --base master \
+            --title "Bump SonarQube Community Build to ${NEW_VERSION}" \
+            --body "Automated version bump triggered by community-build release in sonar-enterprise."
