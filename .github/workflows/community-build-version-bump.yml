@@ -18,21 +18,15 @@ jobs:
       pull-requests: write
       id-token: write
     steps:
-      - id: secrets
-        uses: SonarSource/vault-action-wrapper@v3
-        with:
-          secrets: |
-            development/github/token/{REPO_OWNER_NAME_DASH}-jira token | GITHUB_TOKEN;
-
       - name: 'Checkout repository'
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v6.0.2
         with:
           persist-credentials: true
-          token: ${{ fromJSON(steps.secrets.outputs.vault).GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_BOT_TOKEN }}
 
       - name: 'Bump SONARQUBE_VERSION and create PR'
         env:
-          GITHUB_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN }}
           NEW_VERSION: ${{ github.event.client_payload.community_build_version || github.event.inputs.community_build_version }}
         run: |
           if [ -z "$NEW_VERSION" ]; then
