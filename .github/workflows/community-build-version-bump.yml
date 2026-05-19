@@ -70,4 +70,4 @@ jobs:
             --head "$BRANCH" \
             --base "${{ github.event.repository.default_branch }}" \
             --title "Bump SonarQube Community Build to ${NEW_VERSION}" \
-            --body "Automated version bump triggered by community-build release in sonar-enterprise."
+            --body "This PR bumps the SonarQube version used in the Community Build to ${NEW_VERSION}."
