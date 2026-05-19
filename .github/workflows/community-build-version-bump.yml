@@ -21,6 +21,7 @@ jobs:
       - name: 'Checkout repository'
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v6.0.2
         with:
+          ref: ${{ github.event.repository.default_branch }}
           persist-credentials: true
           token: ${{ secrets.RELEASE_BOT_TOKEN }}
 
@@ -67,6 +68,6 @@ jobs:
           git push --set-upstream origin "$BRANCH"
           gh pr create \
             --head "$BRANCH" \
-            --base master \
+            --base "${{ github.event.repository.default_branch }}" \
             --title "Bump SonarQube Community Build to ${NEW_VERSION}" \
             --body "Automated version bump triggered by community-build release in sonar-enterprise."
