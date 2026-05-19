@@ -1,0 +1,60 @@
+name: Community Build Release on Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [master]
+
+jobs:
+  create-release:
+    name: Create GitHub release for merged community-build bump
+    runs-on: github-ubuntu-latest-s
+    if: >
+      github.repository == 'SonarSource/docker-sonarqube' &&
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'task/bump-community-build-version-') &&
+      contains(github.event.pull_request.labels.*.name, 'community-build-release')
+    permissions:
+      contents: write
+    steps:
+      - name: 'Checkout merge commit'
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v6.0.2
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          persist-credentials: false
+
+      - name: 'Derive and validate version'
+        id: version
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          VERSION="${HEAD_REF#task/bump-community-build-version-}"
+
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Error: version '${VERSION}' parsed from branch '${HEAD_REF}' does not match X.Y.Z.BUILD"
+            exit 1
+          fi
+
+          FILE_VERSION=$(grep -E '^  community_build: ".*"$' .github/github_env.yaml | sed -E 's/^  community_build: "(.*)"$/\1/')
+          if [ "$VERSION" != "$FILE_VERSION" ]; then
+            echo "Error: branch version '${VERSION}' does not match community_build '${FILE_VERSION}' in .github/github_env.yaml"
+            exit 1
+          fi
+
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: 'Create GitHub release'
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "Release ${VERSION} already exists. Exiting."
+            exit 0
+          fi
+
+          gh release create "$VERSION" \
+            --target "$MERGE_SHA" \
+            --title "SonarQube Community Build ${VERSION}" \
+            --generate-notes
