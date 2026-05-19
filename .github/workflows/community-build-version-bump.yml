@@ -22,7 +22,7 @@ jobs:
         uses: SonarSource/vault-action-wrapper@v3
         with:
           secrets: |
-            development/github/token/{REPO_OWNER_NAME_DASH}-release-automation token | GITHUB_TOKEN;
+            development/github/token/{REPO_OWNER_NAME_DASH}-jira token | GITHUB_TOKEN;
 
       - name: 'Checkout repository'
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v6.0.2
