@@ -3,7 +3,7 @@ name: Community Build Release on Merge
 on:
   pull_request:
     types: [closed]
-    branches: [master]
+    branches: [master, test-trigger]
 
 jobs:
   create-release:
@@ -14,7 +14,7 @@ jobs:
       cancel-in-progress: false
     if: >
       github.repository == 'SonarSource/docker-sonarqube' &&
-      github.event.pull_request.merged == true &&
+      github.event.pull_request.merged == false &&
       startsWith(github.event.pull_request.head.ref, 'task/REL-') &&
       contains(github.event.pull_request.head.ref, '-bump-community-build-version-') &&
       contains(github.event.pull_request.labels.*.name, 'community-build-release')
@@ -64,15 +64,16 @@ jobs:
 
           gh release create "$VERSION" \
             --target "$MERGE_SHA" \
-            --title "SonarQube Community Build ${VERSION}"
+            --title "SonarQube Community Build ${VERSION}" \
+            --draft
 
-      - name: 'Dispatch Community Build release on helm-chart-sonarqube'
-        env:
-          GH_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN }}
-          VERSION: ${{ steps.version.outputs.version }}
-          JIRA_KEY: ${{ steps.version.outputs.jira_key }}
-        run: |
-          gh workflow run community-build-release.yml \
-            --repo SonarSource/helm-chart-sonarqube \
-            --field community_build_number="$VERSION" \
-            --field jira_key="$JIRA_KEY"
+      # - name: 'Dispatch Community Build release on helm-chart-sonarqube'
+      #   env:
+      #     GH_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN }}
+      #     VERSION: ${{ steps.version.outputs.version }}
+      #     JIRA_KEY: ${{ steps.version.outputs.jira_key }}
+      #   run: |
+      #     gh workflow run community-build-release.yml \
+      #       --repo SonarSource/helm-chart-sonarqube \
+      #       --field community_build_number="$VERSION" \
+      #       --field jira_key="$JIRA_KEY"
