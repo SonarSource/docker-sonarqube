@@ -9,6 +9,9 @@ jobs:
   create-release:
     name: Create GitHub release for merged community-build bump
     runs-on: github-ubuntu-latest-s
+    concurrency:
+      group: community-build-release-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
     if: >
       github.repository == 'SonarSource/docker-sonarqube' &&
       github.event.pull_request.merged == true &&
