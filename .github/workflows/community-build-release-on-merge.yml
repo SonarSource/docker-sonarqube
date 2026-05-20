@@ -55,6 +55,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN }}
           VERSION: ${{ steps.version.outputs.version }}
+          JIRA_KEY: ${{ steps.version.outputs.jira_key }}
           MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
         run: |
           if gh release view "$VERSION" >/dev/null 2>&1; then
@@ -62,9 +63,14 @@ jobs:
             exit 0
           fi
 
+          NOTES="SonarQube Community Build ${VERSION}.
+
+          Tracked by [${JIRA_KEY}](https://sonarsource.atlassian.net/browse/${JIRA_KEY})."
+
           gh release create "$VERSION" \
             --target "$MERGE_SHA" \
             --title "SonarQube Community Build ${VERSION}" \
+            --notes "$NOTES" \
             --draft
 
       # - name: 'Dispatch Community Build release on helm-chart-sonarqube'
