@@ -3,7 +3,7 @@ name: Community Build Release on Merge
 on:
   pull_request:
     types: [closed]
-    branches: [master]
+    branches: [master, test-trigger]
 
 jobs:
   create-release:
@@ -11,7 +11,7 @@ jobs:
     runs-on: github-ubuntu-latest-s
     if: >
       github.repository == 'SonarSource/docker-sonarqube' &&
-      github.event.pull_request.merged == true &&
+      github.event.pull_request.merged == false &&
       startsWith(github.event.pull_request.head.ref, 'task/bump-community-build-version-') &&
       contains(github.event.pull_request.labels.*.name, 'community-build-release')
     permissions:
@@ -58,3 +58,4 @@ jobs:
             --target "$MERGE_SHA" \
             --title "SonarQube Community Build ${VERSION}" \
             --generate-notes
+            --draft
