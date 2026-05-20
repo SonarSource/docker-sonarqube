@@ -57,5 +57,5 @@ jobs:
           gh release create "$VERSION" \
             --target "$MERGE_SHA" \
             --title "SonarQube Community Build ${VERSION}" \
-            --generate-notes
+            --generate-notes \
             --draft
