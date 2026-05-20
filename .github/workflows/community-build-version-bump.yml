@@ -69,5 +69,6 @@ jobs:
           gh pr create \
             --head "$BRANCH" \
             --base "${{ github.event.repository.default_branch }}" \
+            --label "community-build-release" \
             --title "Bump SonarQube Community Build to ${NEW_VERSION}" \
             --body "This PR bumps the SonarQube version used in the Community Build to ${NEW_VERSION}."
