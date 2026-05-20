@@ -8,6 +8,9 @@ on:
       community_build_version:
         description: 'SonarQube Community Build version (e.g., 26.5.0.122743)'
         required: true
+      jira_key:
+        description: 'Jira release ticket key (e.g., REL-4517)'
+        required: true
 
 jobs:
   bump-version:
@@ -29,6 +32,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN }}
           NEW_VERSION: ${{ github.event.client_payload.community_build_version || github.event.inputs.community_build_version }}
+          JIRA_KEY: ${{ github.event.client_payload.jira_key || github.event.inputs.jira_key }}
         run: |
           if [ -z "$NEW_VERSION" ]; then
             echo "Error: community_build_version is empty in the dispatch payload."
@@ -40,7 +44,17 @@ jobs:
             exit 1
           fi
 
-          BRANCH="task/bump-community-build-version-${NEW_VERSION}"
+          if [ -z "$JIRA_KEY" ]; then
+            echo "Error: jira_key is empty in the dispatch payload."
+            exit 1
+          fi
+
+          if ! echo "$JIRA_KEY" | grep -qE '^REL-[0-9]+$'; then
+            echo "Error: JIRA_KEY '${JIRA_KEY}' does not match expected format REL-N"
+            exit 1
+          fi
+
+          BRANCH="task/${JIRA_KEY}-bump-community-build-version-${NEW_VERSION}"
 
           git config user.name "${GITHUB_ACTOR}"
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
@@ -64,10 +78,11 @@ jobs:
           fi
 
           git add community-build/Dockerfile .github/github_env.yaml
-          git commit -m "NO-JIRA Bump SonarQube Community Build to ${NEW_VERSION}"
+          git commit -m "${JIRA_KEY} Bump SonarQube Community Build to ${NEW_VERSION}"
           git push --set-upstream origin "$BRANCH"
           gh pr create \
             --head "$BRANCH" \
             --base "${{ github.event.repository.default_branch }}" \
-            --title "Bump SonarQube Community Build to ${NEW_VERSION}" \
+            --label "community-build-release" \
+            --title "${JIRA_KEY} Bump SonarQube Community Build to ${NEW_VERSION}" \
             --body "This PR bumps the SonarQube version used in the Community Build to ${NEW_VERSION}."
