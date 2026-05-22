@@ -20,12 +20,19 @@ jobs:
       contains(github.event.pull_request.labels.*.name, 'community-build-release')
     permissions:
       contents: write
+      id-token: write
     steps:
       - name: 'Checkout merge commit'
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v6.0.2
         with:
           ref: ${{ github.event.pull_request.merge_commit_sha }}
           persist-credentials: false
+      - id: secrets
+        uses: SonarSource/vault-action-wrapper@v3
+        with:
+          secrets: |
+            development/github/token/{REPO_OWNER_NAME_DASH}-community-build-release token | GITHUB_TOKEN;
+            development/github/token/{REPO_OWNER_NAME_DASH}-community-build-trigger token | TRIGGER_GITHUB_TOKEN;
 
       - name: 'Derive and validate version and jira key'
         id: version
@@ -53,7 +60,7 @@ jobs:
 
       - name: 'Create GitHub release'
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN }}
+          GH_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).GITHUB_TOKEN }}
           VERSION: ${{ steps.version.outputs.version }}
           JIRA_KEY: ${{ steps.version.outputs.jira_key }}
           MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
@@ -75,7 +82,7 @@ jobs:
 
       - name: 'Dispatch Community Build release on helm-chart-sonarqube'
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN }}
+          GH_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).TRIGGER_GITHUB_TOKEN }}
           VERSION: ${{ steps.version.outputs.version }}
           JIRA_KEY: ${{ steps.version.outputs.jira_key }}
         run: |
