@@ -120,7 +120,7 @@ jobs:
       staging_image_name: ${{ needs.load-config.outputs.staging_image }}
       tag: ${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}
       version: ${{ matrix.version }}
-      runs_on: github-ubuntu-latest-s
+      runs_on: warp-custom-ubuntu-24-04
 
   build-community-build:
     needs: load-config
@@ -136,7 +136,7 @@ jobs:
       staging_image_name: ${{ needs.load-config.outputs.staging_image }}
       tag: ${{ needs.load-config.outputs.community_build_version }}-master-community
       version: community-build
-      runs_on: github-ubuntu-latest-s
+      runs_on: warp-custom-ubuntu-24-04
 
   # Test phase - runs immediately after builds complete (no workflow_run delay)
   test-commercial-editions:
@@ -176,7 +176,7 @@ jobs:
       tag: ${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}
       test_name: ${{ matrix.test_name }}
       architecture: ${{ matrix.architecture }}
-      runs_on: ${{ matrix.architecture == 'arm64' && 'github-ubuntu-24.04-arm-s' || 'github-ubuntu-latest-s' }}
+      runs_on: ${{ matrix.architecture == 'arm64' && 'github-ubuntu-24.04-arm-s' || 'warp-custom-ubuntu-24-04' }}
 
   test-community-build:
     needs: [load-config, build-community-build]
@@ -197,7 +197,7 @@ jobs:
       tag: ${{ needs.load-config.outputs.community_build_version }}-master-community
       test_name: docker
       architecture: ${{ matrix.architecture }}
-      runs_on: ${{ matrix.architecture == 'arm64' && 'github-ubuntu-24.04-arm-s' || 'github-ubuntu-latest-s' }}
+      runs_on: ${{ matrix.architecture == 'arm64' && 'github-ubuntu-24.04-arm-s' || 'warp-custom-ubuntu-24-04' }}
 
   # Security scanning - runs after builds complete
   trivy-scan-datacenter-app:
@@ -206,7 +206,7 @@ jobs:
       always() &&
       (github.event_name != 'workflow_dispatch' || inputs.editions == 'all' || inputs.editions == 'commercial-only')
     name: Security Scan (datacenter-app)
-    runs-on: github-ubuntu-latest-s
+    runs-on: warp-custom-ubuntu-24-04
     permissions:
       id-token: write
       contents: read
@@ -301,7 +301,7 @@ jobs:
       - trivy-scan-datacenter-app
       - gcp-build-staging-app
       - gcp-build-staging-search
-    runs-on: github-ubuntu-latest-s
+    runs-on: warp-custom-ubuntu-24-04
     outputs:
       SUCCESS: ${{ steps.alls-green.outputs.success }}
     steps:

@@ -23,7 +23,7 @@ on:
         required: false
         type: string
         description: "The runner to use"
-        default: "github-ubuntu-latest-s"
+        default: "warp-custom-ubuntu-24-04"
 
 jobs:
   multi-arch-test:

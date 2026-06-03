@@ -19,7 +19,7 @@ jobs:
   go-test:
     uses: ./.github/workflows/go-test-template.yml
   sonarqube:
-    runs-on: github-ubuntu-latest-s
+    runs-on: warp-custom-ubuntu-24-04
     needs: go-test
     permissions:
       id-token: write
