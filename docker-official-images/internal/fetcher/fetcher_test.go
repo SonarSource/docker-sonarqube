@@ -18,6 +18,13 @@ mailto:info AT sonarsource DOT com
 This product includes software developed at
 SonarSource (http://www.sonarsource.com/).
 `
+	const expectedContent = `docker-sonarqube
+Copyright (C) SonarSource Sàrl
+mailto:info AT sonarsource DOT com
+
+This product includes software developed at
+SonarSource (http://www.sonarsource.com/).
+`
 	gitFetcher := fetcher.NewGitFetcher() // No arguments, assumes current directory is repo root
 
 	tests := []struct {
@@ -32,6 +39,13 @@ SonarSource (http://www.sonarsource.com/).
 			branchOrCommit: testCommitSHA,
 			relativePath:   testFilePath,
 			wantContent:    expectedContentAtPinnedCommit,
+			wantErr:        false,
+		},
+		{
+			name:           "Fetch existing file from 'master' branch (assuming it points to the commit or has this content)",
+			branchOrCommit: "origin/master",
+			relativePath:   testFilePath,
+			wantContent:    expectedContent,
 			wantErr:        false,
 		},
 		{
