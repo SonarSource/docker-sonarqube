@@ -3,7 +3,7 @@
 
 versions:
   current: "2026.3.1"
-  community_build: "26.6.0.123539"
+  community_build: "26.7.0.124771"
 
 images:
   staging: "sonarsource/sonarqube"
