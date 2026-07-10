@@ -14,8 +14,8 @@ discover_ip() {
     fi
 }
 
-# Resolve this node's cluster IP. In Kubernetes the Helm chart injects SONAR_CLUSTER_NODE_IP from
-# the pod IP; otherwise autodiscover a global-scope address, preferring IPv4 then IPv6.
+# This search node's Elasticsearch address (sonar.cluster.node.search.host / .es.host): prefer the
+# explicit SONAR_CLUSTER_NODE_IP, else autodiscover a global-scope address (IPv4 then IPv6).
 resolve_node_ip() {
     if [[ -n "${SONAR_CLUSTER_NODE_IP:-}" ]]; then
         log "Cluster node IP set via SONAR_CLUSTER_NODE_IP=${SONAR_CLUSTER_NODE_IP}"
@@ -34,7 +34,7 @@ resolve_node_ip() {
 IP=$(resolve_node_ip)
 
 if [[ -z "${IP}" ]]; then
-    log "WARNING: no cluster node IP found; sonar.cluster.node.host will be unset and startup may fail."
+    log "WARNING: no search node IP found; sonar.cluster.node.search.host will be unset and startup may fail."
 fi
 
 declare -a sq_opts=()
