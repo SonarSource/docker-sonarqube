@@ -1,14 +1,13 @@
 services:
-  sonarqube:
-    deploy:
-      replicas: 3
+  app-1:
     healthcheck:
       test: curl -s http://localhost:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
       interval: 25s
       timeout: 1s
       retries: 3
-      start_period: 55s
+      start_period: 240s
     image: sonarqube:datacenter-app
+    hostname: "app-1"
     read_only: true
     depends_on:
       search-1:
@@ -20,7 +19,8 @@ services:
       db:
         condition: service_healthy
     networks:
-      - ${NETWORK_TYPE:-ipv4}
+      sonar:
+        ipv4_address: 192.168.16.31
     cpus: 0.5
     mem_limit: 4096M
     mem_reservation: 4096M
@@ -29,9 +29,96 @@ services:
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
       SONAR_WEB_PORT: 9000
+      # Advertise this node's address explicitly instead of relying on autodiscovery.
+      SONAR_CLUSTER_NODE_IP: "192.168.16.31"
       SONAR_CLUSTER_SEARCH_HOSTS: "search-1,search-2,search-3"
-      SONAR_CLUSTER_HOSTS: "sonarqube"
-      SONAR_CLUSTER_KUBERNETES: true
+      SONAR_CLUSTER_HOSTS: "192.168.16.31,192.168.16.32,192.168.16.33"
+      SONAR_AUTH_JWTBASE64HS256SECRET: "dZ0EB0KxnF++nr5+4vfTCaun/eWbv6gOoXodiAMqcFo="
+      VIRTUAL_HOST: sonarqube.dev.local
+      VIRTUAL_PORT: 9000
+    volumes:
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_temp:/opt/sonarqube/temp
+      - /opt/sonarqube/data
+  app-2:
+    healthcheck:
+      test: curl -s http://localhost:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
+      interval: 25s
+      timeout: 1s
+      retries: 3
+      start_period: 240s
+    image: sonarqube:datacenter-app
+    hostname: "app-2"
+    read_only: true
+    depends_on:
+      search-1:
+        condition: service_healthy
+      search-2:
+        condition: service_healthy
+      search-3:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      app-1:
+        condition: service_healthy
+    networks:
+      sonar:
+        ipv4_address: 192.168.16.32
+    cpus: 0.5
+    mem_limit: 4096M
+    mem_reservation: 4096M
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+      SONAR_WEB_PORT: 9000
+      SONAR_CLUSTER_NODE_IP: "192.168.16.32"
+      SONAR_CLUSTER_SEARCH_HOSTS: "search-1,search-2,search-3"
+      SONAR_CLUSTER_HOSTS: "192.168.16.31,192.168.16.32,192.168.16.33"
+      SONAR_AUTH_JWTBASE64HS256SECRET: "dZ0EB0KxnF++nr5+4vfTCaun/eWbv6gOoXodiAMqcFo="
+      VIRTUAL_HOST: sonarqube.dev.local
+      VIRTUAL_PORT: 9000
+    volumes:
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_temp:/opt/sonarqube/temp
+      - /opt/sonarqube/data
+  app-3:
+    healthcheck:
+      test: curl -s http://localhost:9000/api/system/status | grep -q -e '"status":"UP"' -e '"status":"DB_MIGRATION_NEEDED"' -e '"status":"DB_MIGRATION_RUNNING"'
+      interval: 25s
+      timeout: 1s
+      retries: 3
+      start_period: 240s
+    image: sonarqube:datacenter-app
+    hostname: "app-3"
+    read_only: true
+    depends_on:
+      search-1:
+        condition: service_healthy
+      search-2:
+        condition: service_healthy
+      search-3:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      app-1:
+        condition: service_healthy
+    networks:
+      sonar:
+        ipv4_address: 192.168.16.33
+    cpus: 0.5
+    mem_limit: 4096M
+    mem_reservation: 4096M
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+      SONAR_WEB_PORT: 9000
+      SONAR_CLUSTER_NODE_IP: "192.168.16.33"
+      SONAR_CLUSTER_SEARCH_HOSTS: "search-1,search-2,search-3"
+      SONAR_CLUSTER_HOSTS: "192.168.16.31,192.168.16.32,192.168.16.33"
       SONAR_AUTH_JWTBASE64HS256SECRET: "dZ0EB0KxnF++nr5+4vfTCaun/eWbv6gOoXodiAMqcFo="
       VIRTUAL_HOST: sonarqube.dev.local
       VIRTUAL_PORT: 9000
@@ -51,11 +138,13 @@ services:
       db:
         condition: service_healthy
     networks:
-      - ${NETWORK_TYPE:-ipv4}
+      sonar:
+        ipv4_address: 192.168.16.21
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
+      SONAR_CLUSTER_NODE_IP: "192.168.16.21"
       SONAR_CLUSTER_ES_HOSTS: "search-1,search-2,search-3"
       SONAR_CLUSTER_NODE_NAME: "search-1"
     volumes:
@@ -82,11 +171,13 @@ services:
       db:
         condition: service_healthy
     networks:
-      - ${NETWORK_TYPE:-ipv4}
+      sonar:
+        ipv4_address: 192.168.16.22
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
+      SONAR_CLUSTER_NODE_IP: "192.168.16.22"
       SONAR_CLUSTER_ES_HOSTS: "search-1,search-2,search-3"
       SONAR_CLUSTER_NODE_NAME: "search-2"
     volumes:
@@ -113,11 +204,13 @@ services:
       db:
         condition: service_healthy
     networks:
-      - ${NETWORK_TYPE:-ipv4}
+      sonar:
+        ipv4_address: 192.168.16.23
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
+      SONAR_CLUSTER_NODE_IP: "192.168.16.23"
       SONAR_CLUSTER_ES_HOSTS: "search-1,search-2,search-3"
       SONAR_CLUSTER_NODE_NAME: "search-3"
     volumes:
@@ -141,7 +234,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - ${NETWORK_TYPE:-ipv4}
+      - sonar
     environment:
       POSTGRES_USER: sonar
       POSTGRES_PASSWORD: sonar
@@ -156,24 +249,18 @@ services:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./unrestricted_client_body_size.conf:/etc/nginx/conf.d/unrestricted_client_body_size.conf:ro
     networks:
-      - ${NETWORK_TYPE:-ipv4}
+      - sonar
       - sonar-public
 
 networks:
   sonar-public:
     driver: bridge
-  ipv4:
+  sonar:
     driver: bridge
-    enable_ipv6: false
-  dual:
-    driver: bridge
-    enable_ipv6: true
     ipam:
       config:
-        - subnet: "192.168.3.0/24"
-          gateway: "192.168.3.1"
-        - subnet: "2001:db8:3::/64"
-          gateway: "2001:db8:3::1"
+        - subnet: "192.168.16.0/24"
+          gateway: "192.168.16.1"
 
 volumes:
   sonarqube_extensions:

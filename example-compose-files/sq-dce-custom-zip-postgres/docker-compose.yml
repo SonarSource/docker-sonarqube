@@ -1,3 +1,6 @@
+# Single switch for the whole cluster: "true" advertises IPv6 and sets the IPv6 JVM flags; "false" is IPv4.
+x-use-ipv6: &use-ipv6 "false"
+
 services:
   sonarqube-1:
     hostname: "sonarqube-1"
@@ -41,7 +44,7 @@ services:
       SONAR_CLUSTER_HOSTS: "sonarqube"
       SONAR_AUTH_JWTBASE64HS256SECRET: "dZ0EB0KxnF++nr5+4vfTCaun/eWbv6gOoXodiAMqcFo="
       SONAR_WEB_CONTEXT: ${SONAR_WEB_CONTEXT:-}
-      USE_IPV6: ${USE_IPV6:-false}
+      USE_IPV6: *use-ipv6
       SONAR_CLUSTER_KUBERNETES: true
       VIRTUAL_HOST: sonarqube.dev.local
       VIRTUAL_PORT: 9000
@@ -73,6 +76,8 @@ services:
         condition: service_healthy
       db:
         condition: service_healthy
+      sonarqube-1:
+        condition: service_healthy
     networks:
       dual:
         ipv4_address: 192.168.3.92
@@ -92,7 +97,7 @@ services:
       SONAR_CLUSTER_HOSTS: "sonarqube"
       SONAR_AUTH_JWTBASE64HS256SECRET: "dZ0EB0KxnF++nr5+4vfTCaun/eWbv6gOoXodiAMqcFo="
       SONAR_WEB_CONTEXT: ${SONAR_WEB_CONTEXT:-}
-      USE_IPV6: ${USE_IPV6:-false}
+      USE_IPV6: *use-ipv6
       SONAR_CLUSTER_KUBERNETES: true
       VIRTUAL_HOST: sonarqube.dev.local
       VIRTUAL_PORT: 9000
@@ -128,7 +133,7 @@ services:
       SONAR_CLUSTER_ES_HOSTS: "search-1,search-2"
       SONAR_CLUSTER_ES_DISCOVERY_SEED_HOSTS: "search"
       SONAR_CLUSTER_NODE_NAME: "search-1"
-      USE_IPV6: ${USE_IPV6:-false}
+      USE_IPV6: *use-ipv6
     volumes:
       - search_data-1:/opt/sonarqube/data
       - sonarqube_logs:/opt/sonarqube/logs
@@ -169,7 +174,7 @@ services:
       SONAR_CLUSTER_ES_HOSTS: "search-1,search-2"
       SONAR_CLUSTER_ES_DISCOVERY_SEED_HOSTS: "search"
       SONAR_CLUSTER_NODE_NAME: "search-2"
-      USE_IPV6: ${USE_IPV6:-false}
+      USE_IPV6: *use-ipv6
     volumes:
       - search_data-2:/opt/sonarqube/data
       - sonarqube_logs:/opt/sonarqube/logs

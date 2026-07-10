@@ -47,7 +47,7 @@ You can access your SonarQube Server instance through the reverse proxy with thi
 
 | Variable | Default | Description |
 |---|---|---|
-| `USE_IPV6` | `false` | Set to `true` to run in IPv6 mode. Automatically sets the required JVM flags on all nodes. |
+| `USE_IPV6` | `false` | Set `true` to advertise IPv6 and set the IPv6 JVM flags on all nodes. Flip the single `x-use-ipv6` switch at the top of `docker-compose.yml`. |
 | `SONAR_WEB_CONTEXT` | _(empty)_ | Set to run SonarQube under a sub-path, e.g. `/sonarqube`. |
 
 ## Troubleshooting
