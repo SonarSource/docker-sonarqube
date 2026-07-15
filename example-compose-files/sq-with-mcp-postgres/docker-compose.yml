@@ -33,7 +33,7 @@ services:
       - sonarnet
 
   mcp:
-    image: sonarsource/sonarqube-mcp:${MCP_VERSION:-1.18.1.2664}
+    image: sonarsource/sonarqube-mcp:${MCP_VERSION:-1.22.0.3040}
     hostname: mcp
     container_name: sonarqube-mcp
     depends_on:
