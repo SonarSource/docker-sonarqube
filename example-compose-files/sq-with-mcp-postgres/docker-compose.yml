@@ -1,6 +1,6 @@
 services:
   sonarqube:
-    image: sonarqube:${SONARQUBE_VERSION:-2026.4.0-enterprise}
+    image: sonarqube:${SONARQUBE_VERSION:-2026.3.0-enterprise}
     hostname: sonarqube
     container_name: sonarqube
     read_only: true
