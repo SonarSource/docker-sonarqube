@@ -8,7 +8,7 @@ services:
       timeout: 1s
       retries: 3
       start_period: 240s
-    image: sonarqube:${SONARQUBE_VERSION:-2026.3.0-datacenter-app}
+    image: sonarqube:${SONARQUBE_VERSION:-2026.4.0-datacenter-app}
     read_only: true
     depends_on:
       search-1:
@@ -44,7 +44,7 @@ services:
       - sonarqube_temp:/opt/sonarqube/temp
       - /opt/sonarqube/data
   search-1:
-    image: sonarqube:${SONARQUBE_VERSION:-2026.3.0-datacenter-search}
+    image: sonarqube:${SONARQUBE_VERSION:-2026.4.0-datacenter-search}
     read_only: true
     hostname: "search-1"
     cpus: 0.5
@@ -75,7 +75,7 @@ services:
         retries: 3
         start_period: 55s
   search-2:
-    image: sonarqube:${SONARQUBE_VERSION:-2026.3.0-datacenter-search}
+    image: sonarqube:${SONARQUBE_VERSION:-2026.4.0-datacenter-search}
     read_only: true
     hostname: "search-2"
     cpus: 0.5
@@ -106,7 +106,7 @@ services:
         retries: 3
         start_period: 55s
   search-3:
-    image: sonarqube:${SONARQUBE_VERSION:-2026.3.0-datacenter-search}
+    image: sonarqube:${SONARQUBE_VERSION:-2026.4.0-datacenter-search}
     read_only: true
     hostname: "search-3"
     cpus: 0.5
