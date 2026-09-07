@@ -94,6 +94,7 @@ jobs:
         env:
           TRIVY_SEVERITY: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           TRIVY_SHOW_SUPPRESSED: 'true'
+          TRIVY_REPORT: 'all'
         with:
           image-ref: '${{ inputs.public_image_name }}:${{ inputs.current_version }}-datacenter-${{ inputs.component_type }}'
           format: 'json'
