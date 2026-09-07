@@ -1,0 +1,28 @@
+# Governed Trivy suppression file (SONAR-31880).
+#
+# Loaded explicitly via `trivy --ignorefile ./.trivyignore.yaml` (YAML ignore files are
+# an experimental Trivy feature and are never auto-loaded). This file is scanned by the
+# same CI policy on PRs, pushes, and nightly runs -- see .github/workflows/push_and_pr.yml
+# and .github/workflows/scripts/evaluate-trivy-report.py.
+#
+# Every entry MUST carry all four governance fields:
+#   - id:          the exact finding ID (e.g. a CVE)
+#   - statement:   written justification AND named owner, e.g.
+#                    "Owner: alice@sonarsource.com. Justification: <why this is safe to ignore>."
+#                  (`statement` is Trivy's only free-text field; it is documentation only
+#                  and is never used for filtering.)
+#   - expired_at:  a YYYY-MM-DD date after which Trivy stops honoring the suppression and
+#                  the finding reappears in normal scan results, re-entering the CI gate.
+#
+# Never add an entry without expired_at -- an ignore rule with no expiration is permanent
+# and defeats the point of governance.
+#
+# Example (remove the leading '#' on each line to activate):
+# vulnerabilities:
+#   - id: CVE-2023-12345
+#     statement: >-
+#       Owner: alice@sonarsource.com. Justification: vulnerable code path is not reachable
+#       in our runtime configuration; tracked in JIRA-1234 pending an upstream fix.
+#     expired_at: 2026-12-31
+
+vulnerabilities: []
