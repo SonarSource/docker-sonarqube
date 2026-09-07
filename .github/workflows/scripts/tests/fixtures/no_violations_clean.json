@@ -1,0 +1,12 @@
+{
+  "SchemaVersion": 2,
+  "ArtifactName": "example/image:test",
+  "Results": [
+    {
+      "Target": "example/image:test (debian 12.5)",
+      "Class": "os-pkgs",
+      "Type": "debian",
+      "Vulnerabilities": []
+    }
+  ]
+}

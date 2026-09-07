@@ -199,13 +199,97 @@ jobs:
       architecture: ${{ matrix.architecture }}
       runs_on: ${{ matrix.architecture == 'arm64' && 'github-ubuntu-24.04-arm-s' || 'github-ubuntu-latest-s' }}
 
-  # Security scanning - runs after builds complete
-  trivy-scan-datacenter-app:
+  # Security scanning - runs after builds complete. Mirrors the
+  # build-commercial-editions / build-community-build split so every staging image
+  # (developer, enterprise, datacenter-app, datacenter-search, community) is scanned.
+  trivy-scan-commercial-editions:
     needs: [load-config, build-commercial-editions]
     if: |
       always() &&
       (github.event_name != 'workflow_dispatch' || inputs.editions == 'all' || inputs.editions == 'commercial-only')
-    name: Security Scan (datacenter-app)
+    name: Security Scan (${{ matrix.edition }})
+    runs-on: github-ubuntu-latest-s
+    permissions:
+      id-token: write
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        edition: [developer, enterprise, datacenter-app, datacenter-search]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v6.0.2
+
+      - id: secrets
+        name: Retrieve secrets from Vault
+        uses: SonarSource/vault-action-wrapper@v3
+        with:
+          secrets: |
+            development/kv/data/docker/sonardockerrw username | docker_username;
+            development/kv/data/docker/sonardockerrw access_token_rwd | docker_password;
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          username: ${{ fromJSON(steps.secrets.outputs.vault).docker_username }}
+          password: ${{ fromJSON(steps.secrets.outputs.vault).docker_password }}
+
+      - name: Pull staging image
+        run: |
+          docker pull ${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}
+
+      # Two invocations produce JSON (for the CVSS policy evaluator) and SARIF (for the
+      # Security tab). --config/--ignorefile/--ignore-unfixed/--show-suppressed are kept
+      # identical across both; only format/output/severity (Security-tab display scope) differ.
+      - name: Run Trivy vulnerability scanner (JSON, for policy evaluation)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          # Trivy severity is not the enforcement gate: scan every severity band,
+          # including UNKNOWN, so the evaluator sees every finding and judges it by CVSS.
+          TRIVY_SEVERITY: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+          # show-suppressed has no dedicated action input; set it via env instead.
+          TRIVY_SHOW_SUPPRESSED: 'true'
+        with:
+          image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}'
+          format: 'json'
+          output: 'trivy-${{ matrix.edition }}.json'
+          vuln-type: 'os'
+          trivy-config: '.github/trivy.yaml'
+          trivyignores: './.trivyignore.yaml'
+          ignore-unfixed: true
+
+      - name: Run Trivy vulnerability scanner (SARIF, for GitHub Security tab)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_SHOW_SUPPRESSED: 'true'
+        with:
+          image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}'
+          format: 'sarif'
+          output: 'trivy-${{ matrix.edition }}.sarif'
+          severity: 'LOW,MEDIUM,HIGH,CRITICAL'
+          vuln-type: 'os'
+          trivy-config: '.github/trivy.yaml'
+          trivyignores: './.trivyignore.yaml'
+          ignore-unfixed: true
+
+      - name: Evaluate Trivy report against CVSS policy
+        run: python3 .github/workflows/scripts/evaluate-trivy-report.py trivy-${{ matrix.edition }}.json
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@5e7a52feb2a3dfb87f88be2af33b9e2275f48de6 # v4.32.4
+        if: always()
+        with:
+          sarif_file: 'trivy-${{ matrix.edition }}.sarif'
+          category: 'image-${{ matrix.edition }}'
+
+  trivy-scan-community-build:
+    needs: [load-config, build-community-build]
+    if: |
+      always() &&
+      (github.event_name != 'workflow_dispatch' || inputs.editions == 'all' || inputs.editions == 'community-only')
+    name: Security Scan (community)
     runs-on: github-ubuntu-latest-s
     permissions:
       id-token: write
@@ -232,23 +316,45 @@ jobs:
 
       - name: Pull staging image
         run: |
-          docker pull ${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-datacenter-app
+          docker pull ${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.community_build_version }}-master-community
 
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+      - name: Run Trivy vulnerability scanner (JSON, for policy evaluation)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_SEVERITY: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+          TRIVY_SHOW_SUPPRESSED: 'true'
         with:
-          image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-datacenter-app'
+          image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.community_build_version }}-master-community'
+          format: 'json'
+          output: 'trivy-community.json'
+          vuln-type: 'os'
+          trivy-config: '.github/trivy.yaml'
+          trivyignores: './.trivyignore.yaml'
+          ignore-unfixed: true
+
+      - name: Run Trivy vulnerability scanner (SARIF, for GitHub Security tab)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_SHOW_SUPPRESSED: 'true'
+        with:
+          image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.community_build_version }}-master-community'
           format: 'sarif'
-          output: 'trivy-datacenter-app.sarif'
+          output: 'trivy-community.sarif'
           severity: 'LOW,MEDIUM,HIGH,CRITICAL'
           vuln-type: 'os'
+          trivy-config: '.github/trivy.yaml'
+          trivyignores: './.trivyignore.yaml'
+          ignore-unfixed: true
+
+      - name: Evaluate Trivy report against CVSS policy
+        run: python3 .github/workflows/scripts/evaluate-trivy-report.py trivy-community.json
 
       - name: Upload Trivy results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@5e7a52feb2a3dfb87f88be2af33b9e2275f48de6 # v4.32.4
         if: always()
         with:
-          sarif_file: 'trivy-datacenter-app.sarif'
-          category: 'image-datacenter-app'
+          sarif_file: 'trivy-community.sarif'
+          category: 'image-community'
 
   # GCP staging builds - only on master or release branches, after tests pass
   gcp-build-staging-app:
@@ -298,7 +404,8 @@ jobs:
       - build-community-build
       - test-commercial-editions
       - test-community-build
-      - trivy-scan-datacenter-app
+      - trivy-scan-commercial-editions
+      - trivy-scan-community-build
       - gcp-build-staging-app
       - gcp-build-staging-search
     runs-on: github-ubuntu-latest-s
@@ -309,7 +416,7 @@ jobs:
         id: alls-green
         with:
           jobs: ${{ toJSON(needs) }}
-          allowed-skips: 'load-config,build-commercial-editions,build-community-build,test-commercial-editions,test-community-build,trivy-scan-datacenter-app,gcp-build-staging-app,gcp-build-staging-search'
+          allowed-skips: 'load-config,build-commercial-editions,build-community-build,test-commercial-editions,test-community-build,gcp-build-staging-app,gcp-build-staging-search'
 
   notify-slack-on-failure:
     name: Notify on Failure
