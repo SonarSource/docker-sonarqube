@@ -16,9 +16,10 @@ vulnerability:
     - os  # Only scan OS packages (excludes application libraries like JAR, npm, etc.)
 
 # Report settings
-report:
-  # Format of the output
-  format: table
+# NOTE: Trivy's config key for the output format is the top-level `format`;
+# a nested `report:` mapping collides with the string `--report` flag and
+# makes Trivy fail with an invalid `--report` value.
+format: table
 
 # Severity levels to report
 severity:
