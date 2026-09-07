@@ -251,7 +251,6 @@ jobs:
           TRIVY_SEVERITY: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           # show-suppressed has no dedicated action input; set it via env instead.
           TRIVY_SHOW_SUPPRESSED: 'true'
-          TRIVY_REPORT: 'all'
         with:
           image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}'
           format: 'json'
@@ -265,7 +264,6 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         env:
           TRIVY_SHOW_SUPPRESSED: 'true'
-          TRIVY_REPORT: 'all'
         with:
           image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}'
           format: 'sarif'
@@ -325,7 +323,6 @@ jobs:
         env:
           TRIVY_SEVERITY: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           TRIVY_SHOW_SUPPRESSED: 'true'
-          TRIVY_REPORT: 'all'
         with:
           image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.community_build_version }}-master-community'
           format: 'json'
@@ -339,7 +336,6 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         env:
           TRIVY_SHOW_SUPPRESSED: 'true'
-          TRIVY_REPORT: 'all'
         with:
           image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.community_build_version }}-master-community'
           format: 'sarif'
