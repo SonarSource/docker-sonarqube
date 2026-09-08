@@ -103,6 +103,20 @@ def test_unexpired_suppression_is_displayed_and_does_not_fail(evaluator):
     assert "status=ignored" in line
 
 
+def test_format_suppressed_falls_back_to_top_level_fields(evaluator):
+    # Older/alternate Trivy shapes may put the vuln fields at the entry's own
+    # top level instead of nested under "Finding" -- cover that branch too.
+    flat = {
+        "Status": "ignored",
+        "Source": ".trivyignore.yaml",
+        "VulnerabilityID": "CVE-2024-0009",
+        "PkgName": "libflat9",
+    }
+    line = evaluator._format_suppressed("target", flat)
+    assert "CVE-2024-0009" in line
+    assert "pkg=libflat9" in line
+
+
 def test_expired_suppression_reappears_and_fails(evaluator):
     # Once Trivy's ignore rule expires, the finding moves back into Vulnerabilities
     # and must be evaluated (and fail) normally, like any other finding.
