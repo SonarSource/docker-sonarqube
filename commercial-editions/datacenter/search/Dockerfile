@@ -34,6 +34,7 @@ RUN set -eux; \
     deluser ubuntu; \
     useradd --system --uid 1000 --gid 0 sonarqube; \
     apt-get update; \
+    apt-get upgrade -y; \
     apt-get --no-install-recommends -y install \
         bash \
         curl \
