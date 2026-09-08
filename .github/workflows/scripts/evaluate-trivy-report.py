@@ -184,13 +184,22 @@ def _format_finding(finding: Finding) -> str:
 
 
 def _format_suppressed(target: str, entry: dict[str, Any]) -> str:
-    finding_id = entry.get("VulnerabilityID") or entry.get("ID") or "UNKNOWN"
+    # Trivy nests the actual vulnerability under "Finding"; fall back to the
+    # entry's own top level in case that shape ever changes.
+    finding = entry.get("Finding") or {}
+    finding_id = (
+        finding.get("VulnerabilityID")
+        or entry.get("VulnerabilityID")
+        or entry.get("ID")
+        or "UNKNOWN"
+    )
+    package = finding.get("PkgName", "")
     status = entry.get("Status", "?")
     statement = entry.get("Statement") or entry.get("Comment") or ""
     source = entry.get("Source", "?")
     return (
-        f"[suppressed] {finding_id:<18} target={target} status={status} "
-        f"source={source} statement={statement!r}"
+        f"[suppressed] {finding_id:<18} pkg={package:<20} target={target} "
+        f"status={status} source={source} statement={statement!r}"
     )
 
 

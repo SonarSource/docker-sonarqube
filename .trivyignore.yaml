@@ -25,4 +25,314 @@
 #       in our runtime configuration; tracked in JIRA-1234 pending an upstream fix.
 #     expired_at: 2026-12-31
 
-vulnerabilities: []
+vulnerabilities:
+  - id: CVE-2024-2236
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2025-15649
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2025-5278
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2025-6141
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-12087
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-13221
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-13595
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-13757
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-15059
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-16742
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-18938
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-27171
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-27456
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-42250
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-48959
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-48962
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-53612
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-53613
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-53614
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-53615
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-53910
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-54371
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-54874
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-57432
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-57433
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-63072
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-63074
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-63076
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-7017
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-75803
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
+  - id: CVE-2026-9538
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image (eclipse-
+      temurin:25-jdk-noble) OS package vulnerability. No newer upstream base image build
+      available as of 2026-09-08; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-11-07
