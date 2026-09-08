@@ -94,6 +94,14 @@ def test_unexpired_suppression_is_displayed_and_does_not_fail(evaluator):
     target, entry = result.suppressed[0]
     assert entry["Finding"]["VulnerabilityID"] == "CVE-2024-0008"
 
+    # Exercise the actual formatter, not just the fixture's own shape, so a
+    # regression in id/package extraction (e.g. reverting the Finding-nesting
+    # fix) would fail this suite.
+    line = evaluator._format_suppressed(target, entry)
+    assert "CVE-2024-0008" in line
+    assert "pkg=libexample8" in line
+    assert "status=ignored" in line
+
 
 def test_expired_suppression_reappears_and_fails(evaluator):
     # Once Trivy's ignore rule expires, the finding moves back into Vulnerabilities

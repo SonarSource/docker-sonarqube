@@ -193,7 +193,7 @@ def _format_suppressed(target: str, entry: dict[str, Any]) -> str:
         or entry.get("ID")
         or "UNKNOWN"
     )
-    package = finding.get("PkgName", "")
+    package = finding.get("PkgName") or entry.get("PkgName") or ""
     status = entry.get("Status", "?")
     statement = entry.get("Statement") or entry.get("Comment") or ""
     source = entry.get("Source", "?")
