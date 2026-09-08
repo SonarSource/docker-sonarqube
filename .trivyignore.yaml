@@ -35,7 +35,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-08
+    expired_at: 2026-11-07
   - id: CVE-2025-15649
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -45,7 +45,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-09
+    expired_at: 2026-11-07
   - id: CVE-2025-5278
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -55,7 +55,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-10
+    expired_at: 2026-11-07
   - id: CVE-2025-6141
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -65,7 +65,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-11
+    expired_at: 2026-11-07
   - id: CVE-2026-12087
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -75,7 +75,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-12
+    expired_at: 2026-11-07
   - id: CVE-2026-13221
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -85,7 +85,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-13
+    expired_at: 2026-11-07
   - id: CVE-2026-13595
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -95,7 +95,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-14
+    expired_at: 2026-11-07
   - id: CVE-2026-13757
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -105,7 +105,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-15
+    expired_at: 2026-11-07
   - id: CVE-2026-15059
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -115,7 +115,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-16
+    expired_at: 2026-11-07
   - id: CVE-2026-16742
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -125,7 +125,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-17
+    expired_at: 2026-11-07
   - id: CVE-2026-18938
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -135,7 +135,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-18
+    expired_at: 2026-11-07
   - id: CVE-2026-27171
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -145,7 +145,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-19
+    expired_at: 2026-11-07
   - id: CVE-2026-27456
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -155,7 +155,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-20
+    expired_at: 2026-11-07
   - id: CVE-2026-42250
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -165,7 +165,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-21
+    expired_at: 2026-11-07
   - id: CVE-2026-48959
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -175,7 +175,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-22
+    expired_at: 2026-11-07
   - id: CVE-2026-48962
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -185,7 +185,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-23
+    expired_at: 2026-11-07
   - id: CVE-2026-53612
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -195,7 +195,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-24
+    expired_at: 2026-11-07
   - id: CVE-2026-53613
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -205,7 +205,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-25
+    expired_at: 2026-11-07
   - id: CVE-2026-53614
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -215,7 +215,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-26
+    expired_at: 2026-11-07
   - id: CVE-2026-53615
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -225,7 +225,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-27
+    expired_at: 2026-11-07
   - id: CVE-2026-53910
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -235,7 +235,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-28
+    expired_at: 2026-11-07
   - id: CVE-2026-54371
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -245,7 +245,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-29
+    expired_at: 2026-11-07
   - id: CVE-2026-54874
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -255,7 +255,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-30
+    expired_at: 2026-11-07
   - id: CVE-2026-57432
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -265,7 +265,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-10-31
+    expired_at: 2026-11-07
   - id: CVE-2026-57433
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -275,7 +275,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-11-01
+    expired_at: 2026-11-07
   - id: CVE-2026-63072
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -285,7 +285,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-11-02
+    expired_at: 2026-11-07
   - id: CVE-2026-63074
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -295,7 +295,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-11-03
+    expired_at: 2026-11-07
   - id: CVE-2026-63076
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -305,7 +305,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-11-04
+    expired_at: 2026-11-07
   - id: CVE-2026-7017
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -315,7 +315,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-11-05
+    expired_at: 2026-11-07
   - id: CVE-2026-75803
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -325,7 +325,7 @@ vulnerabilities:
       docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
-    expired_at: 2026-11-06
+    expired_at: 2026-11-07
   - id: CVE-2026-9538
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
