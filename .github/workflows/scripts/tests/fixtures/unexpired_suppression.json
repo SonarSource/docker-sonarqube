@@ -9,10 +9,14 @@
       "Vulnerabilities": [],
       "ModifiedFindings": [
         {
-          "VulnerabilityID": "CVE-2024-0008",
+          "Type": "vulnerability",
           "Status": "ignored",
           "Statement": "Owner: alice@sonarsource.com. Justification: accepted risk, tracked in JIRA-1234.",
-          "Source": ".trivyignore.yaml"
+          "Source": ".trivyignore.yaml",
+          "Finding": {
+            "VulnerabilityID": "CVE-2024-0008",
+            "PkgName": "libexample8"
+          }
         }
       ]
     }

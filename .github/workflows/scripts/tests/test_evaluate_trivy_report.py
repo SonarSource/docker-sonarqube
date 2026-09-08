@@ -92,7 +92,7 @@ def test_unexpired_suppression_is_displayed_and_does_not_fail(evaluator):
     assert not result.violations
     assert result.suppressed
     target, entry = result.suppressed[0]
-    assert entry["VulnerabilityID"] == "CVE-2024-0008"
+    assert entry["Finding"]["VulnerabilityID"] == "CVE-2024-0008"
 
 
 def test_expired_suppression_reappears_and_fails(evaluator):
