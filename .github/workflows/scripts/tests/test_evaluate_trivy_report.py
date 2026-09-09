@@ -56,9 +56,9 @@ def test_highest_non_nvd_source_selected_as_fallback(evaluator):
     result = _evaluate(evaluator, "other_source_fallback.json")
     (finding,) = result.findings
     # ghsa (8.9) beats redhat (6.5); both are non-nvd, so the higher score wins.
-    # 8.9 rounds up to 9, so the resulting band is CRITICAL, not HIGH.
+    # 8.9 is High per the official CVSS band (7.0-8.9), not Critical.
     assert finding.source == "CVSS.ghsa.v3"
-    assert finding.band == "CRITICAL"
+    assert finding.band == "HIGH"
 
 
 def test_trivy_severity_fallback_when_no_cvss(evaluator):
@@ -98,12 +98,14 @@ def test_score_to_band_none_is_not_a_failing_band(evaluator):
     assert evaluator.score_to_band(0.0) == "NONE"
 
 
-def test_upward_rounding_at_band_boundary(evaluator):
-    # Raw score 3.1 (Low, < 4.0) rounds UP to 4 -> Medium, and must fail.
+def test_low_score_near_medium_boundary_does_not_fail(evaluator):
+    # Raw score 3.1 is genuinely Low per the official CVSS band (0.1-3.9) and
+    # must stay Low/passing -- guards against reintroducing double-rounding
+    # (e.g. ceil(3.1) == 4 -> Medium), which would incorrectly fail this.
     result = _evaluate(evaluator, "boundary_rounding.json")
     (finding,) = result.findings
-    assert finding.band == "MEDIUM"
-    assert result.violations
+    assert finding.band == "LOW"
+    assert not result.violations
 
 
 def test_medium_plus_fixed_finding_fails_policy(evaluator):
@@ -170,18 +172,18 @@ def test_clean_report_has_no_findings_or_violations(evaluator):
         (0.0, "NONE"),
         (0.1, "LOW"),
         (3.0, "LOW"),
-        (3.1, "MEDIUM"),  # rounds up to 4
+        (3.9, "LOW"),
         (4.0, "MEDIUM"),
         (6.0, "MEDIUM"),
-        (6.1, "HIGH"),  # rounds up to 7
+        (6.9, "MEDIUM"),
         (7.0, "HIGH"),
         (8.0, "HIGH"),
-        (8.1, "CRITICAL"),  # rounds up to 9
+        (8.9, "HIGH"),
         (9.0, "CRITICAL"),
         (10.0, "CRITICAL"),
     ],
 )
-def test_score_to_band_rounds_up_never_down(evaluator, score, expected_band):
+def test_score_to_band_matches_official_cvss_bands(evaluator, score, expected_band):
     assert evaluator.score_to_band(score) == expected_band
 
 

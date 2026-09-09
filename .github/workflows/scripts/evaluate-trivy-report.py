@@ -17,8 +17,10 @@ CVSS score selection precedence, per finding:
   4. The highest score reported by any other CVSS source/version
   5. Trivy's own Severity field, only when no CVSS score is available at all
 
-Numeric CVSS scores are rounded UP (never down) to the nearest whole number
-before being mapped to a band, so a borderline score is never under-classified.
+Numeric CVSS scores are mapped to their band using the exact official CVSS
+qualitative severity ranges (Low 0.1-3.9, Medium 4.0-6.9, High 7.0-8.9,
+Critical 9.0-10.0) -- no rounding is applied, since a score already falls
+in exactly one of these bands.
 
 Not GitHub Actions-specific: run directly against any Trivy JSON report file.
 """
@@ -27,7 +29,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -86,15 +87,19 @@ class ReportResult:
 
 
 def score_to_band(score: float) -> str:
-    """Round the score UP to the nearest whole number, then map to a band."""
-    rounded = math.ceil(score)
-    if rounded <= 0:
+    """Map a CVSS score to its qualitative band using the official v3.x/v4
+    boundaries (NVD qualitative severity rating scale). These are exact float
+    ranges, not integers, so no rounding is applied -- a score already sits
+    in exactly one band, and comparing it directly is what "never rounds
+    down" actually means here.
+    """
+    if score <= 0.0:
         return "NONE"
-    if rounded <= 3:
+    if score <= 3.9:
         return "LOW"
-    if rounded <= 6:
+    if score <= 6.9:
         return "MEDIUM"
-    if rounded <= 8:
+    if score <= 8.9:
         return "HIGH"
     return "CRITICAL"
 
