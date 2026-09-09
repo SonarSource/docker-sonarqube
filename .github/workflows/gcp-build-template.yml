@@ -88,8 +88,17 @@ jobs:
       # Release gate (SONAR-31880): re-scan the exact image about to be promoted to the
       # public GCP registry and block the promotion below if it violates the CVSS policy.
       # Covers every image this template promotes to production (app and search).
+      #
+      # This template's production path never rebuilds anything -- it re-pushes the
+      # already-published Docker Hub image as-is (see the pull/promote steps around this
+      # one). release.yml also triggers that path on a nightly `schedule` cron, which
+      # would re-scan that same frozen, immutable image every night for no reason and
+      # eventually fail on a day nothing about the release actually changed. So the gate
+      # only runs for an actual release promotion: a genuine `release` publish or a
+      # deliberate manual production push, matching release.yml's own promotion-job
+      # condition minus `schedule`.
       - name: Run Trivy vulnerability scanner (release gate)
-        if: ${{ inputs.build_type == 'production' }}
+        if: ${{ inputs.build_type == 'production' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_PROD_IMAGES')) }}
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         env:
           TRIVY_SEVERITY: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
@@ -104,7 +113,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Evaluate release image against CVSS policy (release gate)
-        if: ${{ inputs.build_type == 'production' }}
+        if: ${{ inputs.build_type == 'production' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_PROD_IMAGES')) }}
         run: python3 .github/workflows/scripts/evaluate-trivy-report.py trivy-release-datacenter-${{ inputs.component_type }}.json
 
       - name: Login to GCP registry
