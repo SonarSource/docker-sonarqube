@@ -69,6 +69,22 @@ def test_trivy_severity_fallback_when_no_cvss(evaluator):
     assert result.violations
 
 
+def test_unknown_severity_with_no_cvss_data_fails_policy(evaluator):
+    # No CVSS anywhere and Trivy's own severity is UNKNOWN -- zero information,
+    # not an informed "no impact" verdict, so this must fail closed.
+    result = _evaluate(evaluator, "unknown_severity_fails.json")
+    (finding,) = result.findings
+    assert finding.band == "UNKNOWN"
+    assert result.violations
+
+
+def test_score_to_band_none_is_not_a_failing_band(evaluator):
+    # A real CVSS score of 0.0 (NONE band) is informed data saying "no impact"
+    # and must be distinguished from UNKNOWN (no data at all) -- NONE passes.
+    assert "NONE" not in evaluator.FAILING_BANDS
+    assert evaluator.score_to_band(0.0) == "NONE"
+
+
 def test_upward_rounding_at_band_boundary(evaluator):
     # Raw score 3.1 (Low, < 4.0) rounds UP to 4 -> Medium, and must fail.
     result = _evaluate(evaluator, "boundary_rounding.json")

@@ -2,11 +2,13 @@
 """Evaluate a Trivy JSON vulnerability report against the repository's CI policy.
 
 Policy: a finding fails CI if its CVSS-derived severity band is Medium, High, or
-Critical. Vulnerabilities without an upstream fix, and vulnerabilities suppressed
-by a governed, unexpired .trivyignore.yaml entry, are expected to already be
-absent from the report's "Vulnerabilities" list (enforced by the Trivy invocation
-itself via --ignore-unfixed and --ignorefile) -- this script only judges whatever
-findings Trivy hands it.
+Critical -- or Unknown, meaning no CVSS score and no usable Trivy severity were
+available at all, so there's no data to say the finding is safe. Vulnerabilities
+without an upstream fix, and vulnerabilities suppressed by a governed, unexpired
+.trivyignore.yaml entry, are expected to already be absent from the report's
+"Vulnerabilities" list (enforced by the Trivy invocation itself via
+--ignore-unfixed and --ignorefile) -- this script only judges whatever findings
+Trivy hands it.
 
 CVSS score selection precedence, per finding:
   1. CVSS.nvd v4   (CVSS.nvd.V40Score)
@@ -48,7 +50,12 @@ TRIVY_SEVERITY_TO_BAND = {
     "CRITICAL": "CRITICAL",
 }
 
-FAILING_BANDS = frozenset({"MEDIUM", "HIGH", "CRITICAL"})
+# UNKNOWN means we have no CVSS score anywhere AND no usable Trivy severity --
+# i.e. zero information, not a real "no impact" score. Fail closed on that so
+# a human has to look and either fix it or add a governed .trivyignore entry,
+# rather than silently trusting an absence of data. NONE (a real score of 0.0)
+# is intentionally excluded -- that's an informed "no impact" verdict.
+FAILING_BANDS = frozenset({"UNKNOWN", "MEDIUM", "HIGH", "CRITICAL"})
 
 # Trivy's --show-suppressed field name has changed across releases; check both.
 SUPPRESSED_FIELDS = ("ModifiedFindings", "ExperimentalModifiedFindings")
