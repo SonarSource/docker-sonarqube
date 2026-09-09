@@ -7,7 +7,7 @@
       "Class": "os-pkgs",
       "Type": "debian",
       "Vulnerabilities": [],
-      "ModifiedFindings": [
+      "ExperimentalModifiedFindings": [
         {
           "Type": "vulnerability",
           "Status": "ignored",

@@ -78,6 +78,19 @@ def test_unknown_severity_with_no_cvss_data_fails_policy(evaluator):
     assert result.violations
 
 
+def test_select_cvss_does_not_drop_a_real_zero_nvd_score(evaluator):
+    # A genuine CVSS score of 0.0 is falsy in Python but is real, informed
+    # data (NONE band) -- it must not be treated as "field absent".
+    assert evaluator.select_cvss({"nvd": {"V3Score": 0.0}}) == (0.0, "CVSS.nvd.v3")
+
+
+def test_select_cvss_nvd_zero_still_beats_other_sources(evaluator):
+    # NVD precedence must hold even when NVD's score is 0.0: a non-nvd
+    # fallback must never be selected while an NVD field is present.
+    cvss = {"nvd": {"V3Score": 0.0}, "ghsa": {"V3Score": 7.0}}
+    assert evaluator.select_cvss(cvss) == (0.0, "CVSS.nvd.v3")
+
+
 def test_score_to_band_none_is_not_a_failing_band(evaluator):
     # A real CVSS score of 0.0 (NONE band) is informed data saying "no impact"
     # and must be distinguished from UNKNOWN (no data at all) -- NONE passes.
@@ -101,8 +114,10 @@ def test_medium_plus_fixed_finding_fails_policy(evaluator):
 
 
 def test_unexpired_suppression_is_displayed_and_does_not_fail(evaluator):
-    # Governed suppressions are surfaced via ModifiedFindings (--show-suppressed) and
-    # never appear in Vulnerabilities, so they must never fail the policy.
+    # Governed suppressions are surfaced via ExperimentalModifiedFindings
+    # (--show-suppressed, the field name real Trivy 0.70.0+/0.74.0 actually
+    # populates) and never appear in Vulnerabilities, so they must never fail
+    # the policy.
     result = _evaluate(evaluator, "unexpired_suppression.json")
     assert not result.findings
     assert not result.violations

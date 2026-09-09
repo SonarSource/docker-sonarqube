@@ -103,7 +103,7 @@ def _best_field(scores: dict[str, Any]) -> Optional[tuple[float, str]]:
     """Return (score, version_label) for the highest-precedence populated field."""
     for cvss_field, version in CVSS_VERSION_FIELDS:
         value = scores.get(cvss_field)
-        if value:
+        if value is not None:
             return float(value), version
     return None
 
@@ -122,7 +122,7 @@ def select_cvss(cvss: dict[str, Any]) -> Optional[tuple[float, str]]:
             continue
         for cvss_field, version in CVSS_VERSION_FIELDS:
             value = scores.get(cvss_field)
-            if not value:
+            if value is None:
                 continue
             value = float(value)
             if best is None or value > best[0]:

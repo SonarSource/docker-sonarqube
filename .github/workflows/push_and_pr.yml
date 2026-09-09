@@ -268,7 +268,7 @@ jobs:
           image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}'
           format: 'sarif'
           output: 'trivy-${{ matrix.edition }}.sarif'
-          severity: 'LOW,MEDIUM,HIGH,CRITICAL'
+          severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           vuln-type: 'os'
           trivy-config: '.github/trivy.yaml'
           trivyignores: './.trivyignore.yaml'
@@ -340,7 +340,7 @@ jobs:
           image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.community_build_version }}-master-community'
           format: 'sarif'
           output: 'trivy-community.sarif'
-          severity: 'LOW,MEDIUM,HIGH,CRITICAL'
+          severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           vuln-type: 'os'
           trivy-config: '.github/trivy.yaml'
           trivyignores: './.trivyignore.yaml'
@@ -416,7 +416,7 @@ jobs:
         id: alls-green
         with:
           jobs: ${{ toJSON(needs) }}
-          allowed-skips: 'load-config,build-commercial-editions,build-community-build,test-commercial-editions,test-community-build,gcp-build-staging-app,gcp-build-staging-search'
+          allowed-skips: 'load-config,build-commercial-editions,build-community-build,test-commercial-editions,test-community-build,trivy-scan-commercial-editions,trivy-scan-community-build,gcp-build-staging-app,gcp-build-staging-search'
 
   notify-slack-on-failure:
     name: Notify on Failure
