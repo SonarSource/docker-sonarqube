@@ -251,17 +251,17 @@ def main(argv: Optional[list[str]] = None) -> int:
 
         violations = result.violations
         if violations:
-            print(f"-- POLICY VIOLATION: {len(violations)} finding(s) at Medium band or higher --")
+            print(f"-- POLICY VIOLATION: {len(violations)} finding(s) in a failing band (Medium+ or Unknown) --")
             total_violations += len(violations)
         else:
             print("-- no policy violations --")
         print()
 
     if total_violations:
-        print(f"FAILED: {total_violations} finding(s) violate the CVSS >= Medium policy.")
+        print(f"FAILED: {total_violations} finding(s) violate the policy (CVSS >= Medium, or Unknown with no data).")
         return 1
 
-    print("PASSED: no findings violate the CVSS >= Medium policy.")
+    print("PASSED: no findings violate the policy (CVSS >= Medium, or Unknown with no data).")
     return 0
 
 
