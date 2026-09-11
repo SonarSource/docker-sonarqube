@@ -2,8 +2,12 @@
 #
 # Loaded explicitly via `trivy --ignorefile ./.trivyignore.yaml` (YAML ignore files are
 # an experimental Trivy feature and are never auto-loaded). This file is scanned by the
-# same CI policy on PRs, pushes, and nightly runs -- see .github/workflows/push_and_pr.yml
-# and .github/workflows/scripts/evaluate-trivy-report.py.
+# same CI policy on PRs, pushes, and nightly runs (.github/workflows/push_and_pr.yml) and
+# by the release gate that guards promotion to the public GCP registry on `release`,
+# manual PUSH_GCP_PROD_IMAGES, and nightly `schedule` runs
+# (.github/workflows/release.yml -> .github/workflows/gcp-build-template.yml). A red
+# release gate skips the GCP promotion step, so an expired entry blocks GCR sync, not
+# just CI -- see .github/workflows/scripts/evaluate-trivy-report.py for the policy.
 #
 # Every entry MUST carry all three governance fields:
 #   - id:          the exact finding ID (e.g. a CVE)
