@@ -87,18 +87,15 @@ jobs:
 
       # Release gate (SONAR-31880): re-scan the exact image about to be promoted to the
       # public GCP registry and block the promotion below if it violates the CVSS policy.
-      # Covers every image this template promotes to production (app and search).
-      #
-      # This template's production path never rebuilds anything -- it re-pushes the
-      # already-published Docker Hub image as-is (see the pull/promote steps around this
-      # one). release.yml also triggers that path on a nightly `schedule` cron, which
-      # would re-scan that same frozen, immutable image every night for no reason and
-      # eventually fail on a day nothing about the release actually changed. So the gate
-      # only runs for an actual release promotion: a genuine `release` publish or a
-      # deliberate manual production push, matching release.yml's own promotion-job
-      # condition minus `schedule`.
+      # Covers every image this template promotes to production (app and search),
+      # including the nightly `schedule` run -- that run keeps GCR in sync with
+      # whatever's current on Docker Hub and is a real precondition for the manual
+      # marketplace steps, not a no-op. A nightly scan going red on an
+      # already-published image is expected, governed behavior, not a bug: the
+      # response is an SLA-timed .trivyignore.yaml exception (same as any other
+      # finding), not skipping the gate.
       - name: Run Trivy vulnerability scanner (release gate)
-        if: ${{ inputs.build_type == 'production' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_PROD_IMAGES')) }}
+        if: ${{ inputs.build_type == 'production' }}
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         env:
           TRIVY_SEVERITY: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
@@ -113,7 +110,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Evaluate release image against CVSS policy (release gate)
-        if: ${{ inputs.build_type == 'production' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_PROD_IMAGES')) }}
+        if: ${{ inputs.build_type == 'production' }}
         run: python3 .github/workflows/scripts/evaluate-trivy-report.py trivy-release-datacenter-${{ inputs.component_type }}.json
 
       - name: Login to GCP registry
@@ -147,12 +144,8 @@ jobs:
           .github/workflows/scripts/multi-arch-build.sh "${STAGING_IMAGE_NAME}" "${TAG}" "${VERSION}"
           .github/workflows/scripts/multi-arch-build.sh "${STAGING_IMAGE_NAME}" "${MINOR_TAG}" "${VERSION}"
 
-      # Gated identically to the two Trivy steps above (SONAR-31880): promotion must
-      # never outrun its own gate. Without this, a nightly `schedule` run (which skips
-      # the gate above since it never rebuilds anything) would still promote to GCP
-      # with zero policy evaluation.
       - name: Promote datacenter image to GCP production
-        if: ${{ inputs.build_type == 'production' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_PROD_IMAGES')) }}
+        if: ${{ inputs.build_type == 'production' }}
         env:
           PUBLIC_IMAGE_NAME: ${{ inputs.public_image_name }}
           CURRENT_VERSION: ${{ inputs.current_version }}
