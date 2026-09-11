@@ -340,3 +340,81 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-07
+  - id: CVE-2026-19499
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) glibc OS package vulnerability (USN-8737-1,
+      libc6/libc-bin/locales 2.39-0ubuntu8.8 -> 2.39-0ubuntu8.9). No newer upstream base image
+      build available as of 2026-09-11; apt-get upgrade was rejected as a fix since it breaks
+      Docker Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Triaged: all six findings require local
+      access with user interaction, or are denial-of-service only with no
+      confidentiality/integrity impact, and none are reachable through SonarQube's actual
+      attack surface. Tracked in SONAR-31880 -- plan is to pin the specific patched package
+      version or pick up an upstream base image bump before this expires.
+    expired_at: 2026-11-10
+  - id: CVE-2026-19542
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) glibc OS package vulnerability (USN-8737-1,
+      libc6/libc-bin/locales 2.39-0ubuntu8.8 -> 2.39-0ubuntu8.9). No newer upstream base image
+      build available as of 2026-09-11; apt-get upgrade was rejected as a fix since it breaks
+      Docker Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Triaged: all six findings require local
+      access with user interaction, or are denial-of-service only with no
+      confidentiality/integrity impact, and none are reachable through SonarQube's actual
+      attack surface. Tracked in SONAR-31880 -- plan is to pin the specific patched package
+      version or pick up an upstream base image bump before this expires.
+    expired_at: 2026-11-10
+  - id: CVE-2026-6368
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) glibc OS package vulnerability (USN-8737-1,
+      libc6/libc-bin/locales 2.39-0ubuntu8.8 -> 2.39-0ubuntu8.9). No newer upstream base image
+      build available as of 2026-09-11; apt-get upgrade was rejected as a fix since it breaks
+      Docker Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Triaged: all six findings require local
+      access with user interaction, or are denial-of-service only with no
+      confidentiality/integrity impact, and none are reachable through SonarQube's actual
+      attack surface. Tracked in SONAR-31880 -- plan is to pin the specific patched package
+      version or pick up an upstream base image bump before this expires.
+    expired_at: 2026-11-10
+  - id: CVE-2026-6791
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) glibc OS package vulnerability (USN-8737-1,
+      libc6/libc-bin/locales 2.39-0ubuntu8.8 -> 2.39-0ubuntu8.9). No newer upstream base image
+      build available as of 2026-09-11; apt-get upgrade was rejected as a fix since it breaks
+      Docker Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Triaged: all six findings require local
+      access with user interaction, or are denial-of-service only with no
+      confidentiality/integrity impact, and none are reachable through SonarQube's actual
+      attack surface. Tracked in SONAR-31880 -- plan is to pin the specific patched package
+      version or pick up an upstream base image bump before this expires.
+    expired_at: 2026-11-10
+  - id: CVE-2026-77117
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) glibc OS package vulnerability (USN-8737-1,
+      libc6/libc-bin/locales 2.39-0ubuntu8.8 -> 2.39-0ubuntu8.9). No newer upstream base image
+      build available as of 2026-09-11; apt-get upgrade was rejected as a fix since it breaks
+      Docker Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Triaged: all six findings require local
+      access with user interaction, or are denial-of-service only with no
+      confidentiality/integrity impact, and none are reachable through SonarQube's actual
+      attack surface. Tracked in SONAR-31880 -- plan is to pin the specific patched package
+      version or pick up an upstream base image bump before this expires.
+    expired_at: 2026-11-10
+  - id: CVE-2026-80489
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) glibc OS package vulnerability (USN-8737-1,
+      libc6/libc-bin/locales 2.39-0ubuntu8.8 -> 2.39-0ubuntu8.9). No newer upstream base image
+      build available as of 2026-09-11; apt-get upgrade was rejected as a fix since it breaks
+      Docker Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Triaged: all six findings require local
+      access with user interaction, or are denial-of-service only with no
+      confidentiality/integrity impact, and none are reachable through SonarQube's actual
+      attack surface. Tracked in SONAR-31880 -- plan is to pin the specific patched package
+      version or pick up an upstream base image bump before this expires.
+    expired_at: 2026-11-10
