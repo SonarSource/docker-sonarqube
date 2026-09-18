@@ -85,6 +85,34 @@ jobs:
           echo "Pull the ${PUBLIC_IMAGE_NAME} datacenter public images"
           docker pull "${PUBLIC_IMAGE_NAME}:${CURRENT_VERSION}-datacenter-${COMPONENT_TYPE}"
 
+      # Release gate (SONAR-31880): re-scan the exact image about to be promoted to the
+      # public GCP registry and block the promotion below if it violates the CVSS policy.
+      # Covers every image this template promotes to production (app and search),
+      # including the nightly `schedule` run -- that run keeps GCR in sync with
+      # whatever's current on Docker Hub and is a real precondition for the manual
+      # marketplace steps, not a no-op. A nightly scan going red on an
+      # already-published image is expected, governed behavior, not a bug: the
+      # response is an SLA-timed .trivyignore.yaml exception (same as any other
+      # finding), not skipping the gate.
+      - name: Run Trivy vulnerability scanner (release gate)
+        if: ${{ inputs.build_type == 'production' }}
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_SEVERITY: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+          TRIVY_SHOW_SUPPRESSED: 'true'
+        with:
+          image-ref: '${{ inputs.public_image_name }}:${{ inputs.current_version }}-datacenter-${{ inputs.component_type }}'
+          format: 'json'
+          output: 'trivy-release-datacenter-${{ inputs.component_type }}.json'
+          vuln-type: 'os'
+          trivy-config: '.github/trivy.yaml'
+          trivyignores: './.trivyignore.yaml'
+          ignore-unfixed: true
+
+      - name: Evaluate release image against CVSS policy (release gate)
+        if: ${{ inputs.build_type == 'production' }}
+        run: python3 .github/workflows/scripts/evaluate-trivy-report.py trivy-release-datacenter-${{ inputs.component_type }}.json
+
       - name: Login to GCP registry
         run: |
           export DOCKER_GCLOUD_PASSWORD=$(echo '${{ fromJSON(steps.secrets.outputs.vault).gcp_sa_key }}' | base64 -d)

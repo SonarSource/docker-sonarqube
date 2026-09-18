@@ -34,6 +34,11 @@ Desktop.ini
 
 *.zip
 
+# ---- Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
 # ---- Docker Official Images
 docker-official-images/official_images.txt
 docker-official-images/coverage.out
