@@ -120,6 +120,22 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-07
+  - id: CVE-2026-15534
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) perl-base OS package vulnerability (perl-base
+      5.38.2-3.2ubuntu0.4 -> 5.38.2-3.2ubuntu0.6). Out-of-bounds heap read/write in the
+      regex engine's superlinear cache (S_regmatch), requiring local access and an
+      attacker-crafted ~286MB subject matched against a specific pattern shape (AV:L).
+      SonarQube's images never invoke perl or its regex engine on request-controlled input
+      -- perl-base is a transitive base-image dependency, not exercised by our entrypoint
+      scripts or the JVM -- so this code path is not reachable from our attack surface. No
+      newer upstream base image build available as of 2026-09-18; apt-get upgrade was
+      rejected as a fix since it breaks Docker Official Images build reproducibility (these
+      Dockerfiles are pinned per-commit in docker-official-images/internal/build/build.go).
+      Tracked in SONAR-31880 -- plan is to pin the specific patched package version or pick
+      up an upstream base image bump before this expires.
+    expired_at: 2026-10-18
   - id: CVE-2026-16742
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -140,6 +156,23 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-07
+  - id: CVE-2026-19487
+    statement: >-
+      Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) perl-base OS package vulnerability (perl-base
+      5.38.2-3.2ubuntu0.4 -> 5.38.2-3.2ubuntu0.6). Logic bug in the regex engine's
+      Aho-Corasick prescan (S_find_byclass) that can produce an incorrect match result on a
+      crafted alternation pattern -- not memory corruption, a correctness bug in matching
+      itself. SonarQube's images never invoke perl or its regex engine on request-controlled
+      input -- perl-base is a transitive base-image dependency, not exercised by our
+      entrypoint scripts or the JVM -- so this code path is not reachable from our attack
+      surface. No newer upstream base image build available as of 2026-09-18; apt-get
+      upgrade was rejected as a fix since it breaks Docker Official Images build
+      reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-31880 -- plan is to
+      pin the specific patched package version or pick up an upstream base image bump before
+      this expires.
+    expired_at: 2026-10-18
   - id: CVE-2026-19499
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
