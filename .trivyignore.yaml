@@ -60,6 +60,22 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-07
+  - id: CVE-2025-59375
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.5). Large dynamic memory allocations triggered by a small crafted
+      document, causing a denial of service for the calling process. libexpat1 is only pulled in
+      by the base image's libfontconfig1, which uses it to parse fontconfig's own XML
+      configuration (root-owned /etc/fonts, not writable by the sonarqube user). SonarQube's JVM
+      parses XML with Java's own parsers and never passes request-controlled XML to expat, so
+      this code path is not reachable from our attack surface. No newer upstream base image
+      build available as of 2026-09-25; apt-get upgrade was rejected as a fix since it breaks
+      Docker Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-32543 -- plan is to pin
+      the specific patched package version or pick up an upstream base image bump before this
+      expires.
+    expired_at: 2026-11-24
   - id: CVE-2025-6141
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -222,6 +238,54 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-07
+  - id: CVE-2026-32776
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.5). NULL function-pointer dereference in the parser on crafted input,
+      causing a crash of the calling process. libexpat1 is only pulled in by the base image's
+      libfontconfig1, which uses it to parse fontconfig's own XML configuration (root-owned
+      /etc/fonts, not writable by the sonarqube user). SonarQube's JVM parses XML with Java's
+      own parsers and never passes request-controlled XML to expat, so this code path is not
+      reachable from our attack surface. No newer upstream base image build available as of
+      2026-09-25; apt-get upgrade was rejected as a fix since it breaks Docker Official Images
+      build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-32543 -- plan is to pin
+      the specific patched package version or pick up an upstream base image bump before this
+      expires.
+    expired_at: 2026-11-24
+  - id: CVE-2026-32777
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.5). Infinite loop while parsing crafted DTD content, causing a denial of
+      service for the calling process. libexpat1 is only pulled in by the base image's
+      libfontconfig1, which uses it to parse fontconfig's own XML configuration (root-owned
+      /etc/fonts, not writable by the sonarqube user). SonarQube's JVM parses XML with Java's
+      own parsers and never passes request-controlled XML to expat, so this code path is not
+      reachable from our attack surface. No newer upstream base image build available as of
+      2026-09-25; apt-get upgrade was rejected as a fix since it breaks Docker Official Images
+      build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-32543 -- plan is to pin
+      the specific patched package version or pick up an upstream base image bump before this
+      expires.
+    expired_at: 2026-11-24
+  - id: CVE-2026-32778
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.5). NULL pointer dereference in namespace prefix handling on crafted
+      input, causing a crash of the calling process. libexpat1 is only pulled in by the base
+      image's libfontconfig1, which uses it to parse fontconfig's own XML configuration
+      (root-owned /etc/fonts, not writable by the sonarqube user). SonarQube's JVM parses XML
+      with Java's own parsers and never passes request-controlled XML to expat, so this code
+      path is not reachable from our attack surface. No newer upstream base image build
+      available as of 2026-09-25; apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-32543 -- plan is to pin
+      the specific patched package version or pick up an upstream base image bump before this
+      expires.
+    expired_at: 2026-11-24
   - id: CVE-2026-42250
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -232,6 +296,21 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-07
+  - id: CVE-2026-45186
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.5). Denial of service via moderately sized crafted XML input (duplicate
+      attribute handling). libexpat1 is only pulled in by the base image's libfontconfig1, which
+      uses it to parse fontconfig's own XML configuration (root-owned /etc/fonts, not writable
+      by the sonarqube user). SonarQube's JVM parses XML with Java's own parsers and never
+      passes request-controlled XML to expat, so this code path is not reachable from our attack
+      surface. No newer upstream base image build available as of 2026-09-25; apt-get upgrade
+      was rejected as a fix since it breaks Docker Official Images build reproducibility (these
+      Dockerfiles are pinned per-commit in docker-official-images/internal/build/build.go).
+      Tracked in SONAR-32543 -- plan is to pin the specific patched package version or pick up
+      an upstream base image bump before this expires.
+    expired_at: 2026-11-24
   - id: CVE-2026-48959
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -252,6 +331,22 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-07
+  - id: CVE-2026-50219
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.5). Use after free when parser API functions are called from within
+      parser handler callbacks. libexpat1 is only pulled in by the base image's libfontconfig1,
+      which uses it to parse fontconfig's own XML configuration (root-owned /etc/fonts, not
+      writable by the sonarqube user). SonarQube's JVM parses XML with Java's own parsers and
+      never passes request-controlled XML to expat, so this code path is not reachable from our
+      attack surface. No newer upstream base image build available as of 2026-09-25; apt-get
+      upgrade was rejected as a fix since it breaks Docker Official Images build reproducibility
+      (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-32543 -- plan is to pin
+      the specific patched package version or pick up an upstream base image bump before this
+      expires.
+    expired_at: 2026-11-24
   - id: CVE-2026-53612
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -322,6 +417,182 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-07
+  - id: CVE-2026-56131
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.6). Use after free when XML_ResumeParser is called from within a parser
+      handler callback. libexpat1 is only pulled in by the base image's libfontconfig1, which
+      uses it to parse fontconfig's own XML configuration (root-owned /etc/fonts, not writable
+      by the sonarqube user). SonarQube's JVM parses XML with Java's own parsers and never
+      passes request-controlled XML to expat, so this code path is not reachable from our attack
+      surface. No newer upstream base image build available as of 2026-09-25; apt-get upgrade
+      was rejected as a fix since it breaks Docker Official Images build reproducibility (these
+      Dockerfiles are pinned per-commit in docker-official-images/internal/build/build.go).
+      Tracked in SONAR-32543 -- plan is to pin the specific patched package version or pick up
+      an upstream base image bump before this expires.
+    expired_at: 2026-11-24
+  - id: CVE-2026-56132
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.6). Heap-based buffer overflow (out-of-bounds scaffolding index store in
+      doProlog) on crafted DTD content. libexpat1 is only pulled in by the base image's
+      libfontconfig1, which uses it to parse fontconfig's own XML configuration (root-owned
+      /etc/fonts, not writable by the sonarqube user). SonarQube's JVM parses XML with Java's
+      own parsers and never passes request-controlled XML to expat, so this code path is not
+      reachable from our attack surface. No newer upstream base image build available as of
+      2026-09-25; apt-get upgrade was rejected as a fix since it breaks Docker Official Images
+      build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-32543 -- plan is to pin
+      the specific patched package version or pick up an upstream base image bump before this
+      expires.
+    expired_at: 2026-11-24
+  - id: CVE-2026-56403
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.5). Integer overflow in attribute storage (storeAtts) on crafted input.
+      libexpat1 is only pulled in by the base image's libfontconfig1, which uses it to parse
+      fontconfig's own XML configuration (root-owned /etc/fonts, not writable by the sonarqube
+      user). SonarQube's JVM parses XML with Java's own parsers and never passes
+      request-controlled XML to expat, so this code path is not reachable from our attack
+      surface. No newer upstream base image build available as of 2026-09-25; apt-get upgrade
+      was rejected as a fix since it breaks Docker Official Images build reproducibility (these
+      Dockerfiles are pinned per-commit in docker-official-images/internal/build/build.go).
+      Tracked in SONAR-32543 -- plan is to pin the specific patched package version or pick up
+      an upstream base image bump before this expires.
+    expired_at: 2026-11-24
+  - id: CVE-2026-56404
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.5). Integer overflow in namespace binding (addBinding) on crafted input.
+      libexpat1 is only pulled in by the base image's libfontconfig1, which uses it to parse
+      fontconfig's own XML configuration (root-owned /etc/fonts, not writable by the sonarqube
+      user). SonarQube's JVM parses XML with Java's own parsers and never passes
+      request-controlled XML to expat, so this code path is not reachable from our attack
+      surface. No newer upstream base image build available as of 2026-09-25; apt-get upgrade
+      was rejected as a fix since it breaks Docker Official Images build reproducibility (these
+      Dockerfiles are pinned per-commit in docker-official-images/internal/build/build.go).
+      Tracked in SONAR-32543 -- plan is to pin the specific patched package version or pick up
+      an upstream base image bump before this expires.
+    expired_at: 2026-11-24
+  - id: CVE-2026-56405
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.5). Integer overflow in attribute ID handling (getAttributeId) on
+      crafted input. libexpat1 is only pulled in by the base image's libfontconfig1, which uses
+      it to parse fontconfig's own XML configuration (root-owned /etc/fonts, not writable by the
+      sonarqube user). SonarQube's JVM parses XML with Java's own parsers and never passes
+      request-controlled XML to expat, so this code path is not reachable from our attack
+      surface. No newer upstream base image build available as of 2026-09-25; apt-get upgrade
+      was rejected as a fix since it breaks Docker Official Images build reproducibility (these
+      Dockerfiles are pinned per-commit in docker-official-images/internal/build/build.go).
+      Tracked in SONAR-32543 -- plan is to pin the specific patched package version or pick up
+      an upstream base image bump before this expires.
+    expired_at: 2026-11-24
+  - id: CVE-2026-56406
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.6). Integer overflow in XML_ParseBuffer, which lacked the overflow check
+      already present in XML_Parse. libexpat1 is only pulled in by the base image's
+      libfontconfig1, which uses it to parse fontconfig's own XML configuration (root-owned
+      /etc/fonts, not writable by the sonarqube user). SonarQube's JVM parses XML with Java's
+      own parsers and never passes request-controlled XML to expat, so this code path is not
+      reachable from our attack surface. No newer upstream base image build available as of
+      2026-09-25; apt-get upgrade was rejected as a fix since it breaks Docker Official Images
+      build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-32543 -- plan is to pin
+      the specific patched package version or pick up an upstream base image bump before this
+      expires.
+    expired_at: 2026-11-24
+  - id: CVE-2026-56407
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.6). Signed integer overflow of the entity text length on crafted input.
+      libexpat1 is only pulled in by the base image's libfontconfig1, which uses it to parse
+      fontconfig's own XML configuration (root-owned /etc/fonts, not writable by the sonarqube
+      user). SonarQube's JVM parses XML with Java's own parsers and never passes
+      request-controlled XML to expat, so this code path is not reachable from our attack
+      surface. No newer upstream base image build available as of 2026-09-25; apt-get upgrade
+      was rejected as a fix since it breaks Docker Official Images build reproducibility (these
+      Dockerfiles are pinned per-commit in docker-official-images/internal/build/build.go).
+      Tracked in SONAR-32543 -- plan is to pin the specific patched package version or pick up
+      an upstream base image bump before this expires.
+    expired_at: 2026-11-24
+  - id: CVE-2026-56408
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.5). Integer overflow in the internal copyString helper on crafted input.
+      libexpat1 is only pulled in by the base image's libfontconfig1, which uses it to parse
+      fontconfig's own XML configuration (root-owned /etc/fonts, not writable by the sonarqube
+      user). SonarQube's JVM parses XML with Java's own parsers and never passes
+      request-controlled XML to expat, so this code path is not reachable from our attack
+      surface. No newer upstream base image build available as of 2026-09-25; apt-get upgrade
+      was rejected as a fix since it breaks Docker Official Images build reproducibility (these
+      Dockerfiles are pinned per-commit in docker-official-images/internal/build/build.go).
+      Tracked in SONAR-32543 -- plan is to pin the specific patched package version or pick up
+      an upstream base image bump before this expires.
+    expired_at: 2026-11-24
+  - id: CVE-2026-56409
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.6). Integer overflow in the xmlwf command-line tool when joining the
+      output path. The flaw is in xmlwf, which is not shipped by libexpat1 and is not present in
+      our images, so this is not reachable from our attack surface. No newer upstream base image
+      build available as of 2026-09-25; apt-get upgrade was rejected as a fix since it breaks
+      Docker Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-32543 -- plan is to pin
+      the specific patched package version or pick up an upstream base image bump before this
+      expires.
+    expired_at: 2026-11-24
+  - id: CVE-2026-56410
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.6). Integer overflow in the xmlwf command-line tool when resolving a
+      system ID. The flaw is in xmlwf, which is not shipped by libexpat1 and is not present in
+      our images, so this is not reachable from our attack surface. No newer upstream base image
+      build available as of 2026-09-25; apt-get upgrade was rejected as a fix since it breaks
+      Docker Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-32543 -- plan is to pin
+      the specific patched package version or pick up an upstream base image bump before this
+      expires.
+    expired_at: 2026-11-24
+  - id: CVE-2026-56411
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.6). Integer overflow in the xmlwf command-line tool when allocating the
+      notation list. The flaw is in xmlwf, which is not shipped by libexpat1 and is not present
+      in our images, so this is not reachable from our attack surface. No newer upstream base
+      image build available as of 2026-09-25; apt-get upgrade was rejected as a fix since it
+      breaks Docker Official Images build reproducibility (these Dockerfiles are pinned
+      per-commit in docker-official-images/internal/build/build.go). Tracked in SONAR-32543 --
+      plan is to pin the specific patched package version or pick up an upstream base image bump
+      before this expires.
+    expired_at: 2026-11-24
+  - id: CVE-2026-56412
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.5). Use after free in the character data handler path (incomplete fix
+      for CVE-2026-50219). libexpat1 is only pulled in by the base image's libfontconfig1, which
+      uses it to parse fontconfig's own XML configuration (root-owned /etc/fonts, not writable
+      by the sonarqube user). SonarQube's JVM parses XML with Java's own parsers and never
+      passes request-controlled XML to expat, so this code path is not reachable from our attack
+      surface. No newer upstream base image build available as of 2026-09-25; apt-get upgrade
+      was rejected as a fix since it breaks Docker Official Images build reproducibility (these
+      Dockerfiles are pinned per-commit in docker-official-images/internal/build/build.go).
+      Tracked in SONAR-32543 -- plan is to pin the specific patched package version or pick up
+      an upstream base image bump before this expires.
+    expired_at: 2026-11-24
   - id: CVE-2026-57432
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -386,6 +657,22 @@ vulnerabilities:
       SONAR-31880 -- plan is to pin the specific patched package version or pick up an
       upstream base image bump before this expires.
     expired_at: 2026-11-10
+  - id: CVE-2026-66046
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.6). Denial of service through the algorithmic complexity of attribute
+      storage (storeAtts) on crafted input. libexpat1 is only pulled in by the base image's
+      libfontconfig1, which uses it to parse fontconfig's own XML configuration (root-owned
+      /etc/fonts, not writable by the sonarqube user). SonarQube's JVM parses XML with Java's
+      own parsers and never passes request-controlled XML to expat, so this code path is not
+      reachable from our attack surface. No newer upstream base image build available as of
+      2026-09-25; apt-get upgrade was rejected as a fix since it breaks Docker Official Images
+      build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-32543 -- plan is to pin
+      the specific patched package version or pick up an upstream base image bump before this
+      expires.
+    expired_at: 2026-11-24
   - id: CVE-2026-6791
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -412,6 +699,21 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-07
+  - id: CVE-2026-72522
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.6). Out-of-bounds read in the UTF-16 conversion functions on crafted
+      input. libexpat1 is only pulled in by the base image's libfontconfig1, which uses it to
+      parse fontconfig's own XML configuration (root-owned /etc/fonts, not writable by the
+      sonarqube user). SonarQube's JVM parses XML with Java's own parsers and never passes
+      request-controlled XML to expat, so this code path is not reachable from our attack
+      surface. No newer upstream base image build available as of 2026-09-25; apt-get upgrade
+      was rejected as a fix since it breaks Docker Official Images build reproducibility (these
+      Dockerfiles are pinned per-commit in docker-official-images/internal/build/build.go).
+      Tracked in SONAR-32543 -- plan is to pin the specific patched package version or pick up
+      an upstream base image bump before this expires.
+    expired_at: 2026-11-24
   - id: CVE-2026-75803
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -422,6 +724,36 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-07
+  - id: CVE-2026-76641
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.6). Out-of-bounds read from an internal hash table on crafted input.
+      libexpat1 is only pulled in by the base image's libfontconfig1, which uses it to parse
+      fontconfig's own XML configuration (root-owned /etc/fonts, not writable by the sonarqube
+      user). SonarQube's JVM parses XML with Java's own parsers and never passes
+      request-controlled XML to expat, so this code path is not reachable from our attack
+      surface. No newer upstream base image build available as of 2026-09-25; apt-get upgrade
+      was rejected as a fix since it breaks Docker Official Images build reproducibility (these
+      Dockerfiles are pinned per-commit in docker-official-images/internal/build/build.go).
+      Tracked in SONAR-32543 -- plan is to pin the specific patched package version or pick up
+      an upstream base image bump before this expires.
+    expired_at: 2026-11-24
+  - id: CVE-2026-76957
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.4
+      -> 2.6.1-2ubuntu0.6). Use after free in custom encoding callbacks on crafted input.
+      libexpat1 is only pulled in by the base image's libfontconfig1, which uses it to parse
+      fontconfig's own XML configuration (root-owned /etc/fonts, not writable by the sonarqube
+      user). SonarQube's JVM parses XML with Java's own parsers and never passes
+      request-controlled XML to expat, so this code path is not reachable from our attack
+      surface. No newer upstream base image build available as of 2026-09-25; apt-get upgrade
+      was rejected as a fix since it breaks Docker Official Images build reproducibility (these
+      Dockerfiles are pinned per-commit in docker-official-images/internal/build/build.go).
+      Tracked in SONAR-32543 -- plan is to pin the specific patched package version or pick up
+      an upstream base image bump before this expires.
+    expired_at: 2026-11-24
   - id: CVE-2026-77117
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
