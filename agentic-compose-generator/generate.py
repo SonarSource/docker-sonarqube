@@ -248,17 +248,22 @@ def resolve_s3_egress(args: argparse.Namespace) -> list[str]:
         host, _, port = authority.partition(":")
         # egress-proxy denies every port it isn't told about, so pass the endpoint's own.
         args.s3_allowed_port = port or ("443" if args.s3_endpoint.startswith("https://") else "80")
-        args.s3_allowed_domain = host
+        args.s3_allowed_domain = host if args.s3_path_style == "true" else f"{args.s3_bucket}.{host}"
         return []
     args.s3_allowed_port = "443"
+    # AWS's wildcard certificate covers a single label, so a dotted bucket host fails TLS
+    # verification: such buckets need path style.
+    dotted = "." in args.s3_bucket
     if args.s3_path_style is None:
-        args.s3_path_style = "false"
+        args.s3_path_style = "true" if dotted else "false"
     if args.s3_path_style == "false":
         args.s3_allowed_domain = f"{args.s3_bucket}.s3.{args.s3_region}.amazonaws.com"
         return []
     args.s3_allowed_domain = f"s3.{args.s3_region}.amazonaws.com"
-    return [f"--s3-path-style true on AWS allowlists {args.s3_allowed_domain} in egress-proxy, "
-            "which reaches every bucket in the region, not only yours; drop it to allowlist the bucket host alone"]
+    reason = ("the bucket name has dots, which AWS's certificate doesn't cover in a bucket host, so path style is used"
+              if dotted else "--s3-path-style true on AWS")
+    return [f"{reason}: egress-proxy allowlists {args.s3_allowed_domain}, which reaches every bucket in the "
+            "region, not only yours" + ("" if dotted else "; drop it to allowlist the bucket host alone")]
 
 
 def validate_and_normalize(args: argparse.Namespace) -> list[str]:
@@ -1239,12 +1244,14 @@ def write_bundle_certs(args: argparse.Namespace, out_dir: Path, reissue: bool) -
 # --------------------------------------------------------------------------------------------------
 
 
-def scan_forbidden(compose_text: str, env_text: str) -> list[str]:
+def scan_forbidden(files: dict[str, str]) -> list[str]:
+    """Checks each bundle file, keyed by its bundle-relative name, for forbidden strings and leftovers."""
     problems = []
     for needle in FORBIDDEN_STRINGS:
-        if needle in compose_text or needle in env_text:
-            problems.append(f"forbidden string leaked into output: {needle!r}")
-    for text, label in ((compose_text, "docker-compose.yaml"), (env_text, ".env")):
+        for label, text in files.items():
+            if needle in text:
+                problems.append(f"forbidden string leaked into output: {needle!r} in {label}")
+    for label, text in files.items():
         for match in re.finditer(r"\$\{([A-Za-z_]\w*)\}", text, re.ASCII):
             problems.append(f"leftover unresolved placeholder ${{{match.group(1)}}} in {label}")
     return problems
@@ -1472,7 +1479,8 @@ def main(argv: list[str] | None = None) -> int:
 
     # write_bundle only carries over secrets and cluster addresses into .env, so the scan holds for it too.
     # The docs and the kit land in the bundle as well, so they are scanned with the compose file.
-    problems = scan_forbidden(compose_text + sonar_properties + "".join({**docs, **kit}.values()), build_env(args))
+    problems = scan_forbidden({"docker-compose.yaml": compose_text, "sonarqube/sonar.properties": sonar_properties,
+                               ".env": build_env(args), **docs, **kit})
     if problems:
         for problem in problems:
             print(f"error: {problem}", file=sys.stderr)

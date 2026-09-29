@@ -19,7 +19,7 @@ The bundle can run in front of:
   nothing to install. Without a local Python, run it in a container instead:
 
   ```bash
-  docker run --rm -u "$(id -u):$(id -g)" -v "$PWD":/work -w /work python:3.9-slim \
+  docker run --rm -u "$(id -u):$(id -g)" -v "$PWD":/work -w /work python:3.13-slim \
     python generate.py --edition developer --out my-bundle
   ```
 
@@ -120,7 +120,7 @@ other's jobs.
 | `local` | — | Evaluation: a Docker volume on this host, removed by `docker compose down -v` |
 | `hostpath` | `--storage-path` (absolute path) | A directory you already provision on the host, e.g. an EFS or NFS mount |
 | `nfs` | `--nfs-server`, `--nfs-export`; with `--edition none`, also `--storage-path` (where your SonarQube host mounts the export) | An NFS export that Docker mounts for you |
-| `s3` | `--s3-bucket`, `--s3-region`, `--s3-access-key`, `--s3-secret-key` | An S3 bucket. Add `--s3-endpoint` for an S3-compatible service. Addressing is virtual-hosted on AWS and path-style with `--s3-endpoint`; `--s3-path-style` overrides it |
+| `s3` | `--s3-bucket`, `--s3-region`, `--s3-access-key`, `--s3-secret-key` | An S3 bucket. Add `--s3-endpoint` for an S3-compatible service. Addressing is virtual-hosted on AWS (path-style for bucket names with dots) and path-style with `--s3-endpoint`; `--s3-path-style` overrides it |
 
 Per-job LLM provider keys are stored in plaintext in this storage: restrict access to it as you
 would a credential store.

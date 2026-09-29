@@ -1,5 +1,5 @@
 #!/bin/sh
-# Runs unmodified against the vanilla nginx:1.27-alpine image (no custom build), so it installs the
+# Runs unmodified against the vanilla nginx:1.30-alpine image (no custom build), so it installs the
 # one package that image is missing itself, lazily, only on the path that actually needs it.
 #
 # Ensures a TLS keypair exists, renders it plus the upstream into nginx.conf, then hands off to the
@@ -82,7 +82,7 @@ elif [ "$SELF_SIGN" != "1" ]; then
   echo "tls-proxy: $CERT is missing and TLS_SELF_SIGN=$SELF_SIGN — generate it first" >&2
   exit 1
 else
-  # The vanilla nginx:1.27-alpine image ships libssl but not the openssl CLI. Installed here,
+  # The vanilla nginx:1.30-alpine image ships libssl but not the openssl CLI. Installed here,
   # once, only when self-signing is actually needed — the "customer supplies their own cert" path
   # never touches the package manager or the network.
   command -v openssl >/dev/null 2>&1 || apk add --no-cache openssl

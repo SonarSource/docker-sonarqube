@@ -8,13 +8,8 @@ The output of this generator is a single flattened `docker-compose.yaml` a custo
 as-is: no overlays, no `!override`/`!reset`.
 
 `egress-proxy/` and `tls-proxy/` are copied as-is into every bundle, so keep their comments
-customer-facing. The `egress-proxy` rules follow the
-[Helm chart's](https://github.com/SonarSource/helm-chart-sonarqube): a remediation-only listener on 3129, SonarQube limited to its two
-endpoints when it is plain http, `deny !Safe_ports`, no `Via`/`X-Forwarded-For`, and small
-`cache_mem`/`max_filedescriptors`. Two deliberate differences from Helm: wildcard domains stay
-refused, and the orchestrator rule requires a `jobId`. Compose can't keep hunter-runtime off 3129
-the way Helm's NetworkPolicy does, so the SonarQube rules also match the client's name.
-`tls-proxy/entrypoint.sh` runs against the vanilla nginx image, so it installs `openssl` itself when it needs to self-sign.
+customer-facing. `tls-proxy/entrypoint.sh` runs against the vanilla nginx image, so it installs
+`openssl` itself when it needs to self-sign.
 
 `AGENTIC_SIGNING_SECRET` is deliberately **not** an input. The generator always mints its own
 (`secrets.token_hex(32)`) and writes it into the bundle's `.env`: accepting it as a flag would risk
@@ -45,18 +40,6 @@ override the former. The bundle's own `README.md` covers resources (~18 GB of `m
 By default the bundle pulls the official, multi-arch (amd64 and arm64) Docker Hub images
 `sonarqube:<tag>-datacenter-app` and `sonarqube:<tag>-datacenter-search`; pick another published
 version with `--sonarqube-tag`.
-
-**Unreleased amd64-only builds:** if you point `--sonarqube-registry`/`--sonarqube-tag` at an
-image published only for `linux/amd64`, note that under amd64
-emulation on an arm64 host (qemu or Rosetta, e.g. Rancher Desktop on Apple Silicon) Elasticsearch 9
-cannot probe seccomp and every search node exits with "seccomp unavailable: CONFIG_SECCOMP not
-compiled into kernel" — ES always installs its syscall filter, so there is no setting to skip it.
-The published multi-arch images don't hit this. To test an unreleased build on such a host, build
-native images from a Data Center zip with the
-[docker-sonarqube `commercial-editions/datacenter`](https://github.com/SonarSource/docker-sonarqube/tree/master/commercial-editions/datacenter)
-Dockerfiles (swapping the download/GPG step for a `COPY` of the zip), tag them
-`<registry>/sonarqube:<tag>-datacenter-app|search`, and pass
-`--sonarqube-registry <registry> --sonarqube-tag <tag>`.
 
 ## TLS internals
 
@@ -196,18 +179,8 @@ checks; run it locally before changing the templates or `default-images.json`.
 python3 generate.py --print-inputs-schema
 ```
 
-Prints the JSON Schema a web form (or any other caller) can build inputs against — property names
-match the flag-derived attribute names used in `profiles/*.json`.
-
-## Programmatic use
-
-A caller (e.g. a configurator form) should:
-
-1. Render a form from `--print-inputs-schema`.
-2. POST the collected values as a JSON profile matching that schema.
-3. Invoke `generate.py --profile <that JSON> --out <bundle dir>` server-side.
-4. Zip and serve the bundle directory to the customer, along with the `README.md` and (for
-   `--edition none`) `ZIP-INSTRUCTIONS.md` this tool writes into it.
+Prints the JSON Schema of the inputs; property names match the flag-derived attribute names used
+in `profiles/*.json`, so a profile can be checked against it.
 
 ## What's not here yet
 

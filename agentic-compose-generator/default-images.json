@@ -51,14 +51,14 @@
   "tls-proxy": {
     "registry": "",
     "name": "nginx",
-    "tag": "1.27-alpine",
-    "digest": "sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10"
+    "tag": "1.30-alpine",
+    "digest": "sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94"
   },
   "sonarqube-lb": {
     "registry": "",
     "name": "nginx",
-    "tag": "1.27-alpine",
-    "digest": "sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10"
+    "tag": "1.30-alpine",
+    "digest": "sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94"
   },
   "truststore-init": {
     "registry": "",

@@ -95,20 +95,19 @@ class RefusalsTest(unittest.TestCase):
 
 class ScanForbiddenTest(unittest.TestCase):
     def test_leftover_placeholder(self):
-        problems = gen.scan_forbidden("image: ${UNRESOLVED}\n", "")
-        self.assertEqual(len(problems), 1)
-        self.assertIn("UNRESOLVED", problems[0])
+        problems = gen.scan_forbidden({"README.md": "see ${UNRESOLVED}\n", ".env": ""})
+        self.assertEqual(problems, ["leftover unresolved placeholder ${UNRESOLVED} in README.md"])
 
     def test_compose_defaults_are_not_placeholders(self):
-        self.assertEqual(gen.scan_forbidden("port: ${PORT:-9000}\n", "A=b\n"), [])
+        self.assertEqual(gen.scan_forbidden({"docker-compose.yaml": "port: ${PORT:-9000}\n", ".env": "A=b\n"}), [])
 
     def test_forbidden_strings(self):
         saved = gen.FORBIDDEN_STRINGS
         gen.FORBIDDEN_STRINGS = ("do-not-ship",)
         try:
-            self.assertEqual(len(gen.scan_forbidden("x: do-not-ship\n", "")), 1)
-            self.assertEqual(len(gen.scan_forbidden("", "X=do-not-ship\n")), 1)
-            self.assertEqual(gen.scan_forbidden("x: fine\n", ""), [])
+            self.assertEqual(gen.scan_forbidden({"docker-compose.yaml": "x: fine\n", ".env": "X=do-not-ship\n"}),
+                             ["forbidden string leaked into output: 'do-not-ship' in .env"])
+            self.assertEqual(gen.scan_forbidden({"docker-compose.yaml": "x: fine\n"}), [])
         finally:
             gen.FORBIDDEN_STRINGS = saved
 
@@ -121,7 +120,7 @@ class ScanForbiddenTest(unittest.TestCase):
         finally:
             gen.FORBIDDEN_STRINGS = saved
         self.assertEqual(code, 1, err)
-        self.assertIn("forbidden string leaked into output", err)
+        self.assertIn("forbidden string leaked into output: 'agentic pack — generated bundle' in README.md", err)
 
 
 class LoadConfigTest(unittest.TestCase):
@@ -159,7 +158,14 @@ class S3EgressTest(unittest.TestCase):
     def test_endpoint_keeps_an_explicit_style(self):
         args, _notes = self.resolve("--s3-endpoint", "https://s3.example.com", "--s3-path-style", "false")
         self.assertEqual(args.s3_path_style, "false")
+        self.assertEqual(args.s3_allowed_domain, "jobs.s3.example.com")
         self.assertEqual(args.s3_allowed_port, "443")
+
+    def test_dotted_aws_bucket_defaults_to_path_style(self):
+        args, notes = self.resolve("--s3-bucket", "acme.jobs")
+        self.assertEqual(args.s3_path_style, "true")
+        self.assertEqual(args.s3_allowed_domain, "s3.eu-west-1.amazonaws.com")
+        self.assertTrue([n for n in notes if "bucket name has dots" in n])
 
 
 class ImageRefTest(unittest.TestCase):
