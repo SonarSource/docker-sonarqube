@@ -29,12 +29,14 @@ case "$SQS_HOST" in
     echo "egress-proxy: refusing malformed AGENTIC_SQS_PROXY_HOST '$SQS_HOST'" >&2
     exit 1
     ;;
+  *) ;;
 esac
 case "$SQS_PORT" in
   *[!0-9]*|"")
     echo "egress-proxy: refusing malformed AGENTIC_SQS_PROXY_PORT '$SQS_PORT'" >&2
     exit 1
     ;;
+  *) ;;
 esac
 case "$SQS_SCHEME" in
   http|https) ;;
@@ -58,12 +60,14 @@ case "$ORCHESTRATOR_HOST" in
     echo "egress-proxy: refusing malformed AGENTIC_ORCHESTRATOR_PROXY_HOST '$ORCHESTRATOR_HOST'" >&2
     exit 1
     ;;
+  *) ;;
 esac
 case "$ORCHESTRATOR_PORT" in
   *[!0-9]*|"")
     echo "egress-proxy: refusing malformed AGENTIC_ORCHESTRATOR_PROXY_PORT '$ORCHESTRATOR_PORT'" >&2
     exit 1
     ;;
+  *) ;;
 esac
 
 # Storage is optional (blank while the stack still uses the local volume) but comes as a pair: its

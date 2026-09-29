@@ -42,17 +42,23 @@ SONARQUBE_KIT_PORT = "9443"
 BUNDLE_CA_FILE = "agentic-bundle-ca.crt"
 # sha256 of every file the last run wrote, so a later run can tell its own output from user edits.
 MANIFEST_FILE = ".generator-manifest.json"
+# The name Docker Desktop, and the host-gateway mapping, resolve to the host.
+HOST_GATEWAY_NAME = "host.docker.internal"
+# File names in the bundle CA's working directory and in the proxies' tls/ directories.
+CA_CERT_FILE = "ca.crt"
+LEAF_CERT_FILE = "tls.crt"
+LEAF_CONFIG_FILE = "leaf.cnf"
 # Written into an openssl config file and a SAN, so no spaces, commas or brackets. No `:` either:
 # IPv6 literals aren't supported — tls-proxy/entrypoint.sh refuses them and the URLs built from
 # these names don't bracket them.
 TLS_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9.-]*$")
 # Everything the generator writes into compose YAML or .env unquoted must match one of these: a `$`
 # there is interpolated by compose, ` #` starts a comment and `: ` breaks the YAML.
-PORT_RE = re.compile(r"^[0-9]{1,5}$")
+PORT_RE = re.compile(r"^\d{1,5}$", re.ASCII)
 DB_NAME_RE = re.compile(r"^[A-Za-z0-9_-]+$")
 # Docker's own reference grammar, narrowed: a registry host[:port][/namespace...], and a tag.
-IMAGE_REGISTRY_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9.-]*(:[0-9]+)?(/[a-z0-9][a-z0-9._-]*)*$")
-IMAGE_TAG_RE = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$")
+IMAGE_REGISTRY_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9.-]*(:\d+)?(/[a-z0-9][a-z0-9._-]*)*$", re.ASCII)
+IMAGE_TAG_RE = re.compile(r"^\w[\w.-]{0,127}$", re.ASCII)
 S3_BUCKET_RE = re.compile(r"^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$")
 # `docker compose -p` rules; also becomes the prefix of every container, network and volume.
 PROJECT_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
@@ -140,7 +146,7 @@ def build_argparser() -> argparse.ArgumentParser:
                     help="SonarQube image tag; defaults to default-images.json's sonarqube.tag")
     p.add_argument("--llm-domains", default="api.anthropic.com")
     p.add_argument("--github-api-base-url", default="")
-    p.add_argument("--sonarqube-external-host", default="host.docker.internal", help="--edition none only")
+    p.add_argument("--sonarqube-external-host", default=HOST_GATEWAY_NAME, help="--edition none only")
     p.add_argument("--sonarqube-external-port", default="9000", help="--edition none only")
     p.add_argument("--sonarqube-external-scheme", choices=("http", "https"), default="http",
                     help="--edition none only: how the containers call your SonarQube")
@@ -428,9 +434,7 @@ def build_volumes_block(args: argparse.Namespace) -> str:
         for node in DATACENTER_APP_NODES:
             lines += [f"  {volume_prefix(node)}_{suffix}:" for suffix in ("data", "extensions", "logs")]
     elif args.edition != "none":
-        lines.append("  sonarqube_data:")
-        lines.append("  sonarqube_extensions:")
-        lines.append("  sonarqube_logs:")
+        lines.extend(["  sonarqube_data:", "  sonarqube_extensions:", "  sonarqube_logs:"])
     if args.edition != "none":
         lines.append("  agentic_signing_sqs:")
     lines.append("  agentic_signing_orchestrator:")
@@ -490,7 +494,7 @@ def build_sonarqube_properties(args: argparse.Namespace) -> str:
 
 
 def build_storage_anchors(args: argparse.Namespace) -> str:
-    provider = "NFS" if args.storage == "nfs" else ("S3" if args.storage == "s3" else "FILESYSTEM")
+    provider = {"nfs": "NFS", "s3": "S3"}.get(args.storage, "FILESYSTEM")
     return render("compose/storage-anchors.tmpl", storage_provider=provider)
 
 
@@ -557,7 +561,7 @@ def build_postgres(args: argparse.Namespace) -> str:
     return render("compose/postgres.tmpl", image=image_ref(args, "postgres"))
 
 
-def db_env_lines(args: argparse.Namespace, indent: str) -> tuple[str, str, str, str]:
+def db_env_lines(args: argparse.Namespace) -> tuple[str, str, str, str]:
     if args.db_mode == "local":
         return "postgres:5432", "sonarqube", "sonarqube", "sonarqube"
     # Credentials are free-form, so quoted; host, port and name are validated as plain tokens.
@@ -642,20 +646,24 @@ def sonarqube_image(args: argparse.Namespace, suffix: str) -> str:
 
 def sonarqube_common(args: argparse.Namespace) -> dict[str, str]:
     """Substitutions shared by the single-node SonarQube and every Data Center application node."""
-    endpoint, name, user, password = db_env_lines(args, "")
+    endpoint, name, user, password = db_env_lines(args)
     server_base_url = "https://${TLS_SERVER_NAME:-localhost}:${SONARQUBE_TLS_PUBLISH_PORT:-9443}" if args.tls_on \
         else "http://localhost:${SONARQUBE_PUBLISH_PORT:-9000}"
-    return dict(
-        db_endpoint=endpoint, db_name=name, db_url_params=db_url_params(args),
-        db_user=user, db_password=password,
-        server_base_url=server_base_url,
-        storage_volume_line=storage_volume_line(args) + secret_key_volume_line(args, SONAR_SECRET_KEY_MOUNT),
-    )
+    return {
+        "db_endpoint": endpoint, "db_name": name, "db_url_params": db_url_params(args),
+        "db_user": user, "db_password": password,
+        "server_base_url": server_base_url,
+        "storage_volume_line": storage_volume_line(args) + secret_key_volume_line(args, SONAR_SECRET_KEY_MOUNT),
+    }
 
 
 def sonarqube_ports_block(args: argparse.Namespace) -> str:
     return "    ports: []  # published by tls-proxy instead" if args.tls_on else \
         "    ports:\n      - \"${SONARQUBE_PUBLISH_PORT:-9000}:9000\""
+
+
+def extra_hosts_lines(extra_hosts: list[str]) -> str:
+    return ("    extra_hosts:\n" + "\n".join(extra_hosts)) if extra_hosts else ""
 
 
 def depends_on_lines(healthy: list[str], completed: list[str]) -> str:
@@ -715,8 +723,8 @@ def sonarqube_url(args: argparse.Namespace) -> tuple[str, list[str]]:
         host = args.sonarqube_external_host
         # Rancher Desktop/lima map host-gateway to the VM's bridge rather than the host, so this
         # is opt-out: those runtimes already resolve host.docker.internal on their own.
-        use_gateway = host == "host.docker.internal" and args.host_gateway == "on"
-        extra_hosts = ["      - \"host.docker.internal:host-gateway\""] if use_gateway else []
+        use_gateway = host == HOST_GATEWAY_NAME and args.host_gateway == "on"
+        extra_hosts = [f"      - \"{HOST_GATEWAY_NAME}:host-gateway\""] if use_gateway else []
         if uses_kit(args):
             return f"https://{host}:{SONARQUBE_KIT_PORT}", extra_hosts
         return f"{args.sonarqube_external_scheme}://{host}:{args.sonarqube_external_port}", extra_hosts
@@ -734,7 +742,7 @@ def backing_ports_block(args: argparse.Namespace, port_var: str, default_port: s
 
 def build_orchestrator(args: argparse.Namespace) -> str:
     sq_url, extra_hosts = sonarqube_url(args)
-    endpoint, name, user, password = db_env_lines(args, "")
+    endpoint, name, user, password = db_env_lines(args)
     depends_on = []
     if args.edition != "none":
         depends_on.append("sonarqube")
@@ -756,7 +764,7 @@ def build_orchestrator(args: argparse.Namespace) -> str:
     if "remediation" in args.components:
         push_urls.append("      AGENTIC_REMEDIATION_RUNTIME_PUSH_URL: http://remediation-agent-runtime:8090/jobs")
         push_urls.append("      AGENTIC_REMEDIATION_RUNTIME_SIGNING_KEY_PATH: /run/agentic-signing/orchestrator-to-remediation.key")
-    extra_hosts_block = ("    extra_hosts:\n" + "\n".join(extra_hosts)) if extra_hosts else ""
+    extra_hosts_block = extra_hosts_lines(extra_hosts)
     datasource_url_line = ""
     if args.db_mode == "external":
         # application.yml's datasource URL has no hook for extra parameters, so replace it whole;
@@ -792,7 +800,7 @@ def build_runtime(args: argparse.Namespace, name: str) -> str:
         sq_url, extra_hosts = sonarqube_url(args)
         extra["rule_info_endpoint"] = f"{sq_url}/api/rules/show"
         extra["analysis_endpoint"] = f"{sq_url}/api/v2/a3s/private/analyses"
-        extra["extra_hosts_block"] = ("    extra_hosts:\n" + "\n".join(extra_hosts)) if extra_hosts else ""
+        extra["extra_hosts_block"] = extra_hosts_lines(extra_hosts)
     depends_on = build_storage_services(args)[1] + ["signing-init"]
     depends_on_block = "\n".join(
         f"      {n}:\n        condition: service_completed_successfully" for n in depends_on
@@ -814,7 +822,7 @@ def build_egress_proxy(args: argparse.Namespace) -> str:
     sq_scheme = sq_url.split("://", 1)[0]
     sq_host = re.sub(r"^https?://", "", sq_url).split(":")[0]
     sq_port = sq_url.rsplit(":", 1)[-1]
-    extra_hosts_block = ("    extra_hosts:\n" + "\n".join(extra_hosts)) if extra_hosts else ""
+    extra_hosts_block = extra_hosts_lines(extra_hosts)
     return render(
         "compose/egress-proxy.tmpl",
         image=image_ref(args, "egress-proxy"),
@@ -843,7 +851,7 @@ def build_vortex(args: argparse.Namespace) -> str:
         f"      {n}:\n        condition: service_completed_successfully"
         for n in depends_on
     )
-    extra_hosts_block = ("    extra_hosts:\n" + "\n".join(extra_hosts)) if extra_hosts else ""
+    extra_hosts_block = extra_hosts_lines(extra_hosts)
     return render(
         "compose/vortex.tmpl",
         image=image_ref(args, "vortex"),
@@ -939,13 +947,15 @@ def build_env(args: argparse.Namespace) -> str:
         # containers must mount the storage at the same path the host sees it at.
         parts.append(f"AGENTIC_STORAGE_MOUNT={args.storage_path}")
     if args.storage == "s3":
-        parts.append(f"AGENTIC_STORAGE_BUCKET={args.s3_bucket}")
-        parts.append(f"AGENTIC_STORAGE_REGION={args.s3_region}")
-        parts.append(f"AGENTIC_STORAGE_ENDPOINT={args.s3_endpoint}")
-        parts.append(f"AGENTIC_STORAGE_ACCESS_KEY={env_str(args.s3_access_key)}")
-        parts.append(f"AGENTIC_STORAGE_SECRET_KEY={env_str(args.s3_secret_key)}")
-        parts.append(f"AGENTIC_STORAGE_PATH_STYLE_ACCESS={args.s3_path_style}")
-        parts.append(f"AGENTIC_STORAGE_PRESIGN_TTL_SECONDS={args.s3_presign_ttl}")
+        parts.extend([
+            f"AGENTIC_STORAGE_BUCKET={args.s3_bucket}",
+            f"AGENTIC_STORAGE_REGION={args.s3_region}",
+            f"AGENTIC_STORAGE_ENDPOINT={args.s3_endpoint}",
+            f"AGENTIC_STORAGE_ACCESS_KEY={env_str(args.s3_access_key)}",
+            f"AGENTIC_STORAGE_SECRET_KEY={env_str(args.s3_secret_key)}",
+            f"AGENTIC_STORAGE_PATH_STYLE_ACCESS={args.s3_path_style}",
+            f"AGENTIC_STORAGE_PRESIGN_TTL_SECONDS={args.s3_presign_ttl}",
+        ])
 
     if args.tls_on:
         parts.append(f"TLS_SERVER_NAME={args.tls_server_name}")
@@ -1058,8 +1068,8 @@ def build_kit(args: argparse.Namespace) -> dict[str, str]:
     """The sonarqube-tls-proxy kit, keyed by path relative to the bundle; empty unless emitted."""
     if not uses_bundle_ca(args):
         return {}
-    subs = dict(image=image_ref(args, "tls-proxy"), server_name=args.sonarqube_external_host,
-                upstream_port=args.sonarqube_external_port, kit_port=SONARQUBE_KIT_PORT)
+    subs = {"image": image_ref(args, "tls-proxy"), "server_name": args.sonarqube_external_host,
+            "upstream_port": args.sonarqube_external_port, "kit_port": SONARQUBE_KIT_PORT}
     return {
         f"{SONARQUBE_KIT_DIR}/docker-compose.yaml": render("kit/docker-compose.tmpl", **subs),
         f"{SONARQUBE_KIT_DIR}/README.md": render("kit/readme.tmpl", **subs),
@@ -1150,12 +1160,12 @@ def check_bundle_certs(args: argparse.Namespace, out_dir: Path) -> tuple[bool, l
     """Whether the bundle CA and certificates must be (re)issued. Run before anything is written, so
     a refusal leaves the bundle as it was."""
     leaves = bundle_cert_leaves(args, out_dir)
-    existing = [out_dir / "tls" / "ca.crt"] + [d / f for d in leaves for f in ("tls.crt", "tls.key")]
+    existing = [out_dir / "tls" / CA_CERT_FILE] + [d / f for d in leaves for f in (LEAF_CERT_FILE, "tls.key")]
     if not all(path.exists() for path in existing):
         return True, ["issued a CA for this bundle (tls/ca.crt) and certificates for agentic-proxy and "
                       "sonarqube-tls-proxy; the CA key was not kept."]
     mismatched = [leaf_dir.relative_to(out_dir).as_posix() for leaf_dir, names in leaves.items()
-                  if cert_names(leaf_dir / "tls.crt") != {normalize_name(n) for n in names}]
+                  if cert_names(leaf_dir / LEAF_CERT_FILE) != {normalize_name(n) for n in names}]
     if not mismatched:
         return False, ["kept the certificates already in tls/ and sonarqube-tls-proxy/tls/; delete tls/ "
                        "to issue new ones."]
@@ -1170,27 +1180,27 @@ def check_bundle_certs(args: argparse.Namespace, out_dir: Path) -> tuple[bool, l
 def write_bundle_certs(args: argparse.Namespace, out_dir: Path, reissue: bool) -> list[str]:
     """Issues the bundle CA and both proxies' certificates when `reissue`, then hands the CA to the
     containers."""
-    ca_cert = out_dir / "tls" / "ca.crt"
+    ca_cert = out_dir / "tls" / CA_CERT_FILE
     leaves = bundle_cert_leaves(args, out_dir)
     notes = []
     if reissue:
         with tempfile.TemporaryDirectory() as work:
             Path(work, "ca.cnf").write_text(CA_CONFIG)
             openssl(work, "req", "-x509", "-new", "-newkey", "rsa:2048", "-nodes", "-sha256", "-days", "3650",
-                    "-config", "ca.cnf", "-extensions", "v3_ca", "-keyout", "ca.key", "-out", "ca.crt")
+                    "-config", "ca.cnf", "-extensions", "v3_ca", "-keyout", "ca.key", "-out", CA_CERT_FILE)
             ca_cert.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(Path(work, "ca.crt"), ca_cert)
+            shutil.copyfile(Path(work, CA_CERT_FILE), ca_cert)
             for leaf_dir, names in leaves.items():
-                Path(work, "leaf.cnf").write_text(LEAF_CONFIG.format(cn=names[0], san=san_entries(names)))
-                openssl(work, "req", "-new", "-newkey", "rsa:2048", "-nodes", "-config", "leaf.cnf",
+                Path(work, LEAF_CONFIG_FILE).write_text(LEAF_CONFIG.format(cn=names[0], san=san_entries(names)))
+                openssl(work, "req", "-new", "-newkey", "rsa:2048", "-nodes", "-config", LEAF_CONFIG_FILE,
                         "-keyout", "leaf.key", "-out", "leaf.csr")
                 # 825 days: the longest lifetime Safari and Chrome still accept for a leaf certificate.
-                openssl(work, "x509", "-req", "-in", "leaf.csr", "-CA", "ca.crt", "-CAkey", "ca.key",
+                openssl(work, "x509", "-req", "-in", "leaf.csr", "-CA", CA_CERT_FILE, "-CAkey", "ca.key",
                         "-set_serial", str(secrets.randbits(127)), "-days", "825", "-sha256",
-                        "-extfile", "leaf.cnf", "-extensions", "v3_leaf", "-out", "leaf.crt")
+                        "-extfile", LEAF_CONFIG_FILE, "-extensions", "v3_leaf", "-out", "leaf.crt")
                 leaf_dir.mkdir(parents=True, exist_ok=True)
                 # Full chain, so a client that only has the CA can still build the path.
-                (leaf_dir / "tls.crt").write_text(Path(work, "leaf.crt").read_text() + Path(work, "ca.crt").read_text())
+                (leaf_dir / LEAF_CERT_FILE).write_text(Path(work, "leaf.crt").read_text() + Path(work, CA_CERT_FILE).read_text())
                 write_file(leaf_dir / "tls.key", Path(work, "leaf.key").read_bytes(), 0o600)
 
     if Path(args.custom_ca_dir).is_absolute():
@@ -1212,7 +1222,7 @@ def scan_forbidden(compose_text: str, env_text: str) -> list[str]:
         if needle in compose_text or needle in env_text:
             problems.append(f"forbidden string leaked into output: {needle!r}")
     for text, label in ((compose_text, "docker-compose.yaml"), (env_text, ".env")):
-        for match in re.finditer(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}", text):
+        for match in re.finditer(r"\$\{([A-Za-z_]\w*)\}", text, re.ASCII):
             problems.append(f"leftover unresolved placeholder ${{{match.group(1)}}} in {label}")
     return problems
 
@@ -1397,7 +1407,7 @@ INPUTS_SCHEMA = {
                            "description": "defaults to default-images.json's sonarqube.tag"},
         "llm_domains": {"type": "string", "default": "api.anthropic.com"},
         "github_api_base_url": {"type": "string"},
-        "sonarqube_external_host": {"type": "string", "default": "host.docker.internal"},
+        "sonarqube_external_host": {"type": "string", "default": HOST_GATEWAY_NAME},
         "sonarqube_external_port": {"type": "string", "default": "9000"},
         "host_gateway": {"type": "string", "enum": ["on", "off"], "default": "on"},
         "sonarqube_external_scheme": {"type": "string", "enum": ["http", "https"], "default": "http"},

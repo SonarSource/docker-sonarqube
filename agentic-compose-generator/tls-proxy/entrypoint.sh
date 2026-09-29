@@ -50,6 +50,7 @@ for pair in "TLS_UPSTREAM_HOST=$UPSTREAM_HOST" "TLS_SERVER_NAME=$SERVER_NAME" \
       echo "tls-proxy: refusing malformed $name '$value'" >&2
       exit 1
       ;;
+    *) ;;
   esac
 done
 for pair in "TLS_UPSTREAM_PORT=$UPSTREAM_PORT" "TLS_HTTPS_PUBLIC_PORT=$HTTPS_PUBLIC_PORT"; do
@@ -60,6 +61,7 @@ for pair in "TLS_UPSTREAM_PORT=$UPSTREAM_PORT" "TLS_HTTPS_PUBLIC_PORT=$HTTPS_PUB
       echo "tls-proxy: refusing malformed $name '$value'" >&2
       exit 1
       ;;
+    *) ;;
   esac
 done
 
