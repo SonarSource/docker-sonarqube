@@ -1,0 +1,94 @@
+# Wiring your existing SonarQube install to this bundle
+
+You generated this bundle with `--edition none`, so it does not run SonarQube — it assumes you
+already have a zip/host install of SonarQube running, and only starts the containers around it
+(database is external in this mode too). These are the changes to make in *your* SonarQube's
+`sonar.properties`.
+
+## 1. Database
+
+This bundle points the containers at the same external database you passed to `generate.py`.
+Point your SonarQube at it too, if it isn't already:
+
+```
+sonar.jdbc.url=jdbc:postgresql://${db_host}:${db_port}/${db_name}${db_url_params}
+sonar.jdbc.username=${db_user}
+sonar.jdbc.password=<the --db-password you passed to generate.py>
+```
+
+The orchestrator connects with the same `sslmode=verify-full`: the database must serve TLS with a
+certificate valid for `${db_host}`. Your SonarQube validates it against its JVM truststore, so the
+CA behind it must be in the JDK's default `cacerts` or in the `-Djavax.net.ssl.trustStore` you set
+in `sonar.web.javaAdditionalOpts` and `sonar.ce.javaAdditionalOpts`.
+
+## 2. Network reachability
+
+${reachability_section}
+
+## 3. Agent Orchestrator and Vortex URLs
+
+Add to `sonar.properties`:
+
+```
+sonar.hunteragent.orchestrator.url=${orchestrator_url}
+sonar.remediationagent.orchestrator.url=${orchestrator_url}
+${vortex_lines}
+```
+
+${urls_note}
+
+## 4. Storage
+
+Set the same storage properties this bundle's containers use — `sonar.agentic.storage.*` and
+`sonar.agentic.orchestrator.storage.*` must point at the same backend and credentials/paths on
+both sides. Copy the values from this bundle's `docker-compose.yaml`/`.env` for the storage mode
+you generated with.
+
+${storage_note}
+
+## 5. Signing key
+
+Every agentic request between SonarQube, the orchestrator, and Vortex is signed. Derive your copy
+of the shared key from this bundle's `AGENTIC_SIGNING_SECRET` (in `.env`) and point SonarQube at
+it:
+
+```
+mkdir -p ~/.sonarqube/agentic-signing
+printf '%s' "$AGENTIC_SIGNING_SECRET" > ~/.sonarqube/agentic-signing/instance-secret
+chmod 600 ~/.sonarqube/agentic-signing/instance-secret
+
+docker run --rm --user 0:0 \
+  -v ~/.sonarqube/agentic-signing:/run/agentic-signing \
+  --entrypoint /derive-keys.sh <orchestrator image from this bundle> \
+  --secret-file /run/agentic-signing/instance-secret \
+  --label agentic-shared=/run/agentic-signing/agentic-shared.key
+```
+
+Then in `sonar.properties`:
+
+```
+sonar.agentic.signing.secretFile=/home/<you>/.sonarqube/agentic-signing/instance-secret
+sonar.agentic.orchestrator.signingKeyPath=/home/<you>/.sonarqube/agentic-signing/agentic-shared.key
+```
+
+Regenerating this bundle keeps `AGENTIC_SIGNING_SECRET`, so these keys stay valid. Only after
+`--rotate-secrets` redo this step and run `docker compose up -d --force-recreate`, so SonarQube and
+the containers derive their keys from the new secret.
+${secret_key_note}
+## 6. Start order
+
+The orchestrator stores its state in SonarQube's database and keeps failing its health check until
+SonarQube has created the schema, so start your SonarQube first, then `docker compose up -d`.
+
+## 7. TLS trust
+
+${tls_section}
+
+${ca_note}
+
+## Troubleshooting
+
+If Vortex stays unhealthy and its health check reports `sonarqube-connectivity DOWN: ...
+Unauthorized`, your SonarQube is missing part of sections 3, 5 or 7: check that all three are
+applied and that SonarQube was restarted since. With TLS, `agentic-proxy` waits for a healthy Vortex,
+so it doesn't start either until then.

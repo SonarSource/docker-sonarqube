@@ -1,0 +1,72 @@
+# TLS proxy for your SonarQube
+
+The agentic services in this bundle (the Agent Orchestrator, Vortex and the Remediation Agent)
+call your SonarQube at `https://${server_name}:${kit_port}`. This directory contains the proxy that
+serves that address. Run it on the machine that hosts SonarQube. It terminates TLS on port
+${kit_port} and forwards to SonarQube's own port, ${upstream_port}, on the same machine.
+
+Only the agentic services use this proxy. Your users and scanners keep reaching SonarQube the way
+they do today.
+
+## Requirements
+
+- **Docker with Docker Compose v2** on the SonarQube machine. Without Docker, use your own nginx
+  instead; see [Using your own nginx](#using-your-own-nginx).
+- **Port ${kit_port}** on the SonarQube machine, reachable from the host that runs the bundle.
+- **`${server_name}` resolving to the SonarQube machine** from the bundle's containers. The
+  certificate is issued for that name.
+
+## Starting it
+
+Copy this directory to the SonarQube machine, then, from inside it:
+
+```bash
+docker compose up -d
+docker compose logs sonarqube-tls-proxy
+```
+
+To check it from the host that runs the bundle, from the bundle directory:
+
+```bash
+curl --cacert tls/ca.crt https://${server_name}:${kit_port}/api/system/status
+```
+
+## If SonarQube isn't on port ${upstream_port} of this machine
+
+The proxy reaches SonarQube at `host.docker.internal:${upstream_port}`, which is the Docker host. To
+change either, create a `.env` file in this directory:
+
+```
+SONARQUBE_UPSTREAM_HOST=host.docker.internal
+SONARQUBE_UPSTREAM_PORT=${upstream_port}
+```
+
+Then run `docker compose up -d` again.
+
+On Linux, the proxy reaches the host through Docker's bridge network. SonarQube must accept
+connections on that interface, which it does with the default `sonar.web.host=0.0.0.0`, and no host
+firewall may block traffic from the bridge.
+
+## Certificate
+
+`tls/` holds a certificate for `${server_name}`, valid for 825 days. It is signed by the bundle's
+own CA, which the agentic services already trust.
+
+To serve your own certificate instead:
+
+1. Replace `tls/tls.crt` (the full chain) and `tls/tls.key`.
+2. Put the certificate of the CA that issued it in the bundle's custom CA directory
+   (`CUSTOM_CA_DIR` in the bundle's `.env`). It needs a `keyUsage` extension that includes
+   `keyCertSign`.
+3. Run `docker compose restart` here, then `docker compose up -d --force-recreate` in the bundle.
+
+## Using your own nginx
+
+`nginx/sonarqube-tls.conf` is the same proxy as a server block, for an nginx you already run on the
+SonarQube machine:
+
+1. Copy `tls/tls.crt` and `tls/tls.key` to `/etc/nginx/sonarqube-tls/`, readable by nginx only.
+2. Include `nginx/sonarqube-tls.conf` inside the `http { }` block of your nginx configuration.
+3. Run `nginx -t`, then reload nginx.
+
+It forwards to `127.0.0.1:${upstream_port}`; edit `proxy_pass` if SonarQube listens elsewhere.

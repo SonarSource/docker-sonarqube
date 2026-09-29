@@ -1,0 +1,24 @@
+# TLS proxy for your SonarQube, generated with the agentic bundle. Run it on the machine that hosts
+# SonarQube: see README.md in this directory.
+name: sonarqube-tls-proxy
+
+services:
+  sonarqube-tls-proxy:
+    image: ${image}
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/usr/local/bin/render-and-run.sh"]
+    command: ["nginx", "-g", "daemon off;"]
+    environment:
+      TLS_TEMPLATE: kit
+      TLS_UPSTREAM_HOST: $${SONARQUBE_UPSTREAM_HOST:-host.docker.internal}
+      TLS_UPSTREAM_PORT: $${SONARQUBE_UPSTREAM_PORT:-${upstream_port}}
+      TLS_SERVER_NAME: ${server_name}
+      TLS_SELF_SIGN: "0"
+    volumes:
+      - ./tls:/tls:ro
+      - ./nginx.kit.conf.template:/etc/nginx/nginx.kit.conf.template:ro
+      - ./entrypoint.sh:/usr/local/bin/render-and-run.sh:ro
+    ports:
+      - "${kit_port}:8443"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

@@ -1,0 +1,20 @@
+  agentic-proxy:
+    image: ${image}
+    entrypoint: ["/bin/sh", "/usr/local/bin/render-and-run.sh"]
+    command: ["nginx", "-g", "daemon off;"]
+    environment:
+      TLS_TEMPLATE: agentic
+      TLS_SERVER_NAME: ${tls_server_name}
+      # Signed by the bundle's CA at generation time (tls/agentic-proxy/), so never self-sign.
+      TLS_SELF_SIGN: "0"
+      TLS_VORTEX: "${vortex_flag}"
+    volumes:
+      - ./tls/agentic-proxy:/tls:ro
+      - ./tls-proxy/nginx.conf.template:/etc/nginx/nginx.conf.template:ro
+      - ./tls-proxy/nginx.agentic.conf.template:/etc/nginx/nginx.agentic.conf.template:ro
+      - ./tls-proxy/entrypoint.sh:/usr/local/bin/render-and-run.sh:ro
+    ports:
+      - "8443:8443"${vortex_port_line}
+    depends_on:
+${depends_on_block}
+    networks: [control, edge]

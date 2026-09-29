@@ -1,0 +1,11 @@
+1. **Apply the changes in `ZIP-INSTRUCTIONS.md`** to your SonarQube, then restart it. It must be
+   SonarQube Server 2026.5 or later.
+2. **Configure an LLM provider** under Administration → Configuration → AI Capabilities → LLM
+   Providers, if you haven't already. Its host must be in `--llm-domains`, the only
+   hosts the agent runtimes may reach; regenerate with it to add one.
+3. **Connect GitHub**, if your projects aren't bound yet: a GitHub App DevOps Platform integration
+   under Administration → Configuration → DevOps Platform Integrations.
+4. **Activate the agents** under Administration → Configuration → AI Capabilities. Your licence
+   must include the agentic features.
+5. **Check the agents are connected** under Administration → System: every agentic component this
+   bundle runs (${components}) should report healthy.

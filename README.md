@@ -36,6 +36,7 @@ The full readme is generated over in [docker-library/docs](https://github.com/do
 - Versioned tags for repeatable local, test, and production deployments.
 - A containerized SonarQube runtime that scanners can send analysis results to.
 - Configuration and tag guidance maintained through the Docker Official Images documentation.
+- [Docker Compose examples](example-compose-files/) for common setups, and a [generator](agentic-compose-generator/) for SonarQube Server with the agentic components.
 
 The image runs the same SonarQube analysis for developer-written and AI-generated code. Scanners analyze a project and send the results to the running SonarQube instance, where teams can review explainable findings and enforce quality gates.
 

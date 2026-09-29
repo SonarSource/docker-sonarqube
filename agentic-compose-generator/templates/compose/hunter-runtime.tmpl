@@ -1,0 +1,39 @@
+  hunter-runtime:
+    image: ${image}
+    runtime: ${sandbox_runtime}
+    pids_limit: 512
+    # Just above the image's own 44400s graceful-shutdown wait for a running job, so a stop doesn't
+    # kill it before that wait ends.
+    stop_grace_period: 44430s
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 8192M
+    cpus: 2
+    volumes:
+      - agentic_signing_hunter:/run/agentic-signing:ro
+${storage_volume_line}
+    environment:
+      SCRIPT_PATH: /home/agent/app/.venv/bin/detection-agent
+      PLAYBOOK_KEY: appsec
+      PLAYBOOK_VERSION: stable
+      HTTPS_PROXY: http://egress-proxy:3128
+      HTTP_PROXY: http://egress-proxy:3128
+      NO_PROXY: localhost,127.0.0.1
+      # Some HTTP clients read only the lower-case names.
+      https_proxy: http://egress-proxy:3128
+      http_proxy: http://egress-proxy:3128
+      no_proxy: localhost,127.0.0.1
+      AGENTIC_VERIFY_KEY_ID: orchestrator-to-hunter
+      AGENTIC_VERIFY_KEY_PATH: /run/agentic-signing/orchestrator-to-hunter.key
+      AGENT_ORCHESTRATOR_URL: http://orchestrator:8080
+      AGENT_ORCHESTRATOR_SIGNING_KEY_PATH: /run/agentic-signing/hunter-to-orchestrator.key
+    depends_on:
+      egress-proxy:
+        condition: service_healthy
+${depends_on_block}
+    networks: [hunter-jobnet]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8090/readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20

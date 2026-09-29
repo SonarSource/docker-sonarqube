@@ -1,0 +1,16 @@
+  # Load balancer in front of the application nodes. Named `sonarqube` so every agentic service,
+  # tls-proxy and sonar.properties address it exactly as they would a single-node SonarQube.
+  sonarqube:
+    image: ${image}
+    volumes:
+      - ./sonarqube-lb/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+${depends_on_block}
+${ports_block}
+    networks: [control, proxy-target, edge, lb-backend]
+    healthcheck:
+      # 127.0.0.1, not localhost: busybox wget tries ::1 first, and this nginx is IPv4-only.
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9000/api/system/status | grep -q '\"status\":\"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30

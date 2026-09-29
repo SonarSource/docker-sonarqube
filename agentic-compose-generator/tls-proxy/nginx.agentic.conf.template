@@ -1,0 +1,101 @@
+# Rendered into /etc/nginx/nginx.conf at container start by entrypoint.sh when TLS_TEMPLATE=agentic —
+# @@SERVER_NAME@@, @@CERT_FILE@@ and @@KEY_FILE@@ are substituted there from the TLS_* environment,
+# and the lines between the @@VORTEX_BEGIN@@/@@VORTEX_END@@ markers are dropped when TLS_VORTEX=0:
+# nginx resolves the literal vortex upstream at startup and would refuse to start without it.
+#
+# Fronts Agent Orchestrator and Vortex Analysis under `--edition none`, so a caller without a
+# SonarQube-bundled TLS front door still gets one TLS hop for both. Upstreams are fixed service
+# names, so there is nothing to parameterise about them. Everything else here is kept deliberately
+# identical to ./nginx.conf.template — keep the two in step.
+worker_processes auto;
+error_log /var/log/nginx/error.log warn;
+pid /var/run/nginx.pid;
+
+events {
+  worker_connections 1024;
+}
+
+http {
+  include       /etc/nginx/mime.types;
+  default_type  application/octet-stream;
+  access_log    /var/log/nginx/access.log;
+  sendfile      on;
+  server_tokens off;
+
+  map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      '';
+  }
+
+  # Shared by both server blocks below. No http listener: nothing here is browser-facing, so there
+  # is no redirect to be helpful with, and the orchestrator and Vortex publish no plain port of their
+  # own either — this is the only way in from the host.
+  ssl_protocols       TLSv1.2 TLSv1.3;
+  ssl_prefer_server_ciphers off;
+  ssl_session_cache   shared:SSL:10m;
+  ssl_session_timeout 1h;
+
+  server {
+    listen 8443 ssl;
+    http2 on;
+    server_name @@SERVER_NAME@@;
+
+    ssl_certificate     /tls/@@CERT_FILE@@;
+    ssl_certificate_key /tls/@@KEY_FILE@@;
+
+    client_max_body_size 0;
+
+    location / {
+      # Literal upstream, so nginx resolves it once at startup. If the orchestrator is ever
+      # recreated with a new container IP, restart this proxy too:
+      # `docker compose restart agentic-proxy`.
+      proxy_pass http://orchestrator:8080;
+      proxy_http_version 1.1;
+
+      proxy_set_header Host              $host;
+      proxy_set_header X-Real-IP         $remote_addr;
+      proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto https;
+      proxy_set_header X-Forwarded-Host  $host;
+      proxy_set_header X-Forwarded-Port  $server_port;
+      proxy_set_header Connection        $connection_upgrade;
+      proxy_set_header Upgrade           $http_upgrade;
+
+      # Job dispatch and model-catalogue calls can sit for minutes waiting on a busy runtime.
+      proxy_buffering off;
+      proxy_read_timeout 3600s;
+      proxy_send_timeout 3600s;
+    }
+  }
+
+  # @@VORTEX_BEGIN@@
+  server {
+    listen 8444 ssl;
+    http2 on;
+    server_name @@SERVER_NAME@@;
+
+    ssl_certificate     /tls/@@CERT_FILE@@;
+    ssl_certificate_key /tls/@@KEY_FILE@@;
+
+    client_max_body_size 0;
+
+    location / {
+      proxy_pass http://vortex:8080;
+      proxy_http_version 1.1;
+
+      proxy_set_header Host              $host;
+      proxy_set_header X-Real-IP         $remote_addr;
+      proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto https;
+      proxy_set_header X-Forwarded-Host  $host;
+      proxy_set_header X-Forwarded-Port  $server_port;
+      proxy_set_header Connection        $connection_upgrade;
+      proxy_set_header Upgrade           $http_upgrade;
+
+      proxy_buffering off;
+      proxy_read_timeout 3600s;
+      proxy_send_timeout 3600s;
+    }
+  }
+  # @@VORTEX_END@@
+}

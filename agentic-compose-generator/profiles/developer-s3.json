@@ -1,0 +1,9 @@
+{
+  "edition": "developer",
+  "components": "hunter",
+  "db_mode": "local",
+  "storage": "s3",
+  "s3_bucket": "acme-agentic-jobs",
+  "s3_region": "eu-west-1",
+  "tls": "on"
+}

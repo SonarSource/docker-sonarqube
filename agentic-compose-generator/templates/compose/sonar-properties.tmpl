@@ -1,0 +1,56 @@
+# Mounted read-only over /opt/sonarqube/conf/sonar.properties. A full file rather than env vars,
+# because only properties already present here become env-overridable, and the config directory in
+# the image cannot be written to at container start.
+#
+# Because every key below already exists here, each one is env-overridable — e.g. set
+# SONAR_VORTEX_ENABLED=false in .env to override without editing this file.
+
+sonar.jdbc.url=jdbc:postgresql://postgres:5432/sonarqube
+sonar.jdbc.username=sonarqube
+sonar.jdbc.password=sonarqube
+
+# The address a browser reaches SonarQube at — tls-proxy's, not this container's. Declared blank
+# so docker-compose.yaml can set it from .env via SONAR_CORE_SERVERBASEURL; see the header above.
+sonar.core.serverBaseURL=
+
+# Agent Orchestrator callbacks, one per agent.
+sonar.hunteragent.orchestrator.url=http://orchestrator:8080
+sonar.remediationagent.orchestrator.url=http://orchestrator:8080
+
+${vortex_lines}
+
+# Vortex context storage (sonar.agentic.storage.*) and the agentic job-log download in the UI
+# (sonar.agentic.orchestrator.storage.*) — two separate namespaces, one bucket when remote. Every key
+# is declared here, blank where unused, purely so `.env` can override it without editing this file;
+# `--storage s3` sets them from the AGENTIC_STORAGE_* keys in .env. In FILESYSTEM mode this base dir
+# is a property SonarQube, the orchestrator and Vortex read (the latter two via the env vars in
+# docker-compose.yaml, not this file); the mount path in docker-compose.yaml is what must stay identical across every service,
+# including the two agent runtimes, which don't read this file at all.
+sonar.agentic.storage.type=FILESYSTEM
+sonar.agentic.storage.filesystem.base-dir=/agentic-storage
+sonar.agentic.storage.bucket=
+sonar.agentic.storage.region=
+sonar.agentic.storage.endpoint=
+sonar.agentic.storage.access-key=
+sonar.agentic.storage.secret-key=
+sonar.agentic.storage.path-style-access=true
+sonar.agentic.storage.presign-ttl-seconds=21600
+
+sonar.agentic.orchestrator.storage.type=FILESYSTEM
+sonar.agentic.orchestrator.storage.filesystem.base-dir=/agentic-storage
+sonar.agentic.orchestrator.storage.bucket=
+sonar.agentic.orchestrator.storage.region=
+sonar.agentic.orchestrator.storage.endpoint=
+sonar.agentic.orchestrator.storage.access-key=
+sonar.agentic.orchestrator.storage.secret-key=
+sonar.agentic.orchestrator.storage.path-style-access=true
+sonar.agentic.orchestrator.storage.presign-ttl-seconds=21600
+
+# Health poll interval, surfaced on the System page. Shorter than the default so a container coming
+# up is visible quickly during evaluation.
+sonar.agents.health.checkIntervalSeconds=10
+
+# Agentic request signing — set from .env via docker-compose.yaml, declared blank here for
+# the same reason as the storage keys above.
+sonar.agentic.signing.secretFile=
+sonar.agentic.orchestrator.signingKeyPath=${secret_key_line}

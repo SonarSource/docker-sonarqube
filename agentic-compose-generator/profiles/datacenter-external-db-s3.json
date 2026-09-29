@@ -1,0 +1,11 @@
+{
+  "edition": "datacenter",
+  "components": "hunter,remediation,vortex",
+  "db_mode": "external",
+  "db_host": "db.internal",
+  "db_password": "change-me",
+  "storage": "s3",
+  "s3_bucket": "agentic-jobs",
+  "s3_region": "eu-central-1",
+  "tls": "off"
+}

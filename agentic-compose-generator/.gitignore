@@ -1,0 +1,6 @@
+!templates/env/
+tmp/
+# The generator's default --out: bundles hold secrets, private keys and a customer-specific compose.
+out/
+coverage.xml
+.coverage

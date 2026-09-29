@@ -1,0 +1,11 @@
+1. **Log in** at ${sonarqube_url} with `admin` / `admin`; SonarQube asks you to change the password.
+2. **Activate the licence** under Administration → Configuration → License Manager. The agentic
+   features need a licence that includes them.
+3. **Configure an LLM provider** under Administration → Configuration → AI Capabilities → LLM
+   Providers. Its host must be in `--llm-domains`, the only hosts the agent runtimes may reach;
+   regenerate with it to add one.
+4. **Connect GitHub**: create a GitHub App DevOps Platform integration under Administration →
+   Configuration → DevOps Platform Integrations, and bind your projects to it.
+5. **Activate the agents** under Administration → Configuration → AI Capabilities.
+6. **Check the agents are connected** under Administration → System: every agentic component this
+   bundle runs (${components}) should report healthy. The status refreshes every 10 seconds.

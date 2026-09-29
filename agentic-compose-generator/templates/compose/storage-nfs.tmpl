@@ -1,0 +1,12 @@
+  # Verifies the export at ${nfs_server}:${nfs_export} is reachable and writable before any
+  # dependent service starts, instead of failing later with an opaque mount error.
+  storage-probe:
+    image: ${image}
+    user: "0:0"
+    # One-shot: dependents wait for it to exit 0 (service_completed_successfully). A throwaway
+    # file proves the export is writable, not just mountable. Each runtime mounts only its own
+    # subdirectory, which must exist before it starts.
+    command: ["/bin/sh", "-ec", "cd /agentic-storage && mkdir -p hunter remediation && chmod 1777 . hunter remediation && touch .probe && rm .probe"]
+    volumes:
+      - agentic-storage:/agentic-storage
+    networks: [data]

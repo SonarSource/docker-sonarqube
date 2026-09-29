@@ -1,0 +1,24 @@
+  signing-init:
+    image: ${orchestrator_image}
+    user: "0:0"
+    # Root only to own the key volumes it creates; it needs no capability on top of that.
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        [ $$$${#AGENTIC_SIGNING_SECRET} -ge 32 ] ||
+          { echo "AGENTIC_SIGNING_SECRET is shorter than 32 characters — SonarQube requires at" \
+            "least that many bytes and disables verification on a shorter one, silently. Use:" \
+            "openssl rand -hex 32" >&2; exit 1; }
+        printf '%s' "$$$$AGENTIC_SIGNING_SECRET" > /tmp/instance-secret
+        ${secret_copy_line}
+        /derive-keys.sh --secret-file /tmp/instance-secret \
+          ${label_args}
+    environment:
+      AGENTIC_SIGNING_SECRET: ${AGENTIC_SIGNING_SECRET:?set AGENTIC_SIGNING_SECRET in .env, see README}
+    volumes:
+${volume_lines}

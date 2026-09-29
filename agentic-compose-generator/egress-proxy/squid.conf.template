@@ -1,0 +1,102 @@
+visible_hostname egress-proxy
+http_port 3128
+# The remediation runtime's own listener, the only one the SonarQube rules below match on. Both
+# runtimes reach this proxy, so nothing stops hunter-runtime from dialling it: the rules pair it
+# with remediation_client rather than relying on the port alone.
+http_port 3129
+
+# Allowlist: an agent runtime may reach ONLY the configured LLM endpoints, plus the storage bucket
+# host when one is set. @@LLM_ACL_LINES@@ and @@STORAGE_ACL_LINES@@ are replaced at container start
+# from AGENTIC_LLM_ALLOWED_DOMAINS and AGENTIC_STORAGE_ALLOWED_DOMAIN/_PORT. A denied host looks like an LLM
+# failure in the agent's own logs — check the proxy's logs first.
+acl SSL_ports port 443
+# Every port any rule below allows: 80/443, SonarQube's, the orchestrator's, and the storage
+# endpoint's. `deny !Safe_ports` rejects anything else before any allow rule. @@SAFE_PORT_LINES@@
+# is rendered at container start, one `acl Safe_ports port <n>` line per distinct port.
+@@SAFE_PORT_LINES@@
+acl CONNECT method CONNECT
+@@LLM_ACL_LINES@@
+@@STORAGE_ACL_LINES@@
+# The ports an LLM host is reachable on. Safe_ports above also names SonarQube's, the
+# orchestrator's and the storage endpoint's, so an allowlisted host would otherwise answer on any of
+# those too.
+acl web_ports port 80 443
+# Link-local, where cloud metadata services live: no allowlisted name may resolve into it, so a
+# mistaken or hijacked entry can't turn this proxy into a way to reach them. Only ever the last ACL
+# of an allow rule: `dst` makes Squid resolve the destination, and Squid stops evaluating a rule at
+# its first non-matching ACL, so only a host already on the allowlist is ever looked up here.
+acl link_local dst 169.254.0.0/16
+
+# SonarQube: remediation-agent-runtime's rule-info/analysis calls. Static, unlike the LLM
+# allowlist above — this leg doesn't depend on AGENTIC_LLM_ALLOWED_DOMAINS. Only the remediation
+# runtime may use it; hunter-runtime reaches this proxy too and must stay unable to reach
+# SonarQube. Not anchored at ^: Compose's PTR answer is project-prefixed. Defined up here rather
+# than beside its own rules further down, because one of those rules has to precede the CONNECT
+# deny below and an acl must be defined before it is referenced.
+acl remediation_client srcdom_regex -i remediation-agent-runtime
+acl remediation_listener localport 3129
+acl sqs_host dstdomain -n @@SQS_HOST@@
+acl sqs_port port @@SQS_PORT@@
+# The only two endpoints the runtime calls. urlpath_regex sees the path *and* the query string, so
+# both tolerate a trailing "?..." (rules/show carries ?key=...). The `^[^?]*` prefix covers a
+# SonarQube served under a web context, and can't cross a `?`, so `/anything?x=/rules/show` is
+# still denied. Only a plain-http SonarQube can be held to these paths: an https one is a CONNECT
+# tunnel, opaque to Squid, and gets the host-and-port rule below instead.
+acl sqs_endpoints urlpath_regex ^[^?]*/rules/show(\?|$) ^[^?]*/a3s/private/analyses(/|\?|$)
+
+# Ordering matters: http_access rules are matched in file order and the first match wins, so every
+# allow has to sit above the deny that would otherwise swallow it.
+http_access deny !Safe_ports
+http_access allow CONNECT allowed_host SSL_ports !link_local
+@@STORAGE_TUNNEL_RULE@@
+@@SQS_TUNNEL_RULE@@
+http_access deny CONNECT !SSL_ports
+http_access allow allowed_host web_ports !link_local
+@@STORAGE_HTTP_RULE@@
+
+# The same leg when SonarQube is plain http://sonarqube:9000 and no tunnel is involved.
+http_access allow remediation_listener remediation_client sqs_host sqs_port sqs_endpoints
+
+# Locator renewal: both runtimes pull a re-signed upload URL from the orchestrator when a
+# presigned one expires mid-job. Plain HTTP, so Squid sees the request line and this admits the
+# renewal route and nothing else the orchestrator serves. Defence in depth only, unlike the
+# SonarQube leg above: the orchestrator shares a network with each runtime, so a client that ignores
+# HTTP_PROXY reaches it directly and this rule never sees the request. The orchestrator's own
+# checks (RUNNING job only, a single write locator, never a read locator) are the real control.
+# The job id is left unconstrained: the orchestrator answers 404 for anything it does not own.
+# Same non-anchored srcdom_regex reasoning as remediation_client above.
+# urlpath_regex sees path *and* query string, and the job id now rides in the query, so the pattern
+# requires a non-empty jobId but does not care where in the query it sits — a parameter added
+# before or after it must not silently turn renewal into a 403.
+acl runtime_client srcdom_regex -i (hunter-runtime|remediation-agent-runtime)
+acl orchestrator_host dstdomain -n @@ORCHESTRATOR_HOST@@
+acl orchestrator_port port @@ORCHESTRATOR_PORT@@
+acl locator_renewal urlpath_regex ^/artifact-locators\?([^&]*&)*jobId=[^&]+
+http_access allow runtime_client orchestrator_host orchestrator_port locator_renewal
+
+http_access deny all
+
+# A policy gateway, not a cache.
+cache deny all
+# Squid's default cache_mem is 256 MB even with caching denied: the pool still holds in-transit
+# objects. Nothing is cached here, so keep it small.
+cache_mem 16 MB
+# Squid sizes its per-descriptor tables from RLIMIT_NOFILE at startup. Docker commonly hands out
+# 1048576 descriptors, which makes that reservation ~170 MB before a single request. Two
+# descriptors per proxied request, so this allows roughly 2000 concurrent ones.
+max_filedescriptors 4096
+# Don't tell the destination that a proxy is in the path, or which runtime is behind it.
+via off
+forwarded_for delete
+# Presigned storage URLs carry credentials in the query string (signature, access key) — keep them
+# out of the access log rather than relying on Squid's own default for this.
+strip_query_terms on
+# Squid starts as the proxy user and owns the container's stdout/stderr, so logs go straight there:
+# inspect denials with `docker compose logs egress-proxy`. The root filesystem is read-only anyway.
+access_log stdio:/dev/stdout squid
+cache_log stdio:/dev/stderr
+# Nothing signals Squid through its PID file (it runs in the foreground, one per container), and
+# the default /run/squid.pid isn't writable on the read-only root.
+pid_filename none
+# The ICMP pinger needs NET_RAW, which the container drops; nothing here uses its measurements.
+pinger_enable off

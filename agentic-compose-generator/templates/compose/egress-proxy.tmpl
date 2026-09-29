@@ -1,0 +1,32 @@
+  egress-proxy:
+    image: ${image}
+    entrypoint: ["/bin/sh", "/usr/local/bin/render-and-run.sh"]
+    # The image's proxy user. The entrypoint renders squid.conf into /tmp and runs Squid in the
+    # foreground, logging to stdout, so nothing else on the root filesystem needs to be writable.
+    user: "13:13"
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128M
+    cpus: 0.25
+    environment:
+      AGENTIC_LLM_ALLOWED_DOMAINS: ${llm_domains}
+      AGENTIC_STORAGE_ALLOWED_DOMAIN: ${storage_allowed_domain}
+      AGENTIC_STORAGE_ALLOWED_PORT: "${storage_allowed_port}"
+      AGENTIC_SQS_PROXY_SCHEME: ${sqs_proxy_scheme}
+      AGENTIC_SQS_PROXY_HOST: ${sqs_proxy_host}
+      AGENTIC_SQS_PROXY_PORT: ${sqs_proxy_port}
+      AGENTIC_ORCHESTRATOR_PROXY_HOST: ${orchestrator_proxy_host}
+      AGENTIC_ORCHESTRATOR_PROXY_PORT: "8080"
+    volumes:
+      - ./egress-proxy/squid.conf.template:/etc/squid/squid.conf.template:ro
+      - ./egress-proxy/entrypoint.sh:/usr/local/bin/render-and-run.sh:ro
+${extra_hosts_block}
+    networks: [hunter-jobnet, remediation-jobnet, egress, proxy-target]
+    healthcheck:
+      # The image ships no curl; bash's /dev/tcp is enough to see the listener is up.
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/3128"]
+      interval: 5s
+      timeout: 3s
+      retries: 20

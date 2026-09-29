@@ -1,0 +1,27 @@
+  sonarqube:
+    image: ${image}
+    volumes:
+      - ./sonarqube/sonar.properties:/opt/sonarqube/conf/sonar.properties:ro
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+      - agentic_signing_sqs:/run/agentic-signing:ro
+${storage_volume_line}
+    environment:
+      <<: [*context-storage-env, *job-storage-env]
+      SONAR_JDBC_URL: jdbc:postgresql://${db_endpoint}/${db_name}${db_url_params}
+      SONAR_JDBC_USERNAME: ${db_user}
+      SONAR_JDBC_PASSWORD: ${db_password}
+      SONAR_AGENTIC_SIGNING_SECRETFILE: /run/agentic-signing/instance-secret
+      SONAR_AGENTIC_ORCHESTRATOR_SIGNINGKEYPATH: /run/agentic-signing/agentic-shared.key
+      SONAR_CORE_SERVERBASEURL: ${server_base_url}
+    depends_on:
+${depends_on_block}
+${ports_block}
+    networks: [control, data, proxy-target, edge]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9000/api/system/status | grep -q '\"status\":\"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s

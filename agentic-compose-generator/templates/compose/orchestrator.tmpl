@@ -1,0 +1,44 @@
+  orchestrator:
+    image: ${image}
+    # Covers the graceful web drain plus the two db-scheduler shutdown phases (5m + 15m) after it.
+    stop_grace_period: 2580s
+${read_only_line}
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 1024M
+    cpus: 1
+    volumes:
+      - agentic_signing_orchestrator:/run/agentic-signing:ro
+${storage_volume_line}
+    environment:
+      <<: *job-storage-env
+      # The URLs it presigns for a job must outlive the longest one (Hunter's 44400s deadline), so
+      # it doesn't take AGENTIC_STORAGE_PRESIGN_TTL_SECONDS, which SonarQube and Vortex use.
+      SONAR_AGENTIC_ORCHESTRATOR_STORAGE_PRESIGN_TTL_SECONDS: "45000"
+      SERVER_PORT: "8080"
+      CORE_DB_READ_WRITE_ENDPOINT: ${db_endpoint}
+      CORE_DB_NAME: ${db_name}
+      CORE_DB_USERNAME: ${db_user}
+      CORE_DB_PASSWORD: ${db_password}${datasource_url_line}
+      AGENTIC_SONARQUBE_URL: ${sonarqube_url}
+      AGENTIC_SONARQUBE_SIGNING_KEY_PATH: /run/agentic-signing/agentic-shared.key
+      AGENTIC_GITHUB_API_BASE_URL: ${github_api_base_url}${secret_key_env_line}
+${push_url_lines}
+      AGENTIC_INBOUND_HUNTER_VERIFICATION_KEY_PATH: /run/agentic-signing/hunter-to-orchestrator.key
+      AGENTIC_INBOUND_REMEDIATION_VERIFICATION_KEY_PATH: /run/agentic-signing/remediation-to-orchestrator.key
+      AGENTIC_INBOUND_VERIFICATION_KEY_PATH: /run/agentic-signing/agentic-shared.key
+      AGENTIC_JOB_CAPABILITY_SIGNING_KEY_PATH: /run/agentic-signing/orchestrator-job-capability.key
+    depends_on:
+${depends_on_block}
+${extra_hosts_block}
+${ports_block}
+    networks: [control, data, hunter-jobnet, remediation-jobnet]
+    healthcheck:
+      # /readyz, as the Helm chart probes: /health aggregates the database and storage checks and
+      # turns 503 for the whole drain on stop.
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s

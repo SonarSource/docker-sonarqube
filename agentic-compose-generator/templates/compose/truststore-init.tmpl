@@ -1,0 +1,22 @@
+  # One-shot: the JDK's cacerts plus every CA cert in CUSTOM_CA_DIR, for Vortex, which can't import
+  # them on its own (it runs as a user that can't write its cacerts).
+  truststore-init:
+    image: ${image}
+    command:
+      - sh
+      - -c
+      - |
+        set -eu
+        cp "$$$$JAVA_HOME/lib/security/cacerts" /out/cacerts
+        i=0
+        for cert in /custom-ca/*.crt /custom-ca/*.pem; do
+          [ -f "$$$$cert" ] || continue
+          i=$$$$((i + 1))
+          keytool -importcert -keystore /out/cacerts -storepass changeit -noprompt \
+            -alias "custom-ca-$$$$i" -file "$$$$cert"
+        done
+        chmod 644 /out/cacerts
+    volumes:
+      - ${CUSTOM_CA_DIR:?set CUSTOM_CA_DIR in .env}:/custom-ca:ro
+      - custom_truststore:/out
+    network_mode: none

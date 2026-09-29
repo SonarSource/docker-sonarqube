@@ -1,0 +1,7 @@
+{
+  "edition": "datacenter",
+  "components": "hunter,remediation,vortex",
+  "db_mode": "local",
+  "storage": "local",
+  "tls": "on"
+}

@@ -1,0 +1,65 @@
+name: CI - Agentic Compose Generator
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' && !startsWith(github.ref, 'refs/heads/release/') }}
+
+on:
+  push:
+    branches:
+      - master
+      - 'release/**'
+    paths:
+      - 'agentic-compose-generator/**'
+      - '.github/workflows/agentic-compose-generator.yml'
+  pull_request:
+    paths:
+      - 'agentic-compose-generator/**'
+      - '.github/workflows/agentic-compose-generator.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: agentic-compose-generator
+
+jobs:
+  # The generator supports Python 3.9+ with the standard library only, so the tests need no
+  # dependencies. lint.sh also needs Docker Compose, but pulls no image.
+  test:
+    name: Unit tests and lint (Python ${{ matrix.python-version }})
+    runs-on: github-ubuntu-latest-s
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.13']
+    env:
+      # Comma-separated strings that must never reach a generated bundle. Kept in a secret so the
+      # list itself isn't published; unset (e.g. on forks), only the placeholder scan runs.
+      AGENTIC_GEN_FORBIDDEN: ${{ secrets.AGENTIC_GEN_FORBIDDEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run unit tests
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Lint every profile
+        run: ./tests/lint.sh
+
+  egress-proxy:
+    name: Egress proxy allowlist
+    runs-on: github-ubuntu-latest-s
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v6.0.2
+
+      - name: Probe the allowlist
+        run: ./tests/egress-proxy.sh

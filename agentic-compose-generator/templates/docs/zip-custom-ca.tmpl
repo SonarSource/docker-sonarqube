@@ -1,0 +1,10 @@
+### Custom CA certificates
+
+Put every CA certificate the containers must trust (PEM, one `*.crt` or `*.pem` file each) in
+`${custom_ca_dir}` (`CUSTOM_CA_DIR` in `.env`; a relative path resolves against this directory) before
+`docker compose up -d`, typically the CA behind your SonarQube's https certificate. The
+orchestrator and the agent runtimes import them at startup; Vortex reads a truststore that
+`truststore-init` builds from them. After changing the directory, run
+`docker compose up -d --force-recreate` so both pick up the new set.
+The agent runtimes verify strictly (Python 3.13): each CA certificate needs a `keyUsage` extension
+with `keyCertSign`, or the remediation runtime rejects it even though the JVMs accept it.

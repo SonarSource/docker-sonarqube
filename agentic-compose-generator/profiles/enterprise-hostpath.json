@@ -1,0 +1,8 @@
+{
+  "edition": "enterprise",
+  "components": "remediation",
+  "db_mode": "local",
+  "storage": "hostpath",
+  "storage_path": "/mnt/agentic",
+  "tls": "on"
+}
