@@ -35,7 +35,7 @@ for profile in "$ROOT"/profiles/*.json; do
 
   for needle in ${FORBIDDEN_STRINGS[@]+"${FORBIDDEN_STRINGS[@]}"}; do
     [ -n "$needle" ] || continue
-    if grep -rq -- "$needle" "$bundle/docker-compose.yaml" "$bundle/.env"; then
+    if grep -rq -- "$needle" "$bundle"; then
       echo "FAIL: $name: forbidden string leaked into output: $needle"
       fail=1
     fi

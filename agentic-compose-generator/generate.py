@@ -100,7 +100,10 @@ class ConfigError(ValueError):
 
 
 def build_argparser() -> argparse.ArgumentParser:
+    # No prefix matching: load_config spots CLI flags by their exact text, so an abbreviated flag
+    # would go unnoticed and the profile would override it.
     p = argparse.ArgumentParser(
+        allow_abbrev=False,
         description="Generate a docker-compose bundle for the agentic pack (Hunter Agent, "
         "Remediation Agent, Vortex, Agent Orchestrator) in front of SonarQube Server.",
     )
@@ -125,7 +128,8 @@ def build_argparser() -> argparse.ArgumentParser:
     p.add_argument("--s3-endpoint", default="")
     p.add_argument("--s3-access-key", default="")
     p.add_argument("--s3-secret-key", default="")
-    p.add_argument("--s3-path-style", choices=("true", "false"), default="true")
+    p.add_argument("--s3-path-style", choices=("true", "false"), default=None,
+                   help="default: true with --s3-endpoint, false on AWS, whose bucket host is what egress-proxy allowlists")
     p.add_argument("--s3-presign-ttl", default="21600")
     p.add_argument("--sandbox", default="runsc",
                    help="Docker runtime for the agent runtimes: runsc (gVisor, default), another registered "
@@ -230,6 +234,33 @@ def load_config(argv: list[str]) -> tuple[argparse.Namespace, argparse.ArgumentP
 # --------------------------------------------------------------------------------------------------
 
 
+def resolve_s3_egress(args: argparse.Namespace) -> list[str]:
+    """Defaults the S3 addressing style and derives the host and port egress-proxy allowlists.
+
+    The runtimes fetch presigned URLs through egress-proxy, so the allowlisted host must be the one
+    the addressing style puts in those URLs: the bucket host for virtual-hosted style, the endpoint
+    itself for path style.
+    """
+    if args.s3_endpoint:
+        if args.s3_path_style is None:
+            args.s3_path_style = "true"
+        authority = re.sub(r"^https?://", "", args.s3_endpoint).split("/")[0]
+        host, _, port = authority.partition(":")
+        # egress-proxy denies every port it isn't told about, so pass the endpoint's own.
+        args.s3_allowed_port = port or ("443" if args.s3_endpoint.startswith("https://") else "80")
+        args.s3_allowed_domain = host
+        return []
+    args.s3_allowed_port = "443"
+    if args.s3_path_style is None:
+        args.s3_path_style = "false"
+    if args.s3_path_style == "false":
+        args.s3_allowed_domain = f"{args.s3_bucket}.s3.{args.s3_region}.amazonaws.com"
+        return []
+    args.s3_allowed_domain = f"s3.{args.s3_region}.amazonaws.com"
+    return [f"--s3-path-style true on AWS allowlists {args.s3_allowed_domain} in egress-proxy, "
+            "which reaches every bucket in the region, not only yours; drop it to allowlist the bucket host alone"]
+
+
 def validate_and_normalize(args: argparse.Namespace) -> list[str]:
     notes: list[str] = []
 
@@ -245,15 +276,7 @@ def validate_and_normalize(args: argparse.Namespace) -> list[str]:
     if args.storage == "s3":
         if not args.s3_bucket or not args.s3_region:
             raise ConfigError("--storage s3 requires --s3-bucket and --s3-region")
-        if args.s3_endpoint:
-            authority = re.sub(r"^https?://", "", args.s3_endpoint).split("/")[0]
-            host, _, port = authority.partition(":")
-            # egress-proxy denies every port it isn't told about, so pass the endpoint's own.
-            args.s3_allowed_port = port or ("443" if args.s3_endpoint.startswith("https://") else "80")
-        else:
-            host = f"{args.s3_bucket}.s3.{args.s3_region}.amazonaws.com"
-            args.s3_allowed_port = "443"
-        args.s3_allowed_domain = host
+        notes.extend(resolve_s3_egress(args))
 
     # 4. nfs requires server + export; hostpath requires an absolute path.
     if args.storage == "nfs":
@@ -1388,7 +1411,8 @@ INPUTS_SCHEMA = {
         "s3_endpoint": {"type": "string"},
         "s3_access_key": {"type": "string"},
         "s3_secret_key": {"type": "string"},
-        "s3_path_style": {"type": "string", "enum": ["true", "false"], "default": "true"},
+        "s3_path_style": {"type": "string", "enum": ["true", "false"],
+                          "description": "defaults to true with s3_endpoint, false on AWS"},
         "s3_presign_ttl": {"type": "string", "default": "21600"},
         "sandbox": {"type": "string", "pattern": SANDBOX_RUNTIME_RE.pattern, "default": "runsc"},
         "tls": {"type": "string", "enum": ["on", "off"], "default": "on"},
@@ -1447,7 +1471,8 @@ def main(argv: list[str] | None = None) -> int:
     sonar_properties = build_sonarqube_properties(args)
 
     # write_bundle only carries over secrets and cluster addresses into .env, so the scan holds for it too.
-    problems = scan_forbidden(compose_text + sonar_properties, build_env(args))
+    # The docs and the kit land in the bundle as well, so they are scanned with the compose file.
+    problems = scan_forbidden(compose_text + sonar_properties + "".join({**docs, **kit}.values()), build_env(args))
     if problems:
         for problem in problems:
             print(f"error: {problem}", file=sys.stderr)

@@ -112,6 +112,55 @@ class ScanForbiddenTest(unittest.TestCase):
         finally:
             gen.FORBIDDEN_STRINGS = saved
 
+    def test_docs_are_scanned(self):
+        # The heading of the bundle README, which appears nowhere in the compose file or .env.
+        saved = gen.FORBIDDEN_STRINGS
+        gen.FORBIDDEN_STRINGS = ("agentic pack — generated bundle",)
+        try:
+            code, out, err = run("--edition", "developer", "--out", "-")
+        finally:
+            gen.FORBIDDEN_STRINGS = saved
+        self.assertEqual(code, 1, err)
+        self.assertIn("forbidden string leaked into output", err)
+
+
+class LoadConfigTest(unittest.TestCase):
+    def test_abbreviated_flags_are_refused(self):
+        # An abbreviation would escape the CLI-over-profile check, so argparse must reject it.
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            gen.load_config(["--edition", "developer", "--db-pass", "x"])
+
+
+class S3EgressTest(unittest.TestCase):
+    def resolve(self, *argv: str):
+        args, _parser = gen.load_config(["--edition", "developer", "--storage", "s3",
+                                         "--s3-bucket", "jobs", "--s3-region", "eu-west-1", *argv])
+        notes = gen.validate_and_normalize(args)
+        return args, notes
+
+    def test_aws_defaults_to_virtual_hosted_bucket_host(self):
+        args, notes = self.resolve()
+        self.assertEqual(args.s3_path_style, "false")
+        self.assertEqual(args.s3_allowed_domain, "jobs.s3.eu-west-1.amazonaws.com")
+        self.assertEqual(args.s3_allowed_port, "443")
+        self.assertFalse([n for n in notes if "s3-path-style" in n])
+
+    def test_aws_path_style_allowlists_the_regional_host(self):
+        args, notes = self.resolve("--s3-path-style", "true")
+        self.assertEqual(args.s3_allowed_domain, "s3.eu-west-1.amazonaws.com")
+        self.assertTrue([n for n in notes if "every bucket in the region" in n])
+
+    def test_endpoint_defaults_to_path_style(self):
+        args, _notes = self.resolve("--s3-endpoint", "http://minio:9000")
+        self.assertEqual(args.s3_path_style, "true")
+        self.assertEqual(args.s3_allowed_domain, "minio")
+        self.assertEqual(args.s3_allowed_port, "9000")
+
+    def test_endpoint_keeps_an_explicit_style(self):
+        args, _notes = self.resolve("--s3-endpoint", "https://s3.example.com", "--s3-path-style", "false")
+        self.assertEqual(args.s3_path_style, "false")
+        self.assertEqual(args.s3_allowed_port, "443")
+
 
 class ImageRefTest(unittest.TestCase):
     def args(self, *argv: str):
