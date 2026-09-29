@@ -1,0 +1,19 @@
+  ${node}:
+    image: ${image}
+    hostname: ${node}
+    environment:
+      SONAR_CLUSTER_NODE_NAME: ${node}
+      SONAR_CLUSTER_ES_HOSTS: ${search_hosts}
+    volumes:
+      - ${volume_prefix}_data:/opt/sonarqube/data
+      - ${volume_prefix}_logs:/opt/sonarqube/logs
+    networks: [cluster]
+    mem_limit: 4096M
+    healthcheck:
+      # Cluster mode binds the ES HTTP interface to the node's own address, not loopback;
+      # HOSTNAME resolves to that address through Docker's embedded DNS.
+      test: ["CMD-SHELL", "curl -fsS http://$$$$HOSTNAME:9001/_cluster/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 120s
+      retries: 60

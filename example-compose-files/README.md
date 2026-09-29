@@ -2,6 +2,8 @@
 
 This directory contains Docker Compose examples for running SonarQube Server in different configurations.
 
+To deploy SonarQube Server with the agentic components (Agent Orchestrator, Hunter, Remediation and Vortex), use the [agentic compose generator](../agentic-compose-generator/) instead: it generates a complete bundle for your edition, storage and TLS setup.
+
 ## ⚠️ Known Issue with DCE Examples
 
 **The DCE examples (`sq-dce-postgres` and `sq-dce-custom-zip-postgres`) will not work with the current images until the next release.**

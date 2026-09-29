@@ -1,0 +1,10 @@
+{
+  "edition": "developer",
+  "components": "vortex",
+  "db_mode": "external",
+  "db_host": "db.internal",
+  "db_password": "change-me",
+  "storage": "hostpath",
+  "storage_path": "/mnt/agentic",
+  "tls": "on"
+}

@@ -1,0 +1,26 @@
+  tls-proxy:
+    image: ${image}
+    entrypoint: ["/bin/sh", "/usr/local/bin/render-and-run.sh"]
+    command: ["nginx", "-g", "daemon off;"]
+    environment:
+      TLS_TEMPLATE: sonarqube
+      TLS_UPSTREAM_HOST: sonarqube
+      TLS_UPSTREAM_PORT: "9000"
+      TLS_SERVER_NAME: ${tls_server_name}
+      TLS_HTTPS_PUBLIC_PORT: ${SONARQUBE_TLS_PUBLISH_PORT:-9443}
+    volumes:
+      - tls_certs:/tls
+      - ./tls-proxy/nginx.conf.template:/etc/nginx/nginx.conf.template:ro
+      - ./tls-proxy/nginx.agentic.conf.template:/etc/nginx/nginx.agentic.conf.template:ro
+      - ./tls-proxy/entrypoint.sh:/usr/local/bin/render-and-run.sh:ro
+    ports:
+      - "${SONARQUBE_TLS_PUBLISH_PORT:-9443}:8443"
+    depends_on:
+      sonarqube:
+        condition: service_healthy
+    networks: [edge]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSk https://localhost:8443/api/system/status | grep -q '\"status\":\"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30

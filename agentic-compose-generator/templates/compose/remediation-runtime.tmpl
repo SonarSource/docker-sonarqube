@@ -1,0 +1,42 @@
+  remediation-agent-runtime:
+    image: ${image}
+    runtime: ${sandbox_runtime}
+    pids_limit: 512
+    # Just above the image's own 3600s graceful-shutdown wait for a running job, so a stop doesn't
+    # kill it before that wait ends.
+    stop_grace_period: 3630s
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 8192M
+    cpus: 4
+    volumes:
+      - agentic_signing_remediation:/run/agentic-signing:ro
+${storage_volume_line}
+    environment:
+      REMEDIATION_SCRIPT_PATH: /home/agent/app/.venv/lib/python3.13/site-packages/remediation_agent/main.py
+      # egress-proxy's remediation-only listener: the one its SonarQube rules match on.
+      HTTPS_PROXY: http://egress-proxy:3129
+      HTTP_PROXY: http://egress-proxy:3129
+      NO_PROXY: localhost,127.0.0.1
+      # Some HTTP clients read only the lower-case names.
+      https_proxy: http://egress-proxy:3129
+      http_proxy: http://egress-proxy:3129
+      no_proxy: localhost,127.0.0.1
+      REMEDIATION_RULE_INFO_ENDPOINT: ${rule_info_endpoint}
+      REMEDIATION_ANALYSIS_ENDPOINT: ${analysis_endpoint}
+      REMEDIATION_AGENTIC_SIGNING_KEY_PATH: /run/agentic-signing/remediation-to-sqs.key
+      AGENTIC_VERIFY_KEY_ID: orchestrator-to-remediation
+      AGENTIC_VERIFY_KEY_PATH: /run/agentic-signing/orchestrator-to-remediation.key
+      AGENT_ORCHESTRATOR_URL: http://orchestrator:8080
+      AGENT_ORCHESTRATOR_SIGNING_KEY_PATH: /run/agentic-signing/remediation-to-orchestrator.key
+    depends_on:
+      egress-proxy:
+        condition: service_healthy
+${depends_on_block}
+${extra_hosts_block}
+    networks: [remediation-jobnet]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8090/readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20

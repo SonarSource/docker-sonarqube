@@ -1,0 +1,6 @@
+  agentic-storage:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=${nfs_server},nfsvers=4,tcp,rw
+      device: :${nfs_export}

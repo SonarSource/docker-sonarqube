@@ -1,0 +1,78 @@
+# Rendered into /etc/nginx/nginx.conf at container start by entrypoint.sh — @@UPSTREAM@@,
+# @@SERVER_NAME@@, @@REDIRECT_PORT@@, @@CERT_FILE@@ and @@KEY_FILE@@ are substituted there from the
+# TLS_* environment.
+#
+# Sibling to keep in step: ./nginx.agentic.conf.template (same image, TLS_TEMPLATE=agentic, fronts
+# the agentic services instead of SonarQube).
+worker_processes auto;
+error_log /var/log/nginx/error.log warn;
+pid /var/run/nginx.pid;
+
+events {
+  worker_connections 1024;
+}
+
+http {
+  include       /etc/nginx/mime.types;
+  default_type  application/octet-stream;
+  access_log    /var/log/nginx/access.log;
+  sendfile      on;
+  server_tokens off;
+
+  # Keeps upstream connections alive when the client isn't upgrading, and passes the upgrade
+  # through when it is. SonarQube uses SSE rather than WebSockets today, but a bare
+  # `Connection ""` would break any future upgrade silently.
+  map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      '';
+  }
+
+  # HTTP: redirect only. Nothing is served in the clear.
+  server {
+    listen 8080;
+    server_name _;
+    # $host, not @@SERVER_NAME@@: whatever name the browser used is the one it can reach.
+    return 301 https://$host@@REDIRECT_PORT@@$request_uri;
+  }
+
+  server {
+    listen 8443 ssl;
+    http2 on;
+    server_name @@SERVER_NAME@@;
+
+    ssl_certificate     /tls/@@CERT_FILE@@;
+    ssl_certificate_key /tls/@@KEY_FILE@@;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache   shared:SSL:10m;
+    ssl_session_timeout 1h;
+
+    # Analysis report submissions run to tens of megabytes; nginx's 1 MB default would reject them
+    # as 413 with nothing useful in the scanner's output.
+    client_max_body_size 0;
+
+    location / {
+      # Literal upstream, so nginx resolves it once at startup. If SonarQube is ever recreated with
+      # a new container IP, restart this proxy too: `docker compose restart tls-proxy`.
+      proxy_pass http://@@UPSTREAM@@;
+      proxy_http_version 1.1;
+
+      proxy_set_header Host              $host;
+      proxy_set_header X-Real-IP         $remote_addr;
+      proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+      # Without this SonarQube builds http:// redirects and absolute URLs from behind the proxy,
+      # which breaks the OAuth and DevOps-platform callback flows.
+      proxy_set_header X-Forwarded-Proto https;
+      proxy_set_header X-Forwarded-Host  $host;
+      proxy_set_header X-Forwarded-Port  $server_port;
+      proxy_set_header Connection        $connection_upgrade;
+      proxy_set_header Upgrade           $http_upgrade;
+
+      # SonarQube's SSE endpoint (/api/push/sonarlint_events) and its long compute-engine polls hold
+      # a response open for minutes — buffering or a short read timeout turns those into hangs.
+      proxy_buffering off;
+      proxy_read_timeout 3600s;
+      proxy_send_timeout 3600s;
+    }
+  }
+}

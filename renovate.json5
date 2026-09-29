@@ -18,7 +18,8 @@
       "commercial-editions/**",
       "community-build/Dockerfile",
       ".github/github_env.yaml",
-      ".cirrus/tasks.yml"
+      ".cirrus/tasks.yml",
+      "agentic-compose-generator/default-images.json"
     ],
     "enabledManagers": [
       "custom.regex"
@@ -37,6 +38,13 @@
         "groupSlug": "docker-sonarqube-community-build-releases",
         "matchDepNames": ["sonarqube-community-build"],
         "labels": ["sonarqube-community-build"]
+      },
+      {
+        "matchManagers": ["custom.regex"],
+        "matchFileNames": ["agentic-compose-generator/default-images.json"],
+        "groupName": "agentic-compose-generator-images",
+        "groupSlug": "agentic-compose-generator-images",
+        "labels": ["agentic-compose-generator"]
       },
       {
         "matchManagers": ["custom.regex"],
@@ -98,6 +106,16 @@
         "matchStrings": [
           "community_build: \"(?<currentValue>.+)\"",
           "COMMUNITY_BUILD_VERSION: (?<currentValue>.+)"
+        ]
+      },
+      {
+        // Third-party images of the agentic compose generator, pinned by digest. The agentic and
+        // sonarqube images have no digest, so they don't match: they follow the SonarQube release.
+        "customType": "regex",
+        "managerFilePatterns": ["agentic-compose-generator/default-images.json"],
+        "datasourceTemplate": "docker",
+        "matchStrings": [
+          "\"registry\":\\s*\"\",\\s*\"name\":\\s*\"(?<depName>[^\"]+)\",\\s*\"tag\":\\s*\"(?<currentValue>[^\"]+)\",\\s*\"digest\":\\s*\"(?<currentDigest>sha256:[a-f0-9]+)\""
         ]
       }
     ]

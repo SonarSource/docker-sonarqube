@@ -1,0 +1,50 @@
+  ${node}:
+    image: ${image}
+    hostname: ${node}
+    volumes:
+      - ./sonarqube/sonar.properties:/opt/sonarqube/conf/sonar.properties:ro
+      - ${volume_prefix}_data:/opt/sonarqube/data
+      - ${volume_prefix}_extensions:/opt/sonarqube/extensions
+      - ${volume_prefix}_logs:/opt/sonarqube/logs
+      - agentic_signing_sqs:/run/agentic-signing:ro
+${storage_volume_line}
+    environment:
+      <<: [*context-storage-env, *job-storage-env]
+      SONAR_JDBC_URL: jdbc:postgresql://${db_endpoint}/${db_name}${db_url_params}
+      SONAR_JDBC_USERNAME: ${db_user}
+      SONAR_JDBC_PASSWORD: ${db_password}
+      SONAR_AGENTIC_SIGNING_SECRETFILE: /run/agentic-signing/instance-secret
+      SONAR_AGENTIC_ORCHESTRATOR_SIGNINGKEYPATH: /run/agentic-signing/agentic-shared.key
+      # Same value on every node: a browser session can land on either one.
+      SONAR_CORE_SERVERBASEURL: ${server_base_url}
+      SONAR_CLUSTER_NODE_NAME: ${node}
+      # Pins Hazelcast's bind address to this node's static `cluster` address; run.sh's
+      # autodiscovery may otherwise pick a different network on each node.
+      SONAR_CLUSTER_NODE_HOST: ${node_ip}
+      # Swaps Hazelcast's static TCP-IP joiner for its DNS one, which re-resolves
+      # SONAR_CLUSTER_HOSTS on every attempt instead of blacklisting a peer that isn't listening
+      # yet on a cold start. Nothing about it is Kubernetes-specific.
+      SONAR_CLUSTER_KUBERNETES: "true"
+      # A shared alias on the `cluster` network, resolving to every application node.
+      SONAR_CLUSTER_HOSTS: sonarqube-cluster
+      SONAR_CLUSTER_SEARCH_HOSTS: ${search_hosts}
+      SONAR_AUTH_JWTBASE64HS256SECRET: ${SONARQUBE_JWT_SECRET:?set SONARQUBE_JWT_SECRET in .env}
+    depends_on:
+${depends_on_block}
+    networks:
+      control: {}
+      data: {}
+      cluster:
+        ipv4_address: ${node_ip}
+        aliases: [sonarqube-cluster]
+      lb-backend: {}
+    # On a fresh database both nodes race to run the schema migration; the loser exits 0 and only
+    # `unless-stopped` (not `on-failure`) brings it back to join once the schema exists.
+    restart: unless-stopped
+    mem_limit: 3072M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/api/system/status | grep -q '\"status\":\"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      start_period: 300s
+      retries: 90

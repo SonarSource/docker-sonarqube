@@ -1,0 +1,10 @@
+SonarQube and the containers exchange absolute file paths, so both must see the storage at the
+same path. This bundle mounts `${storage_path}` at that same path inside the containers
+(`AGENTIC_STORAGE_MOUNT` in `.env`), so use it on the SonarQube side as well:
+
+```
+sonar.agentic.storage.type=FILESYSTEM
+sonar.agentic.storage.filesystem.base-dir=${storage_path}
+sonar.agentic.orchestrator.storage.type=FILESYSTEM
+sonar.agentic.orchestrator.storage.filesystem.base-dir=${storage_path}
+```

@@ -1,0 +1,63 @@
+# Rendered into /etc/nginx/nginx.conf at container start by entrypoint.sh when TLS_TEMPLATE=kit —
+# @@UPSTREAM@@, @@SERVER_NAME@@, @@CERT_FILE@@ and @@KEY_FILE@@ are substituted there from the
+# TLS_* environment.
+#
+# The standalone sonarqube-tls-proxy kit generated for `--edition none --tls on`: customers run it
+# next to their own SonarQube so the agentic containers reach it over TLS. Only those containers use
+# it, so like ./nginx.agentic.conf.template there is no http redirect listener; the location block is
+# otherwise kept identical to ./nginx.conf.template — keep the three in step.
+worker_processes auto;
+error_log /var/log/nginx/error.log warn;
+pid /var/run/nginx.pid;
+
+events {
+  worker_connections 1024;
+}
+
+http {
+  include       /etc/nginx/mime.types;
+  default_type  application/octet-stream;
+  access_log    /var/log/nginx/access.log;
+  sendfile      on;
+  server_tokens off;
+
+  map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      '';
+  }
+
+  server {
+    listen 8443 ssl;
+    http2 on;
+    server_name @@SERVER_NAME@@;
+
+    ssl_certificate     /tls/@@CERT_FILE@@;
+    ssl_certificate_key /tls/@@KEY_FILE@@;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache   shared:SSL:10m;
+    ssl_session_timeout 1h;
+
+    # The remediation agent submits analyses through here; see ./nginx.conf.template.
+    client_max_body_size 0;
+
+    location / {
+      # Literal upstream, so nginx resolves it once at startup.
+      proxy_pass http://@@UPSTREAM@@;
+      proxy_http_version 1.1;
+
+      proxy_set_header Host              $host;
+      proxy_set_header X-Real-IP         $remote_addr;
+      proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto https;
+      proxy_set_header X-Forwarded-Host  $host;
+      proxy_set_header X-Forwarded-Port  $server_port;
+      proxy_set_header Connection        $connection_upgrade;
+      proxy_set_header Upgrade           $http_upgrade;
+
+      proxy_buffering off;
+      proxy_read_timeout 3600s;
+      proxy_send_timeout 3600s;
+    }
+  }
+}

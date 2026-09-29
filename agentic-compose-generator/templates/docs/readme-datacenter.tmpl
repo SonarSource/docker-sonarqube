@@ -1,0 +1,23 @@
+
+## Data Center Edition
+
+This bundle runs a SonarQube Server Data Center Edition cluster: two application nodes
+(`sonarqube-app-1/2`) and three search nodes (`sonarqube-search-1/2/3`), behind an nginx load
+balancer that is the `sonarqube` service every other container (and `tls-proxy`, when TLS is on)
+talks to.
+
+- **Resources.** The cluster's `mem_limit`s add up to about 18 GB (3 × 4 GB search, 2 × 3 GB
+  application) before the rest of the stack, and Elasticsearch needs `vm.max_map_count` of at
+  least 262144 on the Docker host (`sysctl -w vm.max_map_count=262144`).
+- **Licence.** The cluster starts unlicensed; apply a Data Center Edition licence under
+  *Administration → Configuration → License Manager* before using it.
+- **First start.** Both application nodes race to create the database schema on a fresh
+  database; the loser exits and is restarted automatically (`restart: unless-stopped`), so a
+  restart of one node in `docker compose ps` during the first few minutes is expected.
+- **Session secret.** `SONARQUBE_JWT_SECRET` in `.env` was generated for you and is shared by both
+  application nodes; treat it like the signing secret.
+- **Cluster subnet.** The internal `cluster` network uses `${cluster_subnet}` with a static
+  address per application node. If `docker compose up` fails with "Pool overlaps with other one",
+  change `SONARQUBE_CLUSTER_SUBNET` and `SONARQUBE_APP_1_IP`/`SONARQUBE_APP_2_IP` in `.env` together.
+- **Recreating an application node** changes its address: `docker compose restart sonarqube`
+  afterwards so the load balancer re-resolves it.

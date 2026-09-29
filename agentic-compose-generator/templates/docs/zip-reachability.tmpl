@@ -1,0 +1,6 @@
+The containers expect to reach your SonarQube at `${sonarqube_url}`.
+If that isn't where your install actually listens, regenerate this bundle with
+`--sonarqube-external-host`/`--sonarqube-external-port`/`--sonarqube-external-scheme` set correctly, or make sure SonarQube is
+bound and reachable there (a firewall or a bind to `127.0.0.1` only are the usual culprits).
+
+${https_note}

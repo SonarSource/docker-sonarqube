@@ -1,0 +1,8 @@
+  storage-init:
+    image: ${image}
+    # One subdirectory per runtime, which mounts only its own; see the runtimes' storage mounts.
+    working_dir: ${AGENTIC_STORAGE_MOUNT:-/agentic-storage}
+    command: ["sh", "-c", "mkdir -p hunter remediation && chmod 1777 . hunter remediation"]
+    volumes:
+      - ${AGENTIC_STORAGE_SOURCE:-agentic-storage}:${AGENTIC_STORAGE_MOUNT:-/agentic-storage}
+    networks: [data]

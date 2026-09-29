@@ -1,0 +1,11 @@
+  # Data Center only: Hazelcast (app-to-app) and Elasticsearch transport. Fixed subnet so each
+  # application node can pin SONAR_CLUSTER_NODE_HOST to a static address on it. If it collides with
+  # a network on your host, change SONARQUBE_CLUSTER_SUBNET and SONARQUBE_APP_*_IP in .env together.
+  cluster:
+    internal: true
+    ipam:
+      config:
+        - subnet: ${cluster_subnet}
+  # Data Center only: the load balancer's route to the application nodes.
+  lb-backend:
+    internal: true

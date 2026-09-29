@@ -1,0 +1,19 @@
+networks:
+  # Routable: SonarQube, orchestrator, Vortex, and the orchestrator's outbound git/DevOps traffic.
+  control:
+  # The agent runtimes' only path to the LLM APIs and to SonarQube, via the egress proxy's allowlist.
+  egress:
+  # Database only, no route off-box.
+  data:
+    internal: true
+  # One per runtime: the orchestrator's job dispatch to it, and its route to egress-proxy. Separate
+  # so the two runtimes can't reach each other. SonarQube is on neither.
+  hunter-jobnet:
+    internal: true
+  remediation-jobnet:
+    internal: true
+  # egress-proxy's route to SonarQube for the remediation runtime's rule-info/analysis calls.
+  proxy-target:
+    internal: true
+  # tls-proxy's/agentic-proxy's route to the backing services and the host's published port.
+  edge:
