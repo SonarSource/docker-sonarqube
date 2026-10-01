@@ -1,4 +1,4 @@
-
+<!-- Sonar Marketing hosts these approved brand assets on its Kentico Kontent CDN (assets-eu-01.kc-usercontent.com). Shared URLs are intentional; consult Marketing before replacing them. -->
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://assets-eu-01.kc-usercontent.com/ef593040-b591-0198-9506-ed88b30bc023/a23fc7ba-23f0-489a-829d-ed88c0748521/Sonar_Logo_Dark%20Backgrounds.svg">
@@ -6,29 +6,18 @@
   </picture>
 </p>
 
-# SonarQube Docker images
-
-<p>
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://assets-eu-01.kc-usercontent.com/ef593040-b591-0198-9506-ed88b30bc023/19f97554-c5ec-4cf1-87f7-878c02a19702/SQ_Logo_Server_Dark%20Backgrounds.svg">
-    <img src="https://assets-eu-01.kc-usercontent.com/ef593040-b591-0198-9506-ed88b30bc023/4a785d22-7141-409d-95a2-695c42595f90/SQ_Logo_Server_Light%20Backgrounds.png" alt="SonarQube Server logo" width="400">
-  </picture>
-</p>
-
-Run a self-managed SonarQube instance in a container and make code quality and security analysis available to local and CI workflows.
-
 [![CI - Build and Test](https://github.com/SonarSource/docker-sonarqube/actions/workflows/push_and_pr.yml/badge.svg)](https://github.com/SonarSource/docker-sonarqube/actions/workflows/push_and_pr.yml) [![Quality Gate Status](https://next.sonarqube.com/sonarqube/api/project_badges/measure?project=SonarSource_docker-sonarqube_AYcnOvlJTpBOcQuGEdI5&metric=alert_status&token=sqb_352337cc82cd0ba5dd1026de82ff553dd511afc2)](https://next.sonarqube.com/sonarqube/dashboard?id=SonarSource_docker-sonarqube_AYcnOvlJTpBOcQuGEdI5)
 [![Docker pulls](https://img.shields.io/docker/pulls/library/sonarqube)](https://hub.docker.com/_/sonarqube)
 [![GitHub stars](https://img.shields.io/github/stars/SonarSource/docker-sonarqube?style=flat)](https://github.com/SonarSource/docker-sonarqube)
 [![License](https://img.shields.io/badge/license-LGPL--3.0-blue)](#license)
 [![Community forum](https://img.shields.io/badge/community-forum-blue)](https://community.sonarsource.com/)
 
-About this Repo
------------------
+<!-- sonar-marketing:start -->
+<!-- Marketing maintains this section. For wording changes, consult the relevant Product Marketing Manager (PMM). Repository CODEOWNERS review accuracy and merge changes. -->
 
-This is the Git repo of the official Docker image for [SonarQube](https://registry.hub.docker.com/_/sonarqube/). See the Hub page for the full readme on how to use the Docker image and for information regarding contributing and issues.
+# SonarQube Docker images
 
-The full readme is generated over in [docker-library/docs](https://github.com/docker-library/docs), specifically in [docker-library/docs/sonarqube](https://github.com/docker-library/docs/tree/master/sonarqube).
+Run a self-managed SonarQube instance in a container and make code quality and security analysis available to local and CI workflows.
 
 ## What the image provides
 
@@ -36,7 +25,6 @@ The full readme is generated over in [docker-library/docs](https://github.com/do
 - Versioned tags for repeatable local, test, and production deployments.
 - A containerized SonarQube runtime that scanners can send analysis results to.
 - Configuration and tag guidance maintained through the Docker Official Images documentation.
-- [Docker Compose examples](example-compose-files/) for common setups, and a [generator](agentic-compose-generator/) for SonarQube Server with the agentic components.
 
 The image runs the same SonarQube analysis for developer-written and AI-generated code. Scanners analyze a project and send the results to the running SonarQube instance, where teams can review explainable findings and enforce quality gates.
 
@@ -49,6 +37,16 @@ The image runs the same SonarQube analysis for developer-written and AI-generate
 - [SonarQube MCP Server](https://github.com/SonarSource/sonarqube-mcp-server), bringing SonarQube analysis into AI agent workflows.
 - [SonarQube CLI](https://docs.sonarsource.com/sonarqube-cli), running analysis from the command line.
 
+<!-- sonar-marketing:end -->
+
+About this Repo
+-----------------
+
+This is the Git repo of the official Docker image for [SonarQube](https://registry.hub.docker.com/_/sonarqube/). See the Hub page for the full readme on how to use the Docker image and for information regarding contributing and issues.
+
+- [Docker Compose examples](example-compose-files/) for common setups, and a [generator](agentic-compose-generator/) for SonarQube Server with the agentic components.
+
+The full readme is generated over in [docker-library/docs](https://github.com/docker-library/docs), specifically in [docker-library/docs/sonarqube](https://github.com/docker-library/docs/tree/master/sonarqube).
 
 Have Questions or Feedback?
 ---------------------------
