@@ -22,7 +22,7 @@
   "sonarqube": {
     "registry": "",
     "name": "sonarqube",
-    "tag": "2026.5.0"
+    "tag": "2026.5.2"
   },
   "postgres": {
     "registry": "",
