@@ -407,6 +407,20 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-07
+  - id: CVE-2026-54872
+    statement: >-
+      Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) OpenSSL OS package vulnerability (openssl/libssl3t64
+      3.0.13-0ubuntu3.15 -> 3.0.13-0ubuntu3.16, USN-8847-1). Timing side-channel in EC scalar
+      multiplication on non-NIST curves. SonarQube's own TLS is handled by the JVM (JSSE), not
+      OpenSSL; the only libssl consumer is curl, used as an outbound client, where exploitation
+      would need a non-NIST curve and an attacker able to take fine-grained timing measurements
+      of the local process. Exposure is negligible. apt-get upgrade was rejected as a fix since
+      it breaks Docker Official Images build reproducibility (these Dockerfiles are pinned
+      per-commit in docker-official-images/internal/build/build.go). Tracked in SONAR-32622 --
+      plan is to pin the specific patched package version or pick up an upstream base image bump
+      before this expires.
+    expired_at: 2026-12-01
   - id: CVE-2026-54874
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -724,6 +738,31 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-07
+  - id: CVE-2026-75805
+    statement: >-
+      Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) OpenSSL OS package vulnerability (openssl/libssl3t64
+      3.0.13-0ubuntu3.15 -> 3.0.13-0ubuntu3.16, USN-8847-1). NULL pointer dereference in the
+      OpenSSL CMP (Certificate Management Protocol) client when processing revocation responses.
+      No component in the image uses the CMP client (`openssl cmp` / OSSL_CMP_* APIs), so this
+      code path is not reachable. apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-32622 -- plan is to pin
+      the specific patched package version or pick up an upstream base image bump before this
+      expires.
+    expired_at: 2026-12-01
+  - id: CVE-2026-75806
+    statement: >-
+      Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) OpenSSL OS package vulnerability (openssl/libssl3t64
+      3.0.13-0ubuntu3.15 -> 3.0.13-0ubuntu3.16, USN-8847-1). Denial of service from undersized
+      AEAD records in DTLS 1.2. Nothing in the image uses DTLS (JVM components use JSSE; curl
+      uses TLS over TCP only), so this code path is not reachable. apt-get upgrade was rejected
+      as a fix since it breaks Docker Official Images build reproducibility (these Dockerfiles
+      are pinned per-commit in docker-official-images/internal/build/build.go). Tracked in
+      SONAR-32622 -- plan is to pin the specific patched package version or pick up an upstream
+      base image bump before this expires.
+    expired_at: 2026-12-01
   - id: CVE-2026-76641
     statement: >-
       Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -769,6 +808,19 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-10
+  - id: CVE-2026-77696
+    statement: >-
+      Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) OpenSSL OS package vulnerability (openssl/libssl3t64
+      3.0.13-0ubuntu3.15 -> 3.0.13-0ubuntu3.16, USN-8847-1). Timing side-channel in SM2
+      signature generation. No component in the image generates SM2 signatures with OpenSSL (JVM
+      components use JCA/JSSE; curl does not sign with SM2), so this code path is not reachable.
+      apt-get upgrade was rejected as a fix since it breaks Docker Official Images build
+      reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-32622 -- plan is to pin
+      the specific patched package version or pick up an upstream base image bump before this
+      expires.
+    expired_at: 2026-12-01
   - id: CVE-2026-80489
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -784,6 +836,20 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-10
+  - id: CVE-2026-84782
+    statement: >-
+      Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) OpenSSL OS package vulnerability (openssl/libssl3t64
+      3.0.13-0ubuntu3.15 -> 3.0.13-0ubuntu3.16, USN-8847-1). Out-of-bounds read in DTLS
+      handshake retransmission, reachable only by a process using DTLS with non-blocking I/O.
+      Nothing in the image uses DTLS: SonarQube, Elasticsearch and Hazelcast use the JVM's TLS
+      stack (JSSE), and the only libssl consumer is curl, which speaks TLS over TCP, so this
+      code path is not reachable. apt-get upgrade was rejected as a fix since it breaks Docker
+      Official Images build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-32622 -- plan is to pin
+      the specific patched package version or pick up an upstream base image bump before this
+      expires.
+    expired_at: 2026-12-01
   - id: CVE-2026-9538
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
