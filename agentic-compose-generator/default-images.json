@@ -63,7 +63,7 @@
   "truststore-init": {
     "registry": "",
     "name": "eclipse-temurin",
-    "tag": "21-jre",
-    "digest": "sha256:d7051a45dd955e4d5d1db4d3f4269fe13d1c6dff8cc6b7ef89fc8577b96c1982"
+    "tag": "27-jre",
+    "digest": "sha256:387922dd341a11a06f39375e6b13f3cb865e09aa409789cd4f7a5a6577cd2290"
   }
 }
