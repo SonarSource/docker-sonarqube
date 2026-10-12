@@ -311,6 +311,23 @@ vulnerabilities:
       Tracked in SONAR-32543 -- plan is to pin the specific patched package version or pick up
       an upstream base image bump before this expires.
     expired_at: 2026-11-24
+  - id: CVE-2026-46675
+    statement: >-
+      Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) libpng OS package vulnerability (libpng16-16t64
+      1.6.43-5ubuntu0.6 -> 1.6.43-5ubuntu0.7). Use-after-free in png_read_end after incomplete
+      zTXt/iTXt/iCCP decompression of a crafted PNG. The system libpng16-16t64 is only pulled in
+      as a dependency of the base image's libfreetype6 (PNG-embedded glyphs), which in turn is
+      only used by libfontconfig1 to index the root-owned fonts shipped in the image. The JDK
+      bundles its own libpng (libsplashscreen) and decodes PNG in ImageIO with pure Java, and
+      SonarQube never feeds user-supplied images to native code, so this code path is not
+      reachable from our attack surface. No newer upstream base image build available as of
+      2026-10-12; apt-get upgrade was rejected as a fix since it breaks Docker Official Images
+      build reproducibility (these Dockerfiles are pinned per-commit in
+      docker-official-images/internal/build/build.go). Tracked in SONAR-32622 -- plan is to pin
+      the specific patched package version or pick up an upstream base image bump before this
+      expires.
+    expired_at: 2026-11-23
   - id: CVE-2026-48959
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -860,3 +877,19 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-07
+  - id: CVE-2026-95512
+    statement: >-
+      Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) FreeType OS package vulnerability (libfreetype6
+      2.13.2+dfsg-1ubuntu0.1 -> 2.13.2+dfsg-1ubuntu0.2, USN-8881-1). Denial of service via a
+      crafted CID-keyed font. The JVM does not use the system libfreetype6: the JDK's
+      libfontmanager links against the libfreetype bundled in /opt/java/openjdk/lib. The system
+      library is only used by the base image's libfontconfig1 to index the root-owned fonts
+      shipped in the image (fonts-dejavu, not CID-keyed, not writable by the sonarqube user), and
+      SonarQube never loads user-supplied fonts, so this code path is not reachable from our
+      attack surface. No newer upstream base image build available as of 2026-10-12; apt-get
+      upgrade was rejected as a fix since it breaks Docker Official Images build reproducibility
+      (these Dockerfiles are pinned per-commit in docker-official-images/internal/build/build.go).
+      Tracked in SONAR-32622 -- plan is to pin the specific patched package version or pick up
+      an upstream base image bump before this expires.
+    expired_at: 2026-11-23
