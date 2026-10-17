@@ -33,14 +33,14 @@
   "storage-init": {
     "registry": "",
     "name": "alpine",
-    "tag": "3.22",
-    "digest": "sha256:5291449c3df73caf6ed85e649dec1b9e818b39a5d8c871e97afc13e9cd5e8fa8"
+    "tag": "3.24",
+    "digest": "sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6"
   },
   "storage-probe": {
     "registry": "",
     "name": "alpine",
-    "tag": "3.22",
-    "digest": "sha256:5291449c3df73caf6ed85e649dec1b9e818b39a5d8c871e97afc13e9cd5e8fa8"
+    "tag": "3.24",
+    "digest": "sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6"
   },
   "egress-proxy": {
     "registry": "",
@@ -51,19 +51,19 @@
   "tls-proxy": {
     "registry": "",
     "name": "nginx",
-    "tag": "1.30-alpine",
-    "digest": "sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94"
+    "tag": "1.31-alpine",
+    "digest": "sha256:892bb2152464f0c5d8972593a5f5afaf8054552580b699d95f8ff4af08c2d33d"
   },
   "sonarqube-lb": {
     "registry": "",
     "name": "nginx",
-    "tag": "1.30-alpine",
-    "digest": "sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94"
+    "tag": "1.31-alpine",
+    "digest": "sha256:892bb2152464f0c5d8972593a5f5afaf8054552580b699d95f8ff4af08c2d33d"
   },
   "truststore-init": {
     "registry": "",
     "name": "eclipse-temurin",
     "tag": "21-jre",
-    "digest": "sha256:d7051a45dd955e4d5d1db4d3f4269fe13d1c6dff8cc6b7ef89fc8577b96c1982"
+    "digest": "sha256:227118764cccd3c3294617061aaa93a08309c63a395eefa83e6b35032992ea99"
   }
 }
