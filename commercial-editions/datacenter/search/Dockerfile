@@ -36,6 +36,7 @@ RUN set -eux; \
     apt-get update; \
     apt-get --no-install-recommends -y install \
         bash \
+        ca-certificates \
         curl \
         fonts-dejavu \
         gnupg \
@@ -43,6 +44,24 @@ RUN set -eux; \
         unzip; \
     echo "networkaddress.cache.ttl=5" >> "${JAVA_HOME}/conf/security/java.security"; \
     sed --in-place --expression="s?securerandom.source=file:/dev/random?securerandom.source=file:/dev/urandom?g" "${JAVA_HOME}/conf/security/java.security"; \
+    # Remove emSign ECC Root CA - G3 from the JDK trust store, matching its removal from the Mozilla root store.
+    # The deletion is a no-op once the base image ships without it;
+    # the checks fail the build if either trust store still has it.
+    emsign_g3_alias='cn_emsign_ecc_root_ca__g3,o_emudhra_technologies_limited,ou_emsign_pki,c_in [jdk]'; \
+    emsign_g3_sha256='86:A1:EC:BA:08:9C:4A:8D:3B:BE:27:34:C6:12:BA:34:1D:81:3E:04:3C:F9:E8:A8:62:CD:5C:57:A3:6B:BE:6B'; \
+    if keytool -list -cacerts -storepass changeit -alias "${emsign_g3_alias}" > /dev/null 2>&1; then \
+        keytool -delete -cacerts -storepass changeit -alias "${emsign_g3_alias}"; \
+    fi; \
+    keytool -list -cacerts -storepass changeit > /tmp/cacerts.txt; \
+    if grep -q "${emsign_g3_sha256}" /tmp/cacerts.txt; then \
+        echo "emSign ECC Root CA - G3 is still trusted by the JDK" >&2; exit 1; \
+    fi; \
+    rm /tmp/cacerts.txt; \
+    if [ -e /etc/ssl/certs/emSign_ECC_Root_CA_-_G3.pem ]; then \
+        echo "emSign ECC Root CA - G3 is still trusted by the OS" \
+            "(ca-certificates $(dpkg-query -W -f='${Version}' ca-certificates))" >&2; \
+        exit 1; \
+    fi; \
     # pub   2048R/D26468DE 2015-05-25
     #       Key fingerprint = F118 2E81 C792 9289 21DB  CAB4 CFCA 4A29 D264 68DE
     # uid                  sonarsource_deployer (Sonarsource Deployer) <infra@sonarsource.com>
