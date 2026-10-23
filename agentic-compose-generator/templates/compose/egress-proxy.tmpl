@@ -25,8 +25,9 @@
 ${extra_hosts_block}
     networks: [hunter-jobnet, remediation-jobnet, egress, proxy-target]
     healthcheck:
-      # The image ships no curl; bash's /dev/tcp is enough to see the listener is up.
-      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/3128"]
+      # The image ships no curl, and the 7.x rocks no bash either; Perl is in both, and a TCP
+      # connect is enough to see the listener is up.
+      test: ["CMD", "perl", "-MIO::Socket::INET", "-e", "IO::Socket::INET->new(PeerAddr => '127.0.0.1:3128', Timeout => 2) or exit 1"]
       interval: 5s
       timeout: 3s
       retries: 20

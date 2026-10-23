@@ -2,27 +2,27 @@
   "agent-orchestrator": {
     "registry": "sonarsource",
     "name": "sonarqube-agent-orchestrator",
-    "tag": "2026.5.0"
+    "tag": "2026.5.1"
   },
   "hunter-agent": {
     "registry": "sonarsource",
     "name": "sonarqube-hunter-agent",
-    "tag": "2026.5.0"
+    "tag": "2026.5.1"
   },
   "remediation-agent": {
     "registry": "sonarsource",
     "name": "sonarqube-remediation-agent",
-    "tag": "2026.5.0"
+    "tag": "2026.5.1"
   },
   "vortex": {
     "registry": "sonarsource",
     "name": "sonar-vortex",
-    "tag": "2026.5.0"
+    "tag": "2026.5.1"
   },
   "sonarqube": {
     "registry": "",
     "name": "sonarqube",
-    "tag": "2026.5.0"
+    "tag": "2026.5.3"
   },
   "postgres": {
     "registry": "",
@@ -45,8 +45,8 @@
   "egress-proxy": {
     "registry": "",
     "name": "ubuntu/squid",
-    "tag": "6.6-24.04_edge",
-    "digest": "sha256:8a3baed477e2c282ab8aa5edad442f69873246964f225c5c2ae8364b6610963c"
+    "tag": "7.2-26.04_edge",
+    "digest": "sha256:d11db6479501aa4618b3253f95a88b2547229e2d081726b6fb20dc75a98cc61b"
   },
   "tls-proxy": {
     "registry": "",
