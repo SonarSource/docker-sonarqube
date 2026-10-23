@@ -41,7 +41,8 @@ serve() {
 # proxy's srcdom_regex rules match.
 client() {
   local name=$1
-  docker run -d --name "$name" --network "$net" --entrypoint sleep "$image" infinity >/dev/null
+  # perl, not sleep: the 7.x rocks ship no coreutils. A bare `sleep` in Perl never returns.
+  docker run -d --name "$name" --network "$net" --entrypoint perl "$image" -e sleep >/dev/null
 }
 
 proxy() {

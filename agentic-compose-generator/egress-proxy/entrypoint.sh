@@ -2,6 +2,8 @@
 # Renders the egress allowlist into squid.conf, then execs Squid on it in the foreground. Runs as
 # the image's proxy user on a read-only root, so the config goes to the /tmp tmpfs; the base image's
 # own entrypoint needs root to set up its log tails and cache dirs, and neither is used here.
+# Sticks to sh builtins and awk: the 7.x Squid rocks ship dash and awk but no coreutils (no tr,
+# sort, head, sleep, ...), and this script must run on them as well as on the 6.x images.
 set -eu
 
 TEMPLATE=/etc/squid/squid.conf.template
@@ -82,10 +84,13 @@ fi
 # bucket on AWS — refuse it, since the whole point is an exact-host allowlist, not a wildcard.
 # -n, here and on every other dstdomain ACL: without it, a request by bare IP makes Squid look up
 # the address's name, and a reverse lookup of an address the client picks is a DNS channel out.
+# Always called in a command substitution, so the IFS and noglob changes stay in that subshell.
 domain_acls() {
   acl=$1
   domains=$2
-  for domain in $(printf '%s' "$domains" | tr ',' ' '); do
+  IFS=,
+  set -f
+  for domain in $domains; do
     [ -n "$domain" ] || continue
     case "$domain" in
       .*)
@@ -120,7 +125,12 @@ fi
 
 # One line per distinct port: the same port twice (SonarQube on 443, say) would only be noise.
 safe_port_lines=""
-for port in $(printf '%s\n' 80 443 "$SQS_PORT" "$ORCHESTRATOR_PORT" ${STORAGE_PORT:+"$STORAGE_PORT"} | sort -un); do
+for port in 80 443 "$SQS_PORT" "$ORCHESTRATOR_PORT" ${STORAGE_PORT:+"$STORAGE_PORT"}; do
+  case "$safe_port_lines" in
+    *"acl Safe_ports port ${port}
+"*) continue ;;
+    *) ;;
+  esac
   safe_port_lines="${safe_port_lines}acl Safe_ports port ${port}
 "
 done
@@ -150,6 +160,7 @@ awk -v repl="$acl_lines" -v safe_ports="$safe_port_lines" -v sqs_tunnel="$sqs_tu
     gsub(/@@ORCHESTRATOR_HOST@@/, orch_host); gsub(/@@ORCHESTRATOR_PORT@@/, orch_port); print }' \
   "$TEMPLATE" > "$TARGET"
 
-echo "egress-proxy: allowlisting $(printf '%s' "$LLM_DOMAINS" | tr ',' ' ') on 80/443${STORAGE_DOMAIN:+, $STORAGE_DOMAIN on $STORAGE_PORT}"
+echo "egress-proxy: allowlisting $(printf '%s' "$LLM_DOMAINS" | awk '{ gsub(/,/, " "); print }') on 80/443${STORAGE_DOMAIN:+, $STORAGE_DOMAIN on $STORAGE_PORT}"
 
-exec squid -N -f "$TARGET" "$@"
+# The binary is squid in the 6.x images and squid-gnutls in the 7.x rocks.
+exec "$(command -v squid || command -v squid-gnutls)" -N -f "$TARGET" "$@"
