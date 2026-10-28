@@ -31,7 +31,7 @@ jobs:
     runs-on: ${{ inputs.runs_on }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - id: secrets
         name: Retrieve secrets from Vault
@@ -42,7 +42,7 @@ jobs:
             development/kv/data/docker/sonardockerrw access_token_rwd | docker_password;
 
       - name: Login to Docker Hub
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           username: ${{ fromJSON(steps.secrets.outputs.vault).docker_username }}
           password: ${{ fromJSON(steps.secrets.outputs.vault).docker_password }}
