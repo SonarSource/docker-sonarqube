@@ -149,10 +149,10 @@ would a credential store.
 This mode has two requirements:
 
 - **`--db external`**, pointed at your SonarQube's database. The database must serve TLS.
-  `--db-host` has to resolve both on the SonarQube machine and from the containers, and the
-  certificate has to be valid for that name. `host.docker.internal` is a name the containers
-  resolve; the JVM on the SonarQube machine often does not. `127.0.0.1` inside a container is
-  not the database.
+  `--db-host` has to resolve for SonarQube and for the orchestrator, and the certificate has
+  to be valid for that name. `host.docker.internal` resolves for the orchestrator; the JVM on
+  the SonarQube machine often does not. `127.0.0.1` inside the orchestrator container is not
+  the database.
 - **Storage other than `local`**, reachable from both your SonarQube host and the containers.
   With `--storage hostpath`, mount it at the same path on both.
 

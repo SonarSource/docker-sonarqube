@@ -16,16 +16,16 @@ sonar.jdbc.username=${db_user}
 sonar.jdbc.password=<the --db-password you passed to generate.py>
 ```
 
-The database must serve TLS before SonarQube starts. Both clients use `sslmode=verify-full`:
-they accept the connection only when the certificate is valid for the host in their own URL and
-the CA that signed it is one they trust. A server with TLS off is refused.
+The database must serve TLS before SonarQube starts. SonarQube and the orchestrator use
+`sslmode=verify-full`: each accepts the connection only when the certificate is valid for the
+host in its own URL and the CA that signed it is one it trusts. A server with TLS off is refused.
 
-`${db_host}` is that host for the containers, and the URL above uses it for SonarQube too. The
-name has to resolve in both places, and it has to be on the certificate. `host.docker.internal`
-resolves from the containers and often does not resolve in the JVM on the SonarQube machine.
-`127.0.0.1` from inside a container is the container, not the database. When one name cannot be
-used on both sides, put the name that works on the SonarQube machine in `sonar.jdbc.url`, leave
-this bundle on `${db_host}`, and put both names on the certificate.
+`${db_host}` is the host the orchestrator uses, and the URL above uses it for SonarQube too. The
+name has to resolve for both, and it has to be on the certificate. `host.docker.internal`
+resolves for the orchestrator and often does not resolve in the JVM on the SonarQube machine.
+`127.0.0.1` inside the orchestrator container is the container, not the database. When SonarQube
+and the orchestrator cannot use the same name, put the name that works on the SonarQube machine
+in `sonar.jdbc.url`, leave this bundle on `${db_host}`, and put both names on the certificate.
 
 SonarQube trusts that CA through a copy of the JDK `cacerts`. The shell expands `~`;
 `sonar.properties` does not, so the two properties need the absolute path printed by
