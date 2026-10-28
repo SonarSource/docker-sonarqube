@@ -1088,6 +1088,7 @@ def build_docs(args: argparse.Namespace) -> dict[str, str]:
             storage_note=zip_storage_note(args),
             tls_section=render("docs/zip-tls-trust.tmpl", tls_server_name=args.tls_server_name)
             if args.tls_on else "TLS is disabled in this bundle; every hop is plain HTTP.",
+            orchestrator_image=image_ref(args, "agent-orchestrator"),
         )
     return docs
 

@@ -16,10 +16,40 @@ sonar.jdbc.username=${db_user}
 sonar.jdbc.password=<the --db-password you passed to generate.py>
 ```
 
-The orchestrator connects with the same `sslmode=verify-full`: the database must serve TLS with a
-certificate valid for `${db_host}`. Your SonarQube validates it against its JVM truststore, so the
-CA behind it must be in the JDK's default `cacerts` or in the `-Djavax.net.ssl.trustStore` you set
-in `sonar.web.javaAdditionalOpts` and `sonar.ce.javaAdditionalOpts`.
+The database must serve TLS before SonarQube starts. Both clients use `sslmode=verify-full`:
+they accept the connection only when the certificate is valid for the host in their own URL and
+the CA that signed it is one they trust. A server with TLS off is refused.
+
+`${db_host}` is that host for the containers, and the URL above uses it for SonarQube too. The
+name has to resolve in both places, and it has to be on the certificate. `host.docker.internal`
+resolves from the containers and often does not resolve in the JVM on the SonarQube machine.
+`127.0.0.1` from inside a container is the container, not the database. When one name cannot be
+used on both sides, put the name that works on the SonarQube machine in `sonar.jdbc.url`, leave
+this bundle on `${db_host}`, and put both names on the certificate.
+
+SonarQube trusts that CA through a copy of the JDK `cacerts`. The shell expands `~`;
+`sonar.properties` does not, so the two properties need the absolute path printed by
+`echo ~/.sonarqube/truststore.jks`:
+
+```
+mkdir -p ~/.sonarqube
+cp "$JAVA_HOME/lib/security/cacerts" ~/.sonarqube/truststore.jks
+chmod u+w ~/.sonarqube/truststore.jks
+keytool -importcert -noprompt -alias database-ca -file <your database CA certificate> \
+  -keystore ~/.sonarqube/truststore.jks -storepass changeit
+```
+
+```
+sonar.web.javaAdditionalOpts=-Djavax.net.ssl.trustStore=<absolute path of ~/.sonarqube/truststore.jks> -Djavax.net.ssl.trustStorePassword=changeit
+sonar.ce.javaAdditionalOpts=-Djavax.net.ssl.trustStore=<absolute path of ~/.sonarqube/truststore.jks> -Djavax.net.ssl.trustStorePassword=changeit
+```
+
+Copy the same CA certificate, a PEM file whose name ends in `.crt` or `.pem`, into the directory
+`CUSTOM_CA_DIR` in this bundle's `.env` before `docker compose up -d`. The orchestrator reads it
+from there. The certificate needs a `keyUsage` extension that includes `keyCertSign`. With
+`--tls on`, that directory is `custom-ca` and already holds this bundle's CA: leave that file in
+place. If `CUSTOM_CA_DIR` is unset, regenerate with `--custom-ca-dir` pointing at a directory that
+contains the database CA.
 
 ## 2. Network reachability
 
@@ -52,23 +82,31 @@ Every agentic request between SonarQube, the orchestrator, and Vortex is signed.
 of the shared key from this bundle's `AGENTIC_SIGNING_SECRET` (in `.env`) and point SonarQube at
 it:
 
+From this bundle's directory, so `.env` is loaded:
+
 ```
+set -a
+. ./.env
+set +a
+
 mkdir -p ~/.sonarqube/agentic-signing
 printf '%s' "$AGENTIC_SIGNING_SECRET" > ~/.sonarqube/agentic-signing/instance-secret
 chmod 600 ~/.sonarqube/agentic-signing/instance-secret
 
 docker run --rm --user 0:0 \
   -v ~/.sonarqube/agentic-signing:/run/agentic-signing \
-  --entrypoint /derive-keys.sh <orchestrator image from this bundle> \
+  --entrypoint /derive-keys.sh ${orchestrator_image} \
   --secret-file /run/agentic-signing/instance-secret \
   --label agentic-shared=/run/agentic-signing/agentic-shared.key
 ```
 
-Then in `sonar.properties`:
+`sonar.properties` does not expand `~`. Use the absolute paths printed by
+`echo ~/.sonarqube/agentic-signing/instance-secret` and
+`echo ~/.sonarqube/agentic-signing/agentic-shared.key`:
 
 ```
-sonar.agentic.signing.secretFile=/home/<you>/.sonarqube/agentic-signing/instance-secret
-sonar.agentic.orchestrator.signingKeyPath=/home/<you>/.sonarqube/agentic-signing/agentic-shared.key
+sonar.agentic.signing.secretFile=<absolute path of ~/.sonarqube/agentic-signing/instance-secret>
+sonar.agentic.orchestrator.signingKeyPath=<absolute path of ~/.sonarqube/agentic-signing/agentic-shared.key>
 ```
 
 Regenerating this bundle keeps `AGENTIC_SIGNING_SECRET`, so these keys stay valid. Only after

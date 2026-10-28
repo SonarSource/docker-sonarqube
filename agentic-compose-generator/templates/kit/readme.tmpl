@@ -25,10 +25,14 @@ docker compose up -d
 docker compose logs sonarqube-tls-proxy
 ```
 
-To check it from the host that runs the bundle, from the bundle directory:
+To check it, from the bundle directory. The certificate is for `${server_name}`, which is the
+name the containers use. That name often does not resolve on the host, so `--resolve` sends the
+connection to this machine's port ${kit_port} while still checking that name. When the proxy runs
+on another machine, use that machine's address instead of `127.0.0.1`:
 
 ```bash
-curl --cacert tls/ca.crt https://${server_name}:${kit_port}/api/system/status
+curl --cacert tls/ca.crt --resolve ${server_name}:${kit_port}:127.0.0.1 \
+  https://${server_name}:${kit_port}/api/system/status
 ```
 
 ## If SonarQube isn't on port ${upstream_port} of this machine

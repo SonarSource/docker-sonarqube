@@ -148,7 +148,11 @@ would a credential store.
 
 This mode has two requirements:
 
-- **`--db external`**, pointed at your SonarQube's database.
+- **`--db external`**, pointed at your SonarQube's database. The database must serve TLS.
+  `--db-host` has to resolve both on the SonarQube machine and from the containers, and the
+  certificate has to be valid for that name. `host.docker.internal` is a name the containers
+  resolve; the JVM on the SonarQube machine often does not. `127.0.0.1` inside a container is
+  not the database.
 - **Storage other than `local`**, reachable from both your SonarQube host and the containers.
   With `--storage hostpath`, mount it at the same path on both.
 
@@ -192,8 +196,10 @@ Then follow the bundle's `ZIP-INSTRUCTIONS.md`.
   serve a certificate that is valid for `--db-host`, and SonarQube must trust the CA that issued it:
   - **Bundled SonarQube:** only public CAs are trusted, so a database whose certificate comes from
     a private CA can't be used yet. This includes Amazon RDS and Google Cloud SQL.
-  - **`--edition none`:** add the database's CA certificate to your SonarQube's JVM truststore,
-    and pass it with `--custom-ca-dir` for the orchestrator. `ZIP-INSTRUCTIONS.md` has the details.
+  - **`--edition none`:** SonarQube and the orchestrator both have to trust the database CA.
+    `ZIP-INSTRUCTIONS.md` copies it into SonarQube's truststore and into the bundle's custom CA
+    directory (`./custom-ca` when `--tls on`, otherwise the directory you pass as
+    `--custom-ca-dir`).
 - **To your SonarQube over its own https** (`--edition none`, `--sonarqube-external-scheme https`):
   the containers trust public CAs only. If your SonarQube's certificate comes from a private CA,
   pass that CA's certificate with `--custom-ca-dir`.
