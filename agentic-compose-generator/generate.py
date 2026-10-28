@@ -596,7 +596,9 @@ def db_env_lines(args: argparse.Namespace) -> tuple[str, str, str, str]:
     return f"{args.db_host}:{args.db_port}", args.db_name, yaml_str(args.db_user), yaml_str(args.db_password)
 
 
-# An external database is always reached over TLS with its certificate and host name verified.
+# sslmode=verify-full is defined once here and appended to every external JDBC URL, SonarQube's
+# and the orchestrator's. The database must serve SSL: a server with SSL off is refused, and the
+# certificate's host name is verified.
 # pgjdbc's default factory would look for ~/.postgresql/root.crt, which no image here has;
 # DefaultJavaSSLFactory validates against the JVM truststore (public CAs, plus --custom-ca-dir in
 # the orchestrator) instead.

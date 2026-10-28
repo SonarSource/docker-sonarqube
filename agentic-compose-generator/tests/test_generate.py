@@ -233,5 +233,20 @@ class RegenerationTest(unittest.TestCase):
         self.assertNotIn("# my edit", compose.read_text())
 
 
+class ZipDatabaseCaTest(unittest.TestCase):
+    def test_instructions_import_the_database_ca_for_both_sides(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run("--profile", str(SCRIPT_PATH.parent / "profiles" / "none-nfs-tls.json"),
+                               "--out", str(bundle))
+            self.assertEqual(code, 0, err)
+            text = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
+            self.assertIn("sslmode=verify-full", text)
+            self.assertIn("-alias database-ca", text)
+            self.assertIn("CUSTOM_CA_DIR", text)
+            self.assertIn("-alias agentic-bundle-ca", text)
+            self.assertNotIn('cp "$JAVA_HOME/lib/security/cacerts" /opt/sonarqube-truststore.jks\nchmod u+w', text.split("## 7.")[1])
+
+
 if __name__ == "__main__":
     unittest.main()

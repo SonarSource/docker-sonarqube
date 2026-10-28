@@ -192,8 +192,8 @@ Then follow the bundle's `ZIP-INSTRUCTIONS.md`.
   serve a certificate that is valid for `--db-host`, and SonarQube must trust the CA that issued it:
   - **Bundled SonarQube:** only public CAs are trusted, so a database whose certificate comes from
     a private CA can't be used yet. This includes Amazon RDS and Google Cloud SQL.
-  - **`--edition none`:** add the database's CA certificate to your SonarQube's JVM truststore,
-    and pass it with `--custom-ca-dir` for the orchestrator. `ZIP-INSTRUCTIONS.md` has the details.
+  - **`--edition none`:** `ZIP-INSTRUCTIONS.md` section 1 imports the database CA into SonarQube's
+    truststore and copies it into the bundle's custom CA directory, which the orchestrator reads.
 - **To your SonarQube over its own https** (`--edition none`, `--sonarqube-external-scheme https`):
   the containers trust public CAs only. If your SonarQube's certificate comes from a private CA,
   pass that CA's certificate with `--custom-ca-dir`.
