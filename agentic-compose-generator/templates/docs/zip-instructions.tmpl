@@ -30,12 +30,16 @@ In `sonar.jdbc.url`, use the host that resolves on the zip machine.
 Put both names on the database certificate.
 
 SonarQube trusts that CA through a copy of the JDK `cacerts`. When this bundle has TLS, section 7
-adds this bundle's CA to the same file, so do not replace the file after this step. Copy it to
-`~/.sonarqube/sonarqube-truststore.jks`. In `sonar.properties`, use the absolute path of that file.
+adds this bundle's CA to the same file. Copy the JDK `cacerts` to
+`~/.sonarqube/sonarqube-truststore.jks` only when that file does not exist yet. If it already
+exists, keep it and import the database CA into it. In `sonar.properties`, use the absolute path
+of that file.
 
 ```
 mkdir -p ~/.sonarqube
-cp "$JAVA_HOME/lib/security/cacerts" ~/.sonarqube/sonarqube-truststore.jks
+if [ ! -e ~/.sonarqube/sonarqube-truststore.jks ]; then
+  cp "$JAVA_HOME/lib/security/cacerts" ~/.sonarqube/sonarqube-truststore.jks
+fi
 chmod u+w ~/.sonarqube/sonarqube-truststore.jks
 keytool -importcert -noprompt -alias database-ca -file <your database CA certificate> \
   -keystore ~/.sonarqube/sonarqube-truststore.jks -storepass changeit

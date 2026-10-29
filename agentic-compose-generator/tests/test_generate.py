@@ -288,8 +288,10 @@ class ZipTruststoreAndSigningTest(unittest.TestCase):
             self.assertNotIn("/opt/sonarqube-truststore.jks", text)
             self.assertNotIn("/home/<you>", text)
             self.assertIn("~/.sonarqube/sonarqube-truststore.jks", text)
+            self.assertIn("if [ ! -e ~/.sonarqube/sonarqube-truststore.jks ]; then", text)
             self.assertIn("<absolute-path-of-~/.sonarqube/sonarqube-truststore.jks>", text)
-            self.assertIn("use the absolute path of that file", text)
+            self.assertIn("use the absolute path", text)
+            self.assertIn("only when that file does not exist yet", text)
             self.assertNotIn("does not expand", text)
             self.assertNotIn("Permission denied", text)
             signing, bundled = text.split("## 5. Signing key", 1)[1].split("### Bundled SonarQube", 1)
@@ -323,6 +325,10 @@ class SandboxRuntimeTest(unittest.TestCase):
         text = (SCRIPT_PATH.parent / "README.md").read_text()
         edition_none = text.split("### Using your existing SonarQube", 1)[1].split("## TLS", 1)[0]
         self.assertIn("pass `--sandbox runc` and `--host-gateway off`", edition_none)
+        bundled = text.split("### Bundled SonarQube", 1)[1]
+        self.assertIn("trusts only the public CAs in its image", bundled)
+        self.assertIn("`--custom-ca-dir` is read by the orchestrator", bundled)
+        self.assertNotIn("Both containers use `--db-host` and trust only the public CAs", text)
         sandbox = text.split("- **`runc`**:", 1)[1].split("- **", 1)[0]
         self.assertIn("pass `--sandbox runc`", sandbox)
         self.assertIn("also pass `--host-gateway off`", sandbox)

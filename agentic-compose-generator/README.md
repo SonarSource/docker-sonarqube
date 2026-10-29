@@ -202,9 +202,9 @@ directory. The commands, and what to do when `sonar.jdbc.url` needs a different 
 
 ### Bundled SonarQube
 
-Both containers use `--db-host` and trust only the public CAs in their images. A private CA is
-not supported. Do not apply the zip commands. `--custom-ca-dir` does not reach the SonarQube
-container.
+The SonarQube container uses `--db-host` and trusts only the public CAs in its image. A private
+CA is not supported. Do not apply the zip commands. `--custom-ca-dir` is read by the orchestrator
+and does not reach the SonarQube container.
 
 - **To your SonarQube over its own https** (`--edition none`, `--sonarqube-external-scheme https`):
   the containers trust public CAs only. If your SonarQube's certificate comes from a private CA,
