@@ -27,17 +27,11 @@ docker compose logs sonarqube-tls-proxy
 
 To check it, from the bundle directory on the machine that runs this proxy:
 
-### Zip install
-
 ```bash
 curl --cacert tls/ca.crt --resolve ${server_name}:${kit_port}:127.0.0.1 https://${server_name}:${kit_port}/api/system/status
 ```
 
 Use the certificate name `${server_name}` and send it to this machine.
-
-### Bundled SonarQube
-
-A SonarQube container in the bundle does not use this proxy. This directory is not generated for that install.
 
 ## If SonarQube isn't on port ${upstream_port} of this machine
 

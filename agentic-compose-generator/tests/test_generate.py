@@ -245,12 +245,8 @@ class ZipDatabaseCaTest(unittest.TestCase):
             self.assertIn("the CA that signed it must be in both places below", text)
             self.assertNotIn("PKIX path building failed", text)
             self.assertNotIn("Failed to initialize database dialect", text)
-            self.assertIn("### Zip install", text)
-            self.assertIn("### Bundled SonarQube", text)
-            self.assertIn("A public CA needs no import", text)
-            self.assertIn("A private CA is not supported", text)
-            self.assertIn("above do not apply to it", text)
-            self.assertIn("Sections 2 to 7 continue this zip install", text)
+            self.assertNotIn("### Zip install", text)
+            self.assertNotIn("### Bundled SonarQube", text)
             self.assertIn("-alias database-ca", text)
             self.assertIn("append these flags to any options you already set", text)
             self.assertIn("CUSTOM_CA_DIR", text)
@@ -266,15 +262,12 @@ class ZipDatabaseHostTest(unittest.TestCase):
                                "--out", str(bundle))
             self.assertEqual(code, 0, err)
             text = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
-            zip_part, bundled_part = text.split("### Bundled SonarQube", 1)
-            zip_part = zip_part.split("### Zip install", 1)[1]
-            self.assertIn("for the orchestrator", zip_part)
-            self.assertIn("use the host that resolves on the zip machine", zip_part)
-            self.assertIn("Put both names on the database certificate", zip_part)
+            self.assertIn("for the orchestrator", text)
+            self.assertIn("use the host that resolves on the zip machine", text)
+            self.assertIn("Put both names on the database certificate", text)
             self.assertNotIn("UnknownHostException", text)
             self.assertNotIn("connection is refused", text)
-            self.assertIn("A private CA is not supported", bundled_part)
-            self.assertIn("use the same `--db-host`", bundled_part)
+            self.assertNotIn("### Bundled SonarQube", text)
 
 
 class ZipTruststoreAndSigningTest(unittest.TestCase):
@@ -294,14 +287,14 @@ class ZipTruststoreAndSigningTest(unittest.TestCase):
             self.assertIn("only when that file does not exist yet", text)
             self.assertNotIn("does not expand", text)
             self.assertNotIn("Permission denied", text)
-            signing, bundled = text.split("## 5. Signing key", 1)[1].split("### Bundled SonarQube", 1)
+            signing = text.split("## 5. Signing key", 1)[1].split("## 6.", 1)[0]
             self.assertIn("read `AGENTIC_SIGNING_SECRET` from `.env`", signing)
             self.assertIn("AGENTIC_SIGNING_SECRET=$(sed -n 's/^AGENTIC_SIGNING_SECRET=//p' .env)", signing)
             self.assertIn("`image:` of the `orchestrator` service", signing)
             self.assertIn("use the absolute path of `~/.sonarqube/agentic-signing`", signing)
             self.assertIn("<absolute-path-of-~/.sonarqube/agentic-signing>", signing)
             self.assertNotIn("angle brackets", signing)
-            self.assertIn("receives this key from `signing-init`", bundled)
+            self.assertNotIn("signing-init", signing)
 
 
 class ZipProxyCheckTest(unittest.TestCase):
@@ -312,12 +305,12 @@ class ZipProxyCheckTest(unittest.TestCase):
                                "--out", str(bundle))
             self.assertEqual(code, 0, err)
             text = (bundle / "sonarqube-tls-proxy" / "README.md").read_text()
-            zip_part, bundled_part = text.split("### Bundled SonarQube", 1)
             self.assertIn(
                 "curl --cacert tls/ca.crt --resolve host.docker.internal:9443:127.0.0.1 "
                 "https://host.docker.internal:9443/api/system/status",
-                zip_part)
-            self.assertIn("does not use this proxy", bundled_part)
+                text)
+            self.assertNotIn("### Zip install", text)
+            self.assertNotIn("### Bundled SonarQube", text)
 
 
 class SandboxRuntimeTest(unittest.TestCase):

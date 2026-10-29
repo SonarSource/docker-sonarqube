@@ -198,7 +198,7 @@ Then follow the bundle's `ZIP-INSTRUCTIONS.md`.
 
 Import the CA into SonarQube's truststore and copy the same PEM into the bundle's custom CA
 directory. The commands, and what to do when `sonar.jdbc.url` needs a different host, are in
-`ZIP-INSTRUCTIONS.md` under `Zip install`.
+`ZIP-INSTRUCTIONS.md`.
 
 ### Bundled SonarQube
 

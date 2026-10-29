@@ -20,10 +20,8 @@ The URL above contains `sslmode=verify-full`. The orchestrator uses the same par
 The database must serve TLS. Its certificate must be valid for the host in each URL, and
 the CA that signed it must be in both places below.
 
-### Zip install
-
-SonarQube runs on the host. Import the database CA into its truststore, and copy the same PEM
-into `CUSTOM_CA_DIR` for the orchestrator. Sections 2 to 7 continue this zip install.
+Import the database CA into SonarQube's truststore, and copy the same PEM into `CUSTOM_CA_DIR`
+for the orchestrator.
 
 Use `${db_host}` for the orchestrator.
 In `sonar.jdbc.url`, use the host that resolves on the zip machine.
@@ -61,14 +59,6 @@ from there. The certificate needs a `keyUsage` extension that includes `keyCertS
 `CUSTOM_CA_DIR` is unset, regenerate with `--custom-ca-dir` pointing at a directory that contains
 the database CA.
 
-### Bundled SonarQube
-
-Stop here for a SonarQube that runs in Docker with the orchestrator. Its container trusts the
-public CAs of its image. A public CA needs no import. A private CA is not supported. The commands
-above do not apply to it. `--custom-ca-dir` is read by the orchestrator, not by that container.
-SonarQube and the orchestrator use the same `--db-host`. This file is not generated for that
-install.
-
 ## 2. Network reachability
 
 ${reachability_section}
@@ -98,11 +88,7 @@ ${storage_note}
 
 Every agentic request between SonarQube, the orchestrator, and Vortex is signed. Derive your copy
 of the shared key from this bundle's `AGENTIC_SIGNING_SECRET` (in `.env`) and point SonarQube at
-it.
-
-### Zip install
-
-From this bundle's directory, read `AGENTIC_SIGNING_SECRET` from `.env`. For `docker run`, use the
+it. From this bundle's directory, read `AGENTIC_SIGNING_SECRET` from `.env`. For `docker run`, use the
 `image:` of the `orchestrator` service in this bundle's `docker-compose.yaml`. In
 `sonar.properties`, use the absolute path of `~/.sonarqube/agentic-signing`.
 
@@ -130,11 +116,6 @@ Regenerating this bundle keeps `AGENTIC_SIGNING_SECRET`, so these keys stay vali
 `--rotate-secrets` redo this step and run `docker compose up -d --force-recreate`, so SonarQube and
 the containers derive their keys from the new secret.
 ${secret_key_note}
-### Bundled SonarQube
-
-A SonarQube container started with the orchestrator receives this key from `signing-init`.
-The commands above do not apply to it. This file is not generated for that install.
-
 ## 6. Start order
 
 The orchestrator stores its state in SonarQube's database and keeps failing its health check until
