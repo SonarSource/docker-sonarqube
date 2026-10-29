@@ -302,5 +302,21 @@ class ZipTruststoreAndSigningTest(unittest.TestCase):
             self.assertIn("receives this key from `signing-init`", bundled)
 
 
+class ZipProxyCheckTest(unittest.TestCase):
+    def test_proxy_check_uses_the_certificate_name_on_this_machine(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run("--profile", str(SCRIPT_PATH.parent / "profiles" / "none-nfs-tls.json"),
+                               "--out", str(bundle))
+            self.assertEqual(code, 0, err)
+            text = (bundle / "sonarqube-tls-proxy" / "README.md").read_text()
+            zip_part, bundled_part = text.split("### Bundled SonarQube", 1)
+            self.assertIn(
+                "curl --cacert tls/ca.crt --resolve host.docker.internal:9443:127.0.0.1 "
+                "https://host.docker.internal:9443/api/system/status",
+                zip_part)
+            self.assertIn("does not use this proxy", bundled_part)
+
+
 if __name__ == "__main__":
     unittest.main()
