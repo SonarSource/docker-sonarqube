@@ -2,7 +2,8 @@
 
 Put every CA certificate the containers must trust (PEM, one `*.crt` or `*.pem` file each) in
 `${custom_ca_dir}` (`CUSTOM_CA_DIR` in `.env`; a relative path resolves against this directory) before
-`docker compose up -d`, typically the CA behind your SonarQube's https certificate. The
+`docker compose up -d`. That includes the database CA from section 1, and the CA behind your
+SonarQube's https certificate when the containers call SonarQube over https. The
 orchestrator and the agent runtimes import them at startup; Vortex reads a truststore that
 `truststore-init` builds from them. After changing the directory, run
 `docker compose up -d --force-recreate` so both pick up the new set.

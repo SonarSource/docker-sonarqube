@@ -189,11 +189,18 @@ Then follow the bundle's `ZIP-INSTRUCTIONS.md`.
   `ZIP-INSTRUCTIONS.md` and `sonarqube-tls-proxy/README.md` in the bundle walk through the setup,
   including serving certificates of your own.
 - **To your database** (`--db external`): always TLS with `sslmode=verify-full`. The database must
-  serve a certificate that is valid for `--db-host`, and SonarQube must trust the CA that issued it:
-  - **Bundled SonarQube:** only public CAs are trusted, so a database whose certificate comes from
-    a private CA can't be used yet. This includes Amazon RDS and Google Cloud SQL.
-  - **`--edition none`:** add the database's CA certificate to your SonarQube's JVM truststore,
-    and pass it with `--custom-ca-dir` for the orchestrator. `ZIP-INSTRUCTIONS.md` has the details.
+  serve a certificate that is valid for `--db-host`. `Failed to initialize database dialect` caused by
+  `PKIX path building failed` means the database CA is missing.
+
+### Zip install
+
+Import the CA into SonarQube's truststore and copy the same PEM into the bundle's custom CA
+directory. The commands are in `ZIP-INSTRUCTIONS.md` under `Zip install`.
+
+### Bundled SonarQube
+
+A private CA is not supported.
+
 - **To your SonarQube over its own https** (`--edition none`, `--sonarqube-external-scheme https`):
   the containers trust public CAs only. If your SonarQube's certificate comes from a private CA,
   pass that CA's certificate with `--custom-ca-dir`.
