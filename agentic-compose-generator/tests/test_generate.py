@@ -254,5 +254,23 @@ class ZipDatabaseCaTest(unittest.TestCase):
             self.assertNotIn('cp "$JAVA_HOME/lib/security/cacerts"', text.split("## 7.")[1])
 
 
+class ZipDatabaseHostTest(unittest.TestCase):
+    def test_instructions_split_the_database_host(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run("--profile", str(SCRIPT_PATH.parent / "profiles" / "none-nfs-tls.json"),
+                               "--out", str(bundle))
+            self.assertEqual(code, 0, err)
+            text = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
+            zip_part, bundled_part = text.split("### Bundled SonarQube", 1)
+            zip_part = zip_part.split("### Zip install", 1)[1]
+            self.assertIn("UnknownHostException", zip_part)
+            self.assertIn("`127.0.0.1` inside the orchestrator container", zip_part)
+            self.assertIn("connection is refused", zip_part)
+            self.assertIn("put both names on the certificate", zip_part)
+            self.assertNotIn("UnknownHostException", bundled_part)
+            self.assertIn("A private CA is not supported", bundled_part)
+
+
 if __name__ == "__main__":
     unittest.main()

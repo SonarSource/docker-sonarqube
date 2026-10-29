@@ -148,7 +148,8 @@ would a credential store.
 
 This mode has two requirements:
 
-- **`--db external`**, pointed at your SonarQube's database.
+- **`--db external`**, pointed at your SonarQube's database. `--db-host` is the name the
+  containers use. On a zip install the host in `sonar.jdbc.url` can differ; see [TLS](#tls).
 - **Storage other than `local`**, reachable from both your SonarQube host and the containers.
   With `--storage hostpath`, mount it at the same path on both.
 
@@ -188,14 +189,15 @@ Then follow the bundle's `ZIP-INSTRUCTIONS.md`.
 
   `ZIP-INSTRUCTIONS.md` and `sonarqube-tls-proxy/README.md` in the bundle walk through the setup,
   including serving certificates of your own.
-- **To your database** (`--db external`): always TLS with `sslmode=verify-full`. The database must
-  serve a certificate that is valid for `--db-host`. `Failed to initialize database dialect` caused by
+- **To your database** (`--db external`): always TLS with `sslmode=verify-full`. The certificate
+  must be valid for the host each side uses. `Failed to initialize database dialect` caused by
   `PKIX path building failed` means the database CA is missing.
 
 ### Zip install
 
 Import the CA into SonarQube's truststore and copy the same PEM into the bundle's custom CA
-directory. The commands are in `ZIP-INSTRUCTIONS.md` under `Zip install`.
+directory. The commands, and what to do when `sonar.jdbc.url` needs a different host, are in
+`ZIP-INSTRUCTIONS.md` under `Zip install`.
 
 ### Bundled SonarQube
 
