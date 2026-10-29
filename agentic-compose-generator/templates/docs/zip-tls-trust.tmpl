@@ -1,11 +1,10 @@
 This bundle fronts the orchestrator and Vortex with `agentic-proxy`, which serves a certificate for
 `${tls_server_name}` on port 8443, and on 8444 for Vortex. The generator issued it, and the one for
 `sonarqube-tls-proxy`, from a CA of its own: `tls/ca.crt` in this directory. Your SonarQube JVM
-must trust that CA, or every call to the orchestrator and Vortex fails the TLS handshake.
-
-Import it into the truststore from section 1. Do not copy `cacerts` over that file: it already
-holds the database CA. If section 1 used a truststore that was already configured, import into
-that file instead. `sonar.properties` already points at it. Restart SonarQube after this import:
+must trust that CA. Import `tls/ca.crt` into the truststore from section 1. Do not copy `cacerts`
+over that file: it already holds the database CA. If section 1 used a truststore that was already
+configured, import into that file instead. `sonar.properties` already points at it. Restart
+SonarQube after this import:
 
 ```
 keytool -importcert -noprompt -alias agentic-bundle-ca -file <this bundle>/tls/ca.crt \

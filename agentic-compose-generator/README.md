@@ -190,8 +190,7 @@ Then follow the bundle's `ZIP-INSTRUCTIONS.md`.
   `ZIP-INSTRUCTIONS.md` and `sonarqube-tls-proxy/README.md` in the bundle walk through the setup,
   including serving certificates of your own.
 - **To your database** (`--db external`): always TLS with `sslmode=verify-full`. The certificate
-  must be valid for the host each side uses. `Failed to initialize database dialect` caused by
-  `PKIX path building failed` means the database CA is missing.
+  must be valid for the host each side uses. Trust the database CA on each side.
 
 ### Zip install
 

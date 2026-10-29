@@ -16,26 +16,18 @@ sonar.jdbc.username=${db_user}
 sonar.jdbc.password=<the --db-password you passed to generate.py>
 ```
 
-The URL above contains `sslmode=verify-full`. That parameter is defined once and the orchestrator
-uses it too. SonarQube and the orchestrator accept the connection only when the database serves
-TLS, the certificate is valid for the host in each URL, and the CA that signed it is one they trust.
-A server with TLS off is refused. If the orchestrator then exits with
-`Failed to initialize database dialect`, the cause further down is
-`PKIX path building failed`: the database CA is missing from one of the two places below.
+The URL above contains `sslmode=verify-full`. The orchestrator uses the same parameter.
+The database must serve TLS. Its certificate must be valid for the host in each URL, and
+the CA that signed it must be in both places below.
 
 ### Zip install
 
 SonarQube runs on the host. Import the database CA into its truststore, and copy the same PEM
 into `CUSTOM_CA_DIR` for the orchestrator. Sections 2 to 7 continue this zip install.
 
-`${db_host}` is the host the orchestrator uses, and the URL above uses it for SonarQube too.
-That name has to resolve on the host as well as in the container, and every name either side
-uses has to be on the certificate. `host.docker.internal` resolves for the orchestrator and
-often does not resolve in the JVM of the zip install (`UnknownHostException`).
-`127.0.0.1` inside the orchestrator container is the container, not the database, so the
-connection is refused. When the two sides cannot use the same name, put the name that
-resolves for the zip install in `sonar.jdbc.url`, leave this bundle on `${db_host}`, and
-put both names on the certificate.
+Use `${db_host}` for the orchestrator.
+In `sonar.jdbc.url`, use the host that resolves on the zip machine.
+Put both names on the database certificate.
 
 SonarQube trusts that CA through a copy of the JDK `cacerts`. When this bundle has TLS, section 7
 adds this bundle's CA to the same file, so do not replace the file after this step. Copy it to
