@@ -9,7 +9,7 @@ that file instead. `sonar.properties` already points at it. Restart SonarQube af
 
 ```
 keytool -importcert -noprompt -alias agentic-bundle-ca -file <this bundle>/tls/ca.crt \
-  -keystore /opt/sonarqube-truststore.jks -storepass changeit
+  -keystore ~/.sonarqube/sonarqube-truststore.jks -storepass changeit
 ```
 
 Regenerating this bundle into the same directory keeps `tls/` and the certificates, so you import

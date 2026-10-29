@@ -276,5 +276,30 @@ class ZipDatabaseHostTest(unittest.TestCase):
             self.assertIn("use the same `--db-host`", bundled_part)
 
 
+class ZipTruststoreAndSigningTest(unittest.TestCase):
+    def test_instructions_use_a_writable_truststore_and_load_the_signing_secret(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run("--profile", str(SCRIPT_PATH.parent / "profiles" / "none-nfs-tls.json"),
+                               "--out", str(bundle))
+            self.assertEqual(code, 0, err)
+            text = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
+            self.assertNotIn("/opt/sonarqube-truststore.jks", text)
+            self.assertNotIn("/home/<you>", text)
+            self.assertIn("~/.sonarqube/sonarqube-truststore.jks", text)
+            self.assertIn("<absolute-path-of-~/.sonarqube/sonarqube-truststore.jks>", text)
+            self.assertIn("use the absolute path of that file", text)
+            self.assertNotIn("does not expand", text)
+            self.assertNotIn("Permission denied", text)
+            signing, bundled = text.split("## 5. Signing key", 1)[1].split("### Bundled SonarQube", 1)
+            self.assertIn("read `AGENTIC_SIGNING_SECRET` from `.env`", signing)
+            self.assertIn("AGENTIC_SIGNING_SECRET=$(sed -n 's/^AGENTIC_SIGNING_SECRET=//p' .env)", signing)
+            self.assertIn("`image:` of the `orchestrator` service", signing)
+            self.assertIn("use the absolute path of `~/.sonarqube/agentic-signing`", signing)
+            self.assertIn("<absolute-path-of-~/.sonarqube/agentic-signing>", signing)
+            self.assertNotIn("angle brackets", signing)
+            self.assertIn("receives this key from `signing-init`", bundled)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -38,13 +38,15 @@ resolves for the zip install in `sonar.jdbc.url`, leave this bundle on `${db_hos
 put both names on the certificate.
 
 SonarQube trusts that CA through a copy of the JDK `cacerts`. When this bundle has TLS, section 7
-adds this bundle's CA to the same file, so do not replace the file after this step:
+adds this bundle's CA to the same file, so do not replace the file after this step. Copy it to
+`~/.sonarqube/sonarqube-truststore.jks`. In `sonar.properties`, use the absolute path of that file.
 
 ```
-cp "$JAVA_HOME/lib/security/cacerts" /opt/sonarqube-truststore.jks
-chmod u+w /opt/sonarqube-truststore.jks
+mkdir -p ~/.sonarqube
+cp "$JAVA_HOME/lib/security/cacerts" ~/.sonarqube/sonarqube-truststore.jks
+chmod u+w ~/.sonarqube/sonarqube-truststore.jks
 keytool -importcert -noprompt -alias database-ca -file <your database CA certificate> \
-  -keystore /opt/sonarqube-truststore.jks -storepass changeit
+  -keystore ~/.sonarqube/sonarqube-truststore.jks -storepass changeit
 ```
 
 Then in `sonar.properties`, append these flags to any options you already set on those properties.
@@ -53,8 +55,8 @@ instead of the copy above, and use that same file for the import in section 7. S
 the properties at startup (section 6):
 
 ```
-sonar.web.javaAdditionalOpts=-Djavax.net.ssl.trustStore=/opt/sonarqube-truststore.jks -Djavax.net.ssl.trustStorePassword=changeit
-sonar.ce.javaAdditionalOpts=-Djavax.net.ssl.trustStore=/opt/sonarqube-truststore.jks -Djavax.net.ssl.trustStorePassword=changeit
+sonar.web.javaAdditionalOpts=-Djavax.net.ssl.trustStore=<absolute-path-of-~/.sonarqube/sonarqube-truststore.jks> -Djavax.net.ssl.trustStorePassword=changeit
+sonar.ce.javaAdditionalOpts=-Djavax.net.ssl.trustStore=<absolute-path-of-~/.sonarqube/sonarqube-truststore.jks> -Djavax.net.ssl.trustStorePassword=changeit
 ```
 
 Copy the same CA, a PEM file whose name ends in `.crt` or `.pem`, into the directory
@@ -100,10 +102,17 @@ ${storage_note}
 
 Every agentic request between SonarQube, the orchestrator, and Vortex is signed. Derive your copy
 of the shared key from this bundle's `AGENTIC_SIGNING_SECRET` (in `.env`) and point SonarQube at
-it:
+it.
+
+### Zip install
+
+From this bundle's directory, read `AGENTIC_SIGNING_SECRET` from `.env`. For `docker run`, use the
+`image:` of the `orchestrator` service in this bundle's `docker-compose.yaml`. In
+`sonar.properties`, use the absolute path of `~/.sonarqube/agentic-signing`.
 
 ```
 mkdir -p ~/.sonarqube/agentic-signing
+AGENTIC_SIGNING_SECRET=$(sed -n 's/^AGENTIC_SIGNING_SECRET=//p' .env)
 printf '%s' "$AGENTIC_SIGNING_SECRET" > ~/.sonarqube/agentic-signing/instance-secret
 chmod 600 ~/.sonarqube/agentic-signing/instance-secret
 
@@ -117,14 +126,19 @@ docker run --rm --user 0:0 \
 Then in `sonar.properties`:
 
 ```
-sonar.agentic.signing.secretFile=/home/<you>/.sonarqube/agentic-signing/instance-secret
-sonar.agentic.orchestrator.signingKeyPath=/home/<you>/.sonarqube/agentic-signing/agentic-shared.key
+sonar.agentic.signing.secretFile=<absolute-path-of-~/.sonarqube/agentic-signing>/instance-secret
+sonar.agentic.orchestrator.signingKeyPath=<absolute-path-of-~/.sonarqube/agentic-signing>/agentic-shared.key
 ```
 
 Regenerating this bundle keeps `AGENTIC_SIGNING_SECRET`, so these keys stay valid. Only after
 `--rotate-secrets` redo this step and run `docker compose up -d --force-recreate`, so SonarQube and
 the containers derive their keys from the new secret.
 ${secret_key_note}
+### Bundled SonarQube
+
+A SonarQube container started with the orchestrator receives this key from `signing-init`.
+The commands above do not apply to it. This file is not generated for that install.
+
 ## 6. Start order
 
 The orchestrator stores its state in SonarQube's database and keeps failing its health check until
