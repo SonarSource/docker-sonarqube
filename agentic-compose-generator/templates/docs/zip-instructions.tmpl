@@ -65,7 +65,11 @@ the database CA.
 
 ### Bundled SonarQube
 
-A private CA is not supported.
+Stop here for a SonarQube that runs in Docker with the orchestrator. Its container trusts the
+public CAs of its image. A public CA needs no import. A private CA is not supported. The commands
+above do not apply to it. `--custom-ca-dir` is read by the orchestrator, not by that container.
+SonarQube and the orchestrator use the same `--db-host`. This file is not generated for that
+install.
 
 ## 2. Network reachability
 

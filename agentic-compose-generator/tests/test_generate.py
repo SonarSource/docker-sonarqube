@@ -246,6 +246,9 @@ class ZipDatabaseCaTest(unittest.TestCase):
             self.assertIn("PKIX path building failed", text)
             self.assertIn("### Zip install", text)
             self.assertIn("### Bundled SonarQube", text)
+            self.assertIn("A public CA needs no import", text)
+            self.assertIn("A private CA is not supported", text)
+            self.assertIn("above do not apply to it", text)
             self.assertIn("Sections 2 to 7 continue this zip install", text)
             self.assertIn("-alias database-ca", text)
             self.assertIn("append these flags to any options you already set", text)
@@ -270,6 +273,7 @@ class ZipDatabaseHostTest(unittest.TestCase):
             self.assertIn("put both names on the certificate", zip_part)
             self.assertNotIn("UnknownHostException", bundled_part)
             self.assertIn("A private CA is not supported", bundled_part)
+            self.assertIn("use the same `--db-host`", bundled_part)
 
 
 if __name__ == "__main__":
