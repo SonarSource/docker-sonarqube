@@ -153,6 +153,8 @@ This mode has two requirements:
 - **Storage other than `local`**, reachable from both your SonarQube host and the containers.
   With `--storage hostpath`, mount it at the same path on both.
 
+On Docker Desktop, Rancher Desktop or colima, pass `--sandbox runc` and `--host-gateway off`.
+
 Then follow the bundle's `ZIP-INSTRUCTIONS.md`.
 
 ## TLS
@@ -241,8 +243,9 @@ else in the bundle uses it.
 - **Any other runtime registered with your Docker daemon**, for example `kata-runtime` for Kata
   Containers. Pass the name it is registered under; `docker info --format '{{json .Runtimes}}'` lists
   them. Choose one that isolates the workload from the host kernel at least as well as gVisor.
-- **`runc`**: Docker's default runtime, with no isolation beyond a regular container. Use it only
-  for evaluation where you can't install a sandbox runtime, for example on Docker Desktop.
+- **`runc`**: Docker's default runtime, with no isolation beyond a regular container. On Docker
+  Desktop, Rancher Desktop or colima, pass `--sandbox runc`.
+  With `--edition none`, also pass `--host-gateway off`.
 
 The generator checks only that the value is a valid runtime name. Docker reports a runtime that
 isn't registered when you start the bundle.

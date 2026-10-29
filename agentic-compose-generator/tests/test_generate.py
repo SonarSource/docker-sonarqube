@@ -318,5 +318,15 @@ class ZipProxyCheckTest(unittest.TestCase):
             self.assertIn("does not use this proxy", bundled_part)
 
 
+class SandboxRuntimeTest(unittest.TestCase):
+    def test_readme_selects_runc_on_desktop(self):
+        text = (SCRIPT_PATH.parent / "README.md").read_text()
+        edition_none = text.split("### Using your existing SonarQube", 1)[1].split("## TLS", 1)[0]
+        self.assertIn("pass `--sandbox runc` and `--host-gateway off`", edition_none)
+        sandbox = text.split("- **`runc`**:", 1)[1].split("- **", 1)[0]
+        self.assertIn("pass `--sandbox runc`", sandbox)
+        self.assertIn("also pass `--host-gateway off`", sandbox)
+
+
 if __name__ == "__main__":
     unittest.main()
