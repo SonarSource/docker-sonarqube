@@ -11,7 +11,7 @@ This bundle points the containers at the same external database you passed to `g
 Point your SonarQube at it too, if it isn't already:
 
 ```
-sonar.jdbc.url=jdbc:postgresql://${db_host}:${db_port}/${db_name}${db_url_params}
+sonar.jdbc.url=jdbc:postgresql://<host-that-resolves-on-the-zip-machine>:${db_port}/${db_name}${db_url_params}
 sonar.jdbc.username=${db_user}
 sonar.jdbc.password=<the --db-password you passed to generate.py>
 ```
@@ -120,6 +120,9 @@ ${secret_key_note}
 
 The orchestrator stores its state in SonarQube's database and keeps failing its health check until
 SonarQube has created the schema, so start your SonarQube first, then `docker compose up -d`.
+
+A warning that a property from sections 3, 4 or 5 is not a recognized system property is expected.
+Leave the property in `sonar.properties`.
 
 ## 7. TLS trust
 

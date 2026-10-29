@@ -264,6 +264,7 @@ class ZipDatabaseHostTest(unittest.TestCase):
             text = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
             self.assertIn("for the orchestrator", text)
             self.assertIn("use the host that resolves on the zip machine", text)
+            self.assertIn("sonar.jdbc.url=jdbc:postgresql://<host-that-resolves-on-the-zip-machine>:", text)
             self.assertIn("Put both names on the database certificate", text)
             self.assertNotIn("UnknownHostException", text)
             self.assertNotIn("connection is refused", text)
@@ -295,6 +296,9 @@ class ZipTruststoreAndSigningTest(unittest.TestCase):
             self.assertIn("<absolute-path-of-~/.sonarqube/agentic-signing>", signing)
             self.assertNotIn("angle brackets", signing)
             self.assertNotIn("signing-init", signing)
+            start = text.split("## 6. Start order", 1)[1].split("## 7.", 1)[0]
+            self.assertIn("is not a recognized system property is expected", start)
+            self.assertIn("Leave the property in `sonar.properties`", start)
 
 
 class ZipProxyCheckTest(unittest.TestCase):
@@ -311,6 +315,11 @@ class ZipProxyCheckTest(unittest.TestCase):
                 text)
             self.assertNotIn("### Zip install", text)
             self.assertNotIn("### Bundled SonarQube", text)
+            self.assertIn("From this directory, on the machine that hosts SonarQube", text)
+            self.assertNotIn("Copy this directory to the SonarQube machine", text)
+            instructions = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
+            self.assertIn("start it from that directory", instructions)
+            self.assertNotIn("copy the directory there", instructions)
 
 
 class SandboxRuntimeTest(unittest.TestCase):
