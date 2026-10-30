@@ -33,6 +33,8 @@ adds this bundle's CA to the same file. Copy the JDK `cacerts` to
 exists, keep it and import the database CA into it. In `sonar.properties`, use the absolute path
 of that file.
 
+`<your database CA certificate>` is the CA that signed your database certificate. The generator does not create it.
+
 ```
 mkdir -p ~/.sonarqube
 if [ ! -e ~/.sonarqube/sonarqube-truststore.jks ]; then

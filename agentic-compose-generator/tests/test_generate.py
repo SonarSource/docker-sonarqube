@@ -248,6 +248,7 @@ class ZipDatabaseCaTest(unittest.TestCase):
             self.assertNotIn("### Zip install", text)
             self.assertNotIn("### Bundled SonarQube", text)
             self.assertIn("-alias database-ca", text)
+            self.assertIn("The generator does not create it.", text)
             self.assertIn("append these flags to any options you already set", text)
             self.assertIn("CUSTOM_CA_DIR", text)
             self.assertIn("-alias agentic-bundle-ca", text)
