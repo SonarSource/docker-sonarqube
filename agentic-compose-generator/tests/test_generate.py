@@ -346,7 +346,7 @@ class ZipTlsOffTest(unittest.TestCase):
             self.assertNotIn("every hop is plain HTTP", text)
             self.assertNotIn("sonarqube-tls-proxy", text)
             self.assertNotIn("-alias agentic-bundle-ca", text)
-            self.assertNotIn("agentic-proxy waits for a healthy Vortex", text)
+            self.assertNotIn("`agentic-proxy` waits for a healthy Vortex", text)
 
 
 class SandboxRuntimeTest(unittest.TestCase):
