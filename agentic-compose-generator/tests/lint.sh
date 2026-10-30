@@ -86,8 +86,7 @@ assert environment["AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_MEMBERS"] == "200000"
 for service in ("hunter-runtime", "remediation-agent-runtime"):
     if service in services:
         environment = services[service]["environment"]
-        assert "MAX_EXTRACTED_REPO_SIZE" not in environment, service
-        assert "MAX_EXTRACTED_REPO_MEMBERS" not in environment, service'; then
+        assert not any("MAX_EXTRACTED_REPO" in key for key in environment), service'; then
     echo "FAIL: $name: repository extraction limits must be configured only on the orchestrator"
     fail=1
   fi
@@ -156,6 +155,19 @@ echo "SONARQUBE_PUBLISH_PORT=29000" >> "$dc/.env"
 gen_dc --rotate-secrets || { echo "FAIL: regeneration: a published port set in .env blocked regeneration"; fail=1; }
 gen_dc --force
 grep -q '^SONARQUBE_PUBLISH_PORT=29000$' "$dc/.env" || { echo "FAIL: regeneration: the published port set in .env was not kept"; fail=1; }
+printf '%s\n' 'AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_SIZE=2GB' \
+  'AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_MEMBERS=200000' >> "$dc/.env"
+gen_dc || { echo "FAIL: regeneration: extraction limits blocked regeneration"; fail=1; }
+gen_dc --rotate-secrets
+gen_dc --force
+if ! docker compose -f "$dc/docker-compose.yaml" --env-file "$dc/.env" config --format json |
+  python3 -c '
+import json, sys
+environment = json.load(sys.stdin)["services"]["orchestrator"]["environment"]
+assert environment["AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_SIZE"] == "2GB"
+assert environment["AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_MEMBERS"] == "200000"'; then
+  echo "FAIL: regeneration: extraction limits were not kept in .env"; fail=1
+fi
 echo "EDITED=1" >> "$dc/.env"
 gen_dc --rotate-secrets && { echo "FAIL: regeneration: overwrote another .env edit without --force"; fail=1; }
 [ "$fail" = "$fail_before" ] && echo "OK: regeneration"

@@ -219,6 +219,33 @@ class RegenerationTest(unittest.TestCase):
         self.assertEqual(self.generate("--rotate-secrets")[0], 0)
         self.assertNotEqual(env_value(self.bundle, "AGENTIC_SIGNING_SECRET"), secret)
 
+    def test_extraction_limits_survive_regeneration(self):
+        self.assertEqual(self.generate()[0], 0)
+        env = self.bundle / ".env"
+        for key in ("AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_SIZE",
+                    "AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_MEMBERS"):
+            self.assertNotIn(key, env.read_text())
+        env.write_text(env.read_text() + "AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_SIZE=2GB\n"
+                       "AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_MEMBERS=200000\n")
+        for extra in ((), ("--force",), ("--rotate-secrets",)):
+            with self.subTest(extra=extra):
+                code, err = self.generate(*extra)
+                self.assertEqual(code, 0, err)
+                self.assertEqual(env_value(self.bundle, "AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_SIZE"), "2GB")
+                self.assertEqual(env_value(self.bundle, "AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_MEMBERS"), "200000")
+
+    def test_invalid_extraction_limits_are_not_replaced_by_defaults(self):
+        self.assertEqual(self.generate()[0], 0)
+        env = self.bundle / ".env"
+        for size, members in (("", ""), ("invalid", "0")):
+            with self.subTest(size=size, members=members):
+                env.write_text(env.read_text() + f"AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_SIZE={size}\n"
+                               f"AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_MEMBERS={members}\n")
+                code, err = self.generate("--force")
+                self.assertEqual(code, 0, err)
+                self.assertEqual(env_value(self.bundle, "AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_SIZE"), size)
+                self.assertEqual(env_value(self.bundle, "AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_MEMBERS"), members)
+
     def test_user_edit_needs_force(self):
         self.assertEqual(self.generate()[0], 0)
         compose = self.bundle / "docker-compose.yaml"
