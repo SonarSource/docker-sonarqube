@@ -35,8 +35,8 @@ ${extra_hosts_block}
 ${ports_block}
     networks: [control, data, hunter-jobnet, remediation-jobnet]
     healthcheck:
-      # /readyz, as the Helm chart probes: /health aggregates the database and storage checks and
-      # turns 503 for the whole drain on stop.
+      # Helm readiness probe: readiness plus the database. Shared storage is not checked.
+      # /health and /readyz both return HTTP 503 with status OUT_OF_SERVICE for the whole drain.
       test: ["CMD-SHELL", "curl -fsS http://localhost:8080/readyz"]
       interval: 10s
       timeout: 5s
