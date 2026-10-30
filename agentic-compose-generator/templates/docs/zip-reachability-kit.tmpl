@@ -1,6 +1,7 @@
 The containers reach your SonarQube over TLS at `${sonarqube_url}`, through the proxy in
-`sonarqube-tls-proxy/`. Run that proxy on your SonarQube machine: copy the directory there and
-follow its `README.md`. It forwards to SonarQube on port ${sonarqube_port} of that machine, and its
+`sonarqube-tls-proxy/`. On the SonarQube machine, start it from that directory and follow its
+`README.md`. If that directory is on another machine, copy it onto the SonarQube machine first.
+It forwards to SonarQube on port ${sonarqube_port} of that machine, and its
 certificate for `${sonarqube_host}` is signed by this bundle's CA, which the containers trust.
 
 Only the containers use the proxy: your users and scanners keep reaching SonarQube as they do

@@ -5,21 +5,65 @@ already have a zip/host install of SonarQube running, and only starts the contai
 (database is external in this mode too). These are the changes to make in *your* SonarQube's
 `sonar.properties`.
 
+Section 1 is enough for SonarQube to start and report UP. Sections 2 to 5 connect it to this
+bundle. When this bundle has TLS, section 7 does too. Apply those before `docker compose up -d`.
+
 ## 1. Database
 
 This bundle points the containers at the same external database you passed to `generate.py`.
 Point your SonarQube at it too, if it isn't already:
 
 ```
-sonar.jdbc.url=jdbc:postgresql://${db_host}:${db_port}/${db_name}${db_url_params}
+sonar.jdbc.url=jdbc:postgresql://<host-that-resolves-on-the-zip-machine>:${db_port}/${db_name}${db_url_params}
 sonar.jdbc.username=${db_user}
 sonar.jdbc.password=<the --db-password you passed to generate.py>
 ```
 
-The orchestrator connects with the same `sslmode=verify-full`: the database must serve TLS with a
-certificate valid for `${db_host}`. Your SonarQube validates it against its JVM truststore, so the
-CA behind it must be in the JDK's default `cacerts` or in the `-Djavax.net.ssl.trustStore` you set
-in `sonar.web.javaAdditionalOpts` and `sonar.ce.javaAdditionalOpts`.
+The URL above contains `sslmode=verify-full`. The orchestrator uses the same parameter.
+The database must serve TLS. Its certificate must be valid for the host in each URL, and
+the CA that signed it must be in both places below.
+The database connection stays TLS when this bundle disables TLS.
+
+Import the database CA into SonarQube's truststore, and copy the same PEM into `CUSTOM_CA_DIR`
+for the orchestrator.
+
+Use `${db_host}` for the orchestrator.
+In `sonar.jdbc.url`, use the host that resolves on the zip machine.
+Put both names on the database certificate.
+
+SonarQube trusts that CA through a copy of the JDK `cacerts`. When this bundle has TLS, section 7
+adds this bundle's CA to the same file. Copy the JDK `cacerts` to
+`~/.sonarqube/sonarqube-truststore.jks` only when that file does not exist yet. If it already
+exists, keep it and import the database CA into it. In `sonar.properties`, use the absolute path
+of that file.
+
+`<your database CA certificate>` is the CA that signed your database certificate. The generator does not create it.
+
+```
+mkdir -p ~/.sonarqube
+if [ ! -e ~/.sonarqube/sonarqube-truststore.jks ]; then
+  cp "$JAVA_HOME/lib/security/cacerts" ~/.sonarqube/sonarqube-truststore.jks
+fi
+chmod u+w ~/.sonarqube/sonarqube-truststore.jks
+keytool -importcert -noprompt -alias database-ca -file <your database CA certificate> \
+  -keystore ~/.sonarqube/sonarqube-truststore.jks -storepass changeit
+```
+
+Then in `sonar.properties`, append these flags to any options you already set on those properties.
+If `-Djavax.net.ssl.trustStore` already points at a file, import the database CA into that file
+instead of the copy above, and use that same file for the import in section 7. SonarQube reads
+the properties at startup (section 6):
+
+```
+sonar.web.javaAdditionalOpts=-Djavax.net.ssl.trustStore=<absolute-path-of-~/.sonarqube/sonarqube-truststore.jks> -Djavax.net.ssl.trustStorePassword=changeit
+sonar.ce.javaAdditionalOpts=-Djavax.net.ssl.trustStore=<absolute-path-of-~/.sonarqube/sonarqube-truststore.jks> -Djavax.net.ssl.trustStorePassword=changeit
+```
+
+Copy the same CA, a PEM file whose name ends in `.crt` or `.pem`, into the directory
+`CUSTOM_CA_DIR` in this bundle's `.env` before `docker compose up -d`. The orchestrator reads it
+from there. The certificate needs a `keyUsage` extension that includes `keyCertSign`. If
+`CUSTOM_CA_DIR` is unset, regenerate with `--custom-ca-dir` pointing at a directory that contains
+the database CA.
 
 ## 2. Network reachability
 
@@ -50,10 +94,13 @@ ${storage_note}
 
 Every agentic request between SonarQube, the orchestrator, and Vortex is signed. Derive your copy
 of the shared key from this bundle's `AGENTIC_SIGNING_SECRET` (in `.env`) and point SonarQube at
-it:
+it. From this bundle's directory, read `AGENTIC_SIGNING_SECRET` from `.env`. For `docker run`, use the
+`image:` of the `orchestrator` service in this bundle's `docker-compose.yaml`. In
+`sonar.properties`, use the absolute path of `~/.sonarqube/agentic-signing`.
 
 ```
 mkdir -p ~/.sonarqube/agentic-signing
+AGENTIC_SIGNING_SECRET=$(sed -n 's/^AGENTIC_SIGNING_SECRET=//p' .env)
 printf '%s' "$AGENTIC_SIGNING_SECRET" > ~/.sonarqube/agentic-signing/instance-secret
 chmod 600 ~/.sonarqube/agentic-signing/instance-secret
 
@@ -67,8 +114,8 @@ docker run --rm --user 0:0 \
 Then in `sonar.properties`:
 
 ```
-sonar.agentic.signing.secretFile=/home/<you>/.sonarqube/agentic-signing/instance-secret
-sonar.agentic.orchestrator.signingKeyPath=/home/<you>/.sonarqube/agentic-signing/agentic-shared.key
+sonar.agentic.signing.secretFile=<absolute-path-of-~/.sonarqube/agentic-signing>/instance-secret
+sonar.agentic.orchestrator.signingKeyPath=<absolute-path-of-~/.sonarqube/agentic-signing>/agentic-shared.key
 ```
 
 Regenerating this bundle keeps `AGENTIC_SIGNING_SECRET`, so these keys stay valid. Only after
@@ -77,8 +124,12 @@ the containers derive their keys from the new secret.
 ${secret_key_note}
 ## 6. Start order
 
-The orchestrator stores its state in SonarQube's database and keeps failing its health check until
-SonarQube has created the schema, so start your SonarQube first, then `docker compose up -d`.
+SonarQube reports UP from section 1. Start it before `docker compose up -d`: the
+orchestrator stores its state in SonarQube's database and keeps failing its health check until
+SonarQube has created the schema.
+
+A warning that a property from sections 3, 4 or 5 is not a recognized system property is expected.
+Leave the property in `sonar.properties`.
 
 ## 7. TLS trust
 
@@ -90,5 +141,4 @@ ${ca_note}
 
 If Vortex stays unhealthy and its health check reports `sonarqube-connectivity DOWN: ...
 Unauthorized`, your SonarQube is missing part of sections 3, 5 or 7: check that all three are
-applied and that SonarQube was restarted since. With TLS, `agentic-proxy` waits for a healthy Vortex,
-so it doesn't start either until then.
+applied and that SonarQube was restarted since.${agentic_proxy_note}

@@ -233,5 +233,139 @@ class RegenerationTest(unittest.TestCase):
         self.assertNotIn("# my edit", compose.read_text())
 
 
+class ZipDatabaseCaTest(unittest.TestCase):
+    def test_instructions_import_the_database_ca_for_both_sides(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run("--profile", str(SCRIPT_PATH.parent / "profiles" / "none-nfs-tls.json"),
+                               "--out", str(bundle))
+            self.assertEqual(code, 0, err)
+            text = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
+            self.assertIn("sslmode=verify-full", text)
+            self.assertIn("the CA that signed it must be in both places below", text)
+            self.assertNotIn("PKIX path building failed", text)
+            self.assertNotIn("Failed to initialize database dialect", text)
+            self.assertNotIn("### Zip install", text)
+            self.assertNotIn("### Bundled SonarQube", text)
+            self.assertIn("-alias database-ca", text)
+            self.assertIn("The generator does not create it.", text)
+            self.assertIn("The database connection stays TLS when this bundle disables TLS.", text)
+            self.assertIn("Section 1 is enough for SonarQube to start and report UP.", text)
+            self.assertIn("When this bundle has TLS, section 7 does too.", text)
+            self.assertIn("SonarQube reports UP from section 1.", text)
+            self.assertIn("With TLS, `agentic-proxy` waits for a healthy Vortex, so it doesn't start either until then.", text)
+            self.assertIn("append these flags to any options you already set", text)
+            self.assertIn("CUSTOM_CA_DIR", text)
+            self.assertIn("-alias agentic-bundle-ca", text)
+            self.assertNotIn('cp "$JAVA_HOME/lib/security/cacerts"', text.split("## 7.")[1])
+
+
+class ZipDatabaseHostTest(unittest.TestCase):
+    def test_instructions_split_the_database_host(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run("--profile", str(SCRIPT_PATH.parent / "profiles" / "none-nfs-tls.json"),
+                               "--out", str(bundle))
+            self.assertEqual(code, 0, err)
+            text = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
+            self.assertIn("for the orchestrator", text)
+            self.assertIn("use the host that resolves on the zip machine", text)
+            self.assertIn("sonar.jdbc.url=jdbc:postgresql://<host-that-resolves-on-the-zip-machine>:", text)
+            self.assertIn("Put both names on the database certificate", text)
+            self.assertNotIn("UnknownHostException", text)
+            self.assertNotIn("connection is refused", text)
+            self.assertNotIn("### Bundled SonarQube", text)
+
+
+class ZipTruststoreAndSigningTest(unittest.TestCase):
+    def test_instructions_use_a_writable_truststore_and_load_the_signing_secret(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run("--profile", str(SCRIPT_PATH.parent / "profiles" / "none-nfs-tls.json"),
+                               "--out", str(bundle))
+            self.assertEqual(code, 0, err)
+            text = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
+            self.assertNotIn("/opt/sonarqube-truststore.jks", text)
+            self.assertNotIn("/home/<you>", text)
+            self.assertIn("~/.sonarqube/sonarqube-truststore.jks", text)
+            self.assertIn("if [ ! -e ~/.sonarqube/sonarqube-truststore.jks ]; then", text)
+            self.assertIn("<absolute-path-of-~/.sonarqube/sonarqube-truststore.jks>", text)
+            self.assertIn("use the absolute path", text)
+            self.assertIn("only when that file does not exist yet", text)
+            self.assertNotIn("does not expand", text)
+            self.assertNotIn("Permission denied", text)
+            signing = text.split("## 5. Signing key", 1)[1].split("## 6.", 1)[0]
+            self.assertIn("read `AGENTIC_SIGNING_SECRET` from `.env`", signing)
+            self.assertIn("AGENTIC_SIGNING_SECRET=$(sed -n 's/^AGENTIC_SIGNING_SECRET=//p' .env)", signing)
+            self.assertIn("`image:` of the `orchestrator` service", signing)
+            self.assertIn("use the absolute path of `~/.sonarqube/agentic-signing`", signing)
+            self.assertIn("<absolute-path-of-~/.sonarqube/agentic-signing>", signing)
+            self.assertNotIn("angle brackets", signing)
+            self.assertNotIn("signing-init", signing)
+            start = text.split("## 6. Start order", 1)[1].split("## 7.", 1)[0]
+            self.assertIn("is not a recognized system property is expected", start)
+            self.assertIn("Leave the property in `sonar.properties`", start)
+
+
+class ZipProxyCheckTest(unittest.TestCase):
+    def test_proxy_check_uses_the_certificate_name_on_this_machine(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run("--profile", str(SCRIPT_PATH.parent / "profiles" / "none-nfs-tls.json"),
+                               "--out", str(bundle))
+            self.assertEqual(code, 0, err)
+            text = (bundle / "sonarqube-tls-proxy" / "README.md").read_text()
+            self.assertIn(
+                "curl --cacert tls/ca.crt --resolve host.docker.internal:9443:127.0.0.1 "
+                "https://host.docker.internal:9443/api/system/status",
+                text)
+            self.assertNotIn("### Zip install", text)
+            self.assertNotIn("### Bundled SonarQube", text)
+            self.assertIn("From this directory, on the machine that hosts SonarQube", text)
+            self.assertNotIn("Copy this directory to the SonarQube machine", text)
+            instructions = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
+            self.assertIn("start it from that directory", instructions)
+            self.assertNotIn("copy the directory there", instructions)
+
+
+class ZipTlsOffTest(unittest.TestCase):
+    def test_disabled_bundle_tls_leaves_the_database_connection(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run("--profile", str(SCRIPT_PATH.parent / "profiles" / "none-s3.json"),
+                               "--out", str(bundle))
+            self.assertEqual(code, 0, err)
+            text = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
+            self.assertIn("sslmode=verify-full", text)
+            self.assertIn("The database connection stays TLS when this bundle disables TLS.", text)
+            self.assertIn("Section 1 is enough for SonarQube to start and report UP.", text)
+            self.assertIn("SonarQube reports UP from section 1.", text)
+            self.assertIn("TLS is disabled between SonarQube and the containers.", text)
+            self.assertIn("Those connections are plain HTTP.", text)
+            self.assertIn("The database connection in section 1 stays TLS.", text)
+            self.assertNotIn("every hop is plain HTTP", text)
+            self.assertNotIn("sonarqube-tls-proxy", text)
+            self.assertNotIn("-alias agentic-bundle-ca", text)
+            self.assertNotIn("`agentic-proxy` waits for a healthy Vortex", text)
+
+
+class SandboxRuntimeTest(unittest.TestCase):
+    def test_readme_selects_runc_on_desktop(self):
+        text = (SCRIPT_PATH.parent / "README.md").read_text()
+        edition_none = text.split("### Using your existing SonarQube", 1)[1].split("## TLS", 1)[0]
+        self.assertIn("pass `--sandbox runc` and `--host-gateway off`", edition_none)
+        bundled = text.split("### Bundled SonarQube", 1)[1]
+        self.assertIn("trusts only the public CAs in its image", bundled)
+        self.assertIn("`--custom-ca-dir` is read by the orchestrator", bundled)
+        self.assertNotIn("Both containers use `--db-host` and trust only the public CAs", text)
+        sandbox = text.split("- **`runc`**:", 1)[1].split("- **", 1)[0]
+        self.assertIn("pass `--sandbox runc`", sandbox)
+        self.assertIn("also pass `--host-gateway off`", sandbox)
+        database = text.split("**To your database**", 1)[1].split("### Zip install", 1)[0]
+        self.assertIn("including when", database)
+        self.assertIn("`--tls` is `off`", database)
+        self.assertIn("`--tls` changes the connection between SonarQube and the containers.", database)
+
+
 if __name__ == "__main__":
     unittest.main()

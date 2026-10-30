@@ -148,9 +148,12 @@ would a credential store.
 
 This mode has two requirements:
 
-- **`--db external`**, pointed at your SonarQube's database.
+- **`--db external`**, pointed at your SonarQube's database. `--db-host` is the name the
+  containers use. On a zip install the host in `sonar.jdbc.url` can differ; see [TLS](#tls).
 - **Storage other than `local`**, reachable from both your SonarQube host and the containers.
   With `--storage hostpath`, mount it at the same path on both.
+
+On Docker Desktop, Rancher Desktop or colima, pass `--sandbox runc` and `--host-gateway off`.
 
 Then follow the bundle's `ZIP-INSTRUCTIONS.md`.
 
@@ -188,12 +191,22 @@ Then follow the bundle's `ZIP-INSTRUCTIONS.md`.
 
   `ZIP-INSTRUCTIONS.md` and `sonarqube-tls-proxy/README.md` in the bundle walk through the setup,
   including serving certificates of your own.
-- **To your database** (`--db external`): always TLS with `sslmode=verify-full`. The database must
-  serve a certificate that is valid for `--db-host`, and SonarQube must trust the CA that issued it:
-  - **Bundled SonarQube:** only public CAs are trusted, so a database whose certificate comes from
-    a private CA can't be used yet. This includes Amazon RDS and Google Cloud SQL.
-  - **`--edition none`:** add the database's CA certificate to your SonarQube's JVM truststore,
-    and pass it with `--custom-ca-dir` for the orchestrator. `ZIP-INSTRUCTIONS.md` has the details.
+- **To your database** (`--db external`): always TLS with `sslmode=verify-full`, including when
+  `--tls` is `off`. The certificate must be valid for the host each side uses. Trust the database
+  CA on each side. `--tls` changes the connection between SonarQube and the containers.
+
+### Zip install
+
+Import the CA into SonarQube's truststore and copy the same PEM into the bundle's custom CA
+directory. The commands, and what to do when `sonar.jdbc.url` needs a different host, are in
+`ZIP-INSTRUCTIONS.md`.
+
+### Bundled SonarQube
+
+The SonarQube container uses `--db-host` and trusts only the public CAs in its image. A private
+CA is not supported. Do not apply the zip commands. `--custom-ca-dir` is read by the orchestrator
+and does not reach the SonarQube container.
+
 - **To your SonarQube over its own https** (`--edition none`, `--sonarqube-external-scheme https`):
   the containers trust public CAs only. If your SonarQube's certificate comes from a private CA,
   pass that CA's certificate with `--custom-ca-dir`.
@@ -231,8 +244,9 @@ else in the bundle uses it.
 - **Any other runtime registered with your Docker daemon**, for example `kata-runtime` for Kata
   Containers. Pass the name it is registered under; `docker info --format '{{json .Runtimes}}'` lists
   them. Choose one that isolates the workload from the host kernel at least as well as gVisor.
-- **`runc`**: Docker's default runtime, with no isolation beyond a regular container. Use it only
-  for evaluation where you can't install a sandbox runtime, for example on Docker Desktop.
+- **`runc`**: Docker's default runtime, with no isolation beyond a regular container. On Docker
+  Desktop, Rancher Desktop or colima, pass `--sandbox runc`.
+  With `--edition none`, also pass `--host-gateway off`.
 
 The generator checks only that the value is a valid runtime name. Docker reports a runtime that
 isn't registered when you start the bundle.
