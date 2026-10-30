@@ -191,8 +191,9 @@ Then follow the bundle's `ZIP-INSTRUCTIONS.md`.
 
   `ZIP-INSTRUCTIONS.md` and `sonarqube-tls-proxy/README.md` in the bundle walk through the setup,
   including serving certificates of your own.
-- **To your database** (`--db external`): always TLS with `sslmode=verify-full`. The certificate
-  must be valid for the host each side uses. Trust the database CA on each side.
+- **To your database** (`--db external`): always TLS with `sslmode=verify-full`, including when
+  `--tls` is `off`. The certificate must be valid for the host each side uses. Trust the database
+  CA on each side. `--tls` changes the connection between SonarQube and the containers.
 
 ### Zip install
 

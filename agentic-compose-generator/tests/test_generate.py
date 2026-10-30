@@ -249,6 +249,11 @@ class ZipDatabaseCaTest(unittest.TestCase):
             self.assertNotIn("### Bundled SonarQube", text)
             self.assertIn("-alias database-ca", text)
             self.assertIn("The generator does not create it.", text)
+            self.assertIn("The database connection stays TLS when this bundle disables TLS.", text)
+            self.assertIn("Section 1 is enough for SonarQube to start and report UP.", text)
+            self.assertIn("When this bundle has TLS, section 7 does too.", text)
+            self.assertIn("SonarQube reports UP from section 1.", text)
+            self.assertIn("With TLS, `agentic-proxy` waits for a healthy Vortex, so it doesn't start either until then.", text)
             self.assertIn("append these flags to any options you already set", text)
             self.assertIn("CUSTOM_CA_DIR", text)
             self.assertIn("-alias agentic-bundle-ca", text)
@@ -323,6 +328,27 @@ class ZipProxyCheckTest(unittest.TestCase):
             self.assertNotIn("copy the directory there", instructions)
 
 
+class ZipTlsOffTest(unittest.TestCase):
+    def test_disabled_bundle_tls_leaves_the_database_connection(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run("--profile", str(SCRIPT_PATH.parent / "profiles" / "none-s3.json"),
+                               "--out", str(bundle))
+            self.assertEqual(code, 0, err)
+            text = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
+            self.assertIn("sslmode=verify-full", text)
+            self.assertIn("The database connection stays TLS when this bundle disables TLS.", text)
+            self.assertIn("Section 1 is enough for SonarQube to start and report UP.", text)
+            self.assertIn("SonarQube reports UP from section 1.", text)
+            self.assertIn("TLS is disabled between SonarQube and the containers.", text)
+            self.assertIn("Those connections are plain HTTP.", text)
+            self.assertIn("The database connection in section 1 stays TLS.", text)
+            self.assertNotIn("every hop is plain HTTP", text)
+            self.assertNotIn("sonarqube-tls-proxy", text)
+            self.assertNotIn("-alias agentic-bundle-ca", text)
+            self.assertNotIn("agentic-proxy waits for a healthy Vortex", text)
+
+
 class SandboxRuntimeTest(unittest.TestCase):
     def test_readme_selects_runc_on_desktop(self):
         text = (SCRIPT_PATH.parent / "README.md").read_text()
@@ -335,6 +361,10 @@ class SandboxRuntimeTest(unittest.TestCase):
         sandbox = text.split("- **`runc`**:", 1)[1].split("- **", 1)[0]
         self.assertIn("pass `--sandbox runc`", sandbox)
         self.assertIn("also pass `--host-gateway off`", sandbox)
+        database = text.split("**To your database**", 1)[1].split("### Zip install", 1)[0]
+        self.assertIn("including when", database)
+        self.assertIn("`--tls` is `off`", database)
+        self.assertIn("`--tls` changes the connection between SonarQube and the containers.", database)
 
 
 if __name__ == "__main__":

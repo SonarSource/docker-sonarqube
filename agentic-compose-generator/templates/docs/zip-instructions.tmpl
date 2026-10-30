@@ -5,6 +5,9 @@ already have a zip/host install of SonarQube running, and only starts the contai
 (database is external in this mode too). These are the changes to make in *your* SonarQube's
 `sonar.properties`.
 
+Section 1 is enough for SonarQube to start and report UP. Sections 2 to 5 connect it to this
+bundle. When this bundle has TLS, section 7 does too. Apply those before `docker compose up -d`.
+
 ## 1. Database
 
 This bundle points the containers at the same external database you passed to `generate.py`.
@@ -19,6 +22,7 @@ sonar.jdbc.password=<the --db-password you passed to generate.py>
 The URL above contains `sslmode=verify-full`. The orchestrator uses the same parameter.
 The database must serve TLS. Its certificate must be valid for the host in each URL, and
 the CA that signed it must be in both places below.
+The database connection stays TLS when this bundle disables TLS.
 
 Import the database CA into SonarQube's truststore, and copy the same PEM into `CUSTOM_CA_DIR`
 for the orchestrator.
@@ -120,8 +124,9 @@ the containers derive their keys from the new secret.
 ${secret_key_note}
 ## 6. Start order
 
-The orchestrator stores its state in SonarQube's database and keeps failing its health check until
-SonarQube has created the schema, so start your SonarQube first, then `docker compose up -d`.
+SonarQube reports UP from section 1. Start it before `docker compose up -d`: the
+orchestrator stores its state in SonarQube's database and keeps failing its health check until
+SonarQube has created the schema.
 
 A warning that a property from sections 3, 4 or 5 is not a recognized system property is expected.
 Leave the property in `sonar.properties`.
@@ -136,5 +141,4 @@ ${ca_note}
 
 If Vortex stays unhealthy and its health check reports `sonarqube-connectivity DOWN: ...
 Unauthorized`, your SonarQube is missing part of sections 3, 5 or 7: check that all three are
-applied and that SonarQube was restarted since. With TLS, `agentic-proxy` waits for a healthy Vortex,
-so it doesn't start either until then.
+applied and that SonarQube was restarted since.${agentic_proxy_note}

@@ -1035,6 +1035,13 @@ def zip_reachability_section(args: argparse.Namespace) -> str:
     return text
 
 
+def zip_agentic_proxy_note(args: argparse.Namespace) -> str:
+    if args.tls_on and "vortex" in args.components:
+        return (" With TLS, `agentic-proxy` waits for a healthy Vortex, "
+                "so it doesn't start either until then.")
+    return ""
+
+
 def zip_ca_note(args: argparse.Namespace) -> str:
     if not args.custom_ca_dir:
         return ""
@@ -1087,7 +1094,10 @@ def build_docs(args: argparse.Namespace) -> dict[str, str]:
                       "`VORTEX_PUBLISH_PORT` from `.env` instead if you set them.",
             storage_note=zip_storage_note(args),
             tls_section=render("docs/zip-tls-trust.tmpl", tls_server_name=args.tls_server_name)
-            if args.tls_on else "TLS is disabled in this bundle; every hop is plain HTTP.",
+            if args.tls_on else
+            "TLS is disabled between SonarQube and the containers. Those connections are plain HTTP. "
+            "The database connection in section 1 stays TLS.",
+            agentic_proxy_note=zip_agentic_proxy_note(args),
         )
     return docs
 
