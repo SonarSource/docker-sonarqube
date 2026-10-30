@@ -306,13 +306,15 @@ Regenerating into an existing bundle directory is safe:
   `docker-compose.override.yaml`, which `docker compose` loads automatically and the generator
   never writes, or rerun with `--force` to overwrite it. A bundle generated before the manifest
   existed has none, so its first regeneration stops too; rerun with `--force` once, nothing is lost.
-- **Your ports and cluster addresses in `.env` are kept**, like the secrets, even with `--force`.
+- **Your ports, cluster addresses and repository extraction limits in `.env` are kept**, like the
+  secrets, even with `--force`.
   Change a published port there, not in an override: `docker compose` adds an override's `ports`
   to the ones in `docker-compose.yaml` instead of replacing them. The keys are
   `SONARQUBE_PUBLISH_PORT` (`--tls off`, default 9000), `SONARQUBE_TLS_PUBLISH_PORT` (`--tls on`,
   default 9443), and `ORCHESTRATOR_PUBLISH_PORT` and `VORTEX_PUBLISH_PORT` (`--tls off`, defaults
   9091 and 9092). For Data Center, the cluster addresses are `SONARQUBE_CLUSTER_SUBNET` and the
-  application node addresses.
+  application node addresses. The extraction limits are
+  `AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_SIZE` and `AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_MEMBERS`.
 - **It reports what changed**: every file it updated, and every file it removed because the new
   options no longer need it. A removed file that you edited is left in place.
 - **Certificates are kept** with `--edition none --tls on`, so SonarQube keeps trusting the bundle,
