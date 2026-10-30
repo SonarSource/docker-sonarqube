@@ -225,6 +225,7 @@ def load_config(argv: list[str]) -> tuple[argparse.Namespace, argparse.ArgumentP
     args.cluster_subnet = DATACENTER_CLUSTER_SUBNET
     args.app_node_ips = list(DATACENTER_APP_NODE_IPS)
     args.publish_ports = {}
+    args.extraction_limits = {}
 
     return args, parser
 
@@ -465,6 +466,7 @@ def build_volumes_block(args: argparse.Namespace) -> str:
         lines.extend(["  sonarqube_data:", "  sonarqube_extensions:", "  sonarqube_logs:"])
     if args.edition != "none":
         lines.append("  agentic_signing_sqs:")
+    lines.append("  orchestrator_tmp:")
     lines.append("  agentic_signing_orchestrator:")
     if "hunter" in args.components:
         lines.append("  agentic_signing_hunter:")
@@ -993,6 +995,7 @@ def build_env(args: argparse.Namespace) -> str:
         parts.append(f"SONAR_SECRET_KEY_FILE={args.sonar_secret_key_file}")
     # Never generated: only ever the user's own, carried over from the existing .env.
     parts.extend(f"{key}={value}" for key, value in args.publish_ports.items())
+    parts.extend(f"{key}={value}" for key, value in args.extraction_limits.items())
 
     return "\n".join(parts) + "\n"
 
@@ -1289,9 +1292,11 @@ def sha256(data: bytes) -> str:
 # The host ports the compose publishes on; the README tells users to set them in .env.
 PUBLISH_PORT_KEYS = ("SONARQUBE_PUBLISH_PORT", "SONARQUBE_TLS_PUBLISH_PORT", "ORCHESTRATOR_PUBLISH_PORT",
                      "VORTEX_PUBLISH_PORT")
+EXTRACTION_LIMIT_KEYS = ("AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_SIZE",
+                         "AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_MEMBERS")
 # Kept from the existing .env by reuse_env_values, so editing them isn't a user edit.
 CARRIED_ENV_KEYS = frozenset({"SONARQUBE_CLUSTER_SUBNET", *(ip_var(node) for node in DATACENTER_APP_NODES),
-                              *PUBLISH_PORT_KEYS})
+                              *PUBLISH_PORT_KEYS, *EXTRACTION_LIMIT_KEYS})
 
 
 def file_digest(rel: str, data: bytes) -> str:
@@ -1336,6 +1341,7 @@ def reuse_env_values(args: argparse.Namespace, out_dir: Path) -> list[str]:
     args.app_node_ips = [existing.get(ip_var(node)) or node_ip
                          for node, node_ip in zip(DATACENTER_APP_NODES, DATACENTER_APP_NODE_IPS)]
     args.publish_ports = {key: existing[key] for key in PUBLISH_PORT_KEYS if existing.get(key)}
+    args.extraction_limits = {key: existing[key] for key in EXTRACTION_LIMIT_KEYS if key in existing}
     if args.rotate_secrets:
         return ["--rotate-secrets: minted new secrets; restart the whole stack with the new .env."] \
             if (out_dir / ".env").exists() else []

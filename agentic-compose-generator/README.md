@@ -125,6 +125,29 @@ other's jobs.
 Per-job LLM provider keys are stored in plaintext in this storage: restrict access to it as you
 would a credential store.
 
+### Orchestrator temporary storage
+
+The orchestrator mounts a local disk volume at `/tmp`, separate from shared job artifacts.
+Keep this volume private to one orchestrator instance. The root filesystem stays read-only
+unless custom CA import requires it to be writable.
+
+Size local disk for concurrent repository clones, Git metadata, compressed archives, and
+Remediation's extracted working copies, plus logs and headroom. The extracted repository
+limit is not a disk budget. Increase disk capacity before raising
+`AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_SIZE` or
+`AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_MEMBERS` in the shell or bundle's `.env`.
+The unchanged limits are 1,000,000,000 bytes and 100,000 entries.
+
+Use released orchestrator, Hunter, and Remediation images that support request limits;
+upgrade both runtimes before the orchestrator. Older runtimes retain their original limits.
+With the updated orchestrator image, `/tmp/agent-orchestrator` is owner-only and cleared
+before the application starts, including after a crash. Do not store persistent files there.
+
+For an existing bundle, regenerate with the updated generator and your saved inputs, keeping
+`.env` and its signing secret, then recreate the orchestrator with `docker compose up -d
+--force-recreate orchestrator`. Regeneration preserves existing secrets. Do not remove data
+volumes to apply this change. Disk exhaustion fails jobs; monitor free space on the Docker host.
+
 ### Network and security
 
 | Flag | Values | Default | Effect |
@@ -297,13 +320,15 @@ Regenerating into an existing bundle directory is safe:
   `docker-compose.override.yaml`, which `docker compose` loads automatically and the generator
   never writes, or rerun with `--force` to overwrite it. A bundle generated before the manifest
   existed has none, so its first regeneration stops too; rerun with `--force` once, nothing is lost.
-- **Your ports and cluster addresses in `.env` are kept**, like the secrets, even with `--force`.
+- **Your ports, cluster addresses and repository extraction limits in `.env` are kept**, like the
+  secrets, even with `--force`.
   Change a published port there, not in an override: `docker compose` adds an override's `ports`
   to the ones in `docker-compose.yaml` instead of replacing them. The keys are
   `SONARQUBE_PUBLISH_PORT` (`--tls off`, default 9000), `SONARQUBE_TLS_PUBLISH_PORT` (`--tls on`,
   default 9443), and `ORCHESTRATOR_PUBLISH_PORT` and `VORTEX_PUBLISH_PORT` (`--tls off`, defaults
   9091 and 9092). For Data Center, the cluster addresses are `SONARQUBE_CLUSTER_SUBNET` and the
-  application node addresses.
+  application node addresses. The extraction limits are
+  `AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_SIZE` and `AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_MEMBERS`.
 - **It reports what changed**: every file it updated, and every file it removed because the new
   options no longer need it. A removed file that you edited is left in place.
 - **Certificates are kept** with `--edition none --tls on`, so SonarQube keeps trusting the bundle,
