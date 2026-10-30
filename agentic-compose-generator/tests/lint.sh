@@ -54,6 +54,13 @@ for profile in "$ROOT"/profiles/*.json; do
     python3 -c '
 import json, sys
 config = json.load(sys.stdin)
+orchestrator = config["services"]["orchestrator"]
+work_mounts = [v for v in orchestrator["volumes"] if v["target"] == "/tmp"]
+assert len(work_mounts) == 1 and work_mounts[0]["type"] == "volume"
+assert not orchestrator.get("tmpfs")
+assert sum(v.get("source") == work_mounts[0]["source"] for s in config["services"].values() for v in s.get("volumes", [])) == 1
+if "custom-ca" not in str(orchestrator.get("volumes", [])):
+    assert orchestrator["read_only"]
 runtimes = {s: set(config["services"][s].get("networks", {}))
             for s in ("hunter-runtime", "remediation-agent-runtime") if s in config["services"]}
 errors = [f"{s} is on non-internal network {n}" for s, nets in runtimes.items() for n in sorted(nets)
@@ -67,6 +74,24 @@ sys.exit(bool(errors))'; then
   fi
 
   echo "OK: $name"
+  if ! AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_SIZE=2GB \
+    AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_MEMBERS=200000 \
+    docker compose -f "$bundle/docker-compose.yaml" --env-file "$bundle/.env" config --format json |
+    python3 -c '
+import json, sys
+services = json.load(sys.stdin)["services"]
+environment = services["orchestrator"]["environment"]
+assert environment["AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_SIZE"] == "2GB"
+assert environment["AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_MEMBERS"] == "200000"
+for service in ("hunter-runtime", "remediation-agent-runtime"):
+    if service in services:
+        environment = services[service]["environment"]
+        assert "MAX_EXTRACTED_REPO_SIZE" not in environment, service
+        assert "MAX_EXTRACTED_REPO_MEMBERS" not in environment, service'; then
+    echo "FAIL: $name: repository extraction limits must be configured only on the orchestrator"
+    fail=1
+  fi
+
 done
 
 # Refusals: each of these must exit non-zero and write nothing.

@@ -465,6 +465,7 @@ def build_volumes_block(args: argparse.Namespace) -> str:
         lines.extend(["  sonarqube_data:", "  sonarqube_extensions:", "  sonarqube_logs:"])
     if args.edition != "none":
         lines.append("  agentic_signing_sqs:")
+    lines.append("  orchestrator_tmp:")
     lines.append("  agentic_signing_orchestrator:")
     if "hunter" in args.components:
         lines.append("  agentic_signing_hunter:")
