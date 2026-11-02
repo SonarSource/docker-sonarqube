@@ -268,13 +268,36 @@ class ZipDatabaseHostTest(unittest.TestCase):
                                "--out", str(bundle))
             self.assertEqual(code, 0, err)
             text = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
-            self.assertIn("for the orchestrator", text)
-            self.assertIn("use the host that resolves on the zip machine", text)
-            self.assertIn("sonar.jdbc.url=jdbc:postgresql://<host-that-resolves-on-the-zip-machine>:", text)
+            self.assertIn("`db.internal` is the host the containers use.", text)
+            self.assertIn("`sonar.jdbc.url` uses `db.internal`.", text)
+            self.assertIn("sonar.jdbc.url=jdbc:postgresql://db.internal:", text)
+            self.assertIn("`host.docker.internal` resolves inside the containers. It does not resolve on the host.", text)
+            self.assertIn("SonarQube uses `localhost`.", text)
             self.assertIn("Put both names on the database certificate", text)
+            self.assertNotIn("<host-that-resolves-on-the-zip-machine>", text)
             self.assertNotIn("UnknownHostException", text)
             self.assertNotIn("connection is refused", text)
             self.assertNotIn("### Bundled SonarQube", text)
+
+    def test_host_docker_internal_becomes_localhost_for_the_zip_install(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run(
+                "--edition", "none",
+                "--tls", "off",
+                "--db", "external",
+                "--db-host", "host.docker.internal",
+                "--db-password", "change-me",
+                "--storage", "hostpath",
+                "--storage-path", "/tmp/agentic-storage",
+                "--out", str(bundle),
+            )
+            self.assertEqual(code, 0, err)
+            text = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
+            self.assertIn("sonar.jdbc.url=jdbc:postgresql://localhost:", text)
+            self.assertNotIn("jdbc:postgresql://host.docker.internal:", text)
+            self.assertIn("`host.docker.internal` is the host the containers use.", text)
+            self.assertIn("`sonar.jdbc.url` uses `localhost`.", text)
 
 
 class ZipTruststoreAndSigningTest(unittest.TestCase):

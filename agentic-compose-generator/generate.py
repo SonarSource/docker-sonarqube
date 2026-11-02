@@ -1063,6 +1063,12 @@ def first_start_steps(args: argparse.Namespace) -> str:
     return render("docs/first-start-bundled.tmpl", sonarqube_url=url, components=components).rstrip("\n")
 
 
+def zip_jdbc_host(db_host: str) -> str:
+    if db_host == HOST_GATEWAY_NAME:
+        return "localhost"
+    return db_host
+
+
 def build_docs(args: argparse.Namespace) -> dict[str, str]:
     docs = {"README.md": render(
         "docs/readme.tmpl",
@@ -1080,7 +1086,8 @@ def build_docs(args: argparse.Namespace) -> dict[str, str]:
         vortex_url = f"https://{args.tls_server_name}:8444" if args.tls_on else "http://localhost:9092"
         docs["ZIP-INSTRUCTIONS.md"] = render(
             "docs/zip-instructions.tmpl",
-            db_host=args.db_host, db_port=args.db_port, db_name=args.db_name, db_user=args.db_user,
+            db_host=args.db_host, jdbc_host=zip_jdbc_host(args.db_host),
+            db_port=args.db_port, db_name=args.db_name, db_user=args.db_user,
             db_url_params=db_url_params(args),
             reachability_section=zip_reachability_section(args),
             ca_note=zip_ca_note(args),

@@ -149,7 +149,8 @@ would a credential store.
 This mode has two requirements:
 
 - **`--db external`**, pointed at your SonarQube's database. `--db-host` is the name the
-  containers use. On a zip install the host in `sonar.jdbc.url` can differ; see [TLS](#tls).
+  containers use. `host.docker.internal` does not resolve on the host. When PostgreSQL is on
+  that machine, `sonar.jdbc.url` uses `localhost`. `ZIP-INSTRUCTIONS.md` writes that host.
 - **Storage other than `local`**, reachable from both your SonarQube host and the containers.
   With `--storage hostpath`, mount it at the same path on both.
 

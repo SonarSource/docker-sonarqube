@@ -14,7 +14,7 @@ This bundle points the containers at the same external database you passed to `g
 Point your SonarQube at it too, if it isn't already:
 
 ```
-sonar.jdbc.url=jdbc:postgresql://<host-that-resolves-on-the-zip-machine>:${db_port}/${db_name}${db_url_params}
+sonar.jdbc.url=jdbc:postgresql://${jdbc_host}:${db_port}/${db_name}${db_url_params}
 sonar.jdbc.username=${db_user}
 sonar.jdbc.password=<the --db-password you passed to generate.py>
 ```
@@ -27,9 +27,12 @@ The database connection stays TLS when this bundle disables TLS.
 Import the database CA into SonarQube's truststore, and copy the same PEM into `CUSTOM_CA_DIR`
 for the orchestrator.
 
-Use `${db_host}` for the orchestrator.
-In `sonar.jdbc.url`, use the host that resolves on the zip machine.
+`${db_host}` is the host the containers use. SonarQube runs from the ZIP on the host, so
+`sonar.jdbc.url` uses `${jdbc_host}`.
+`host.docker.internal` resolves inside the containers. It does not resolve on the host.
+When PostgreSQL is on this machine, the containers use `host.docker.internal` and SonarQube uses `localhost`.
 Put both names on the database certificate.
+When `--db-host` already resolves on the host, both sides use that name.
 
 SonarQube trusts that CA through a copy of the JDK `cacerts`. When this bundle has TLS, section 7
 adds this bundle's CA to the same file. Copy the JDK `cacerts` to
