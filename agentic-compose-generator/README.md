@@ -155,7 +155,7 @@ This mode has two requirements:
 
 On Docker Desktop, Rancher Desktop or colima, pass `--sandbox runc` and `--host-gateway off`.
 
-Then follow the bundle's `ZIP-INSTRUCTIONS.md`.
+Then follow `ZIP-INSTRUCTIONS.md` in the bundle. Apply it to your SonarQube, start it or restart it if it is already running, and wait until it reports UP. Then run `docker compose up -d`.
 
 ## TLS
 

@@ -1055,6 +1055,12 @@ def zip_ca_note(args: argparse.Namespace) -> str:
                    f"`{SONARQUBE_KIT_DIR}`: keep it.\n")
 
 
+def before_start_text(args: argparse.Namespace) -> str:
+    if args.edition != "none":
+        return ""
+    return render("docs/before-start-none.tmpl")
+
+
 def first_start_steps(args: argparse.Namespace) -> str:
     components = ", ".join(sorted(args.components))
     if args.edition == "none":
@@ -1075,6 +1081,7 @@ def build_docs(args: argparse.Namespace) -> dict[str, str]:
         edition_note=render("docs/readme-datacenter.tmpl", cluster_subnet=DATACENTER_CLUSTER_SUBNET)
         if args.edition == "datacenter" else "",
         first_start=first_start_steps(args),
+        before_start=before_start_text(args),
     )}
     if args.edition == "none":
         vortex_url = f"https://{args.tls_server_name}:8444" if args.tls_on else "http://localhost:9092"

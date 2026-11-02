@@ -5,8 +5,9 @@ already have a zip/host install of SonarQube running, and only starts the contai
 (database is external in this mode too). These are the changes to make in *your* SonarQube's
 `sonar.properties`.
 
-Section 1 is enough for SonarQube to start and report UP. Sections 2 to 5 connect it to this
-bundle. When this bundle has TLS, section 7 does too. Apply those before `docker compose up -d`.
+Apply sections 1 to 5, then start SonarQube or restart it if it is already running. It reads
+`sonar.properties` only at startup. Wait until it reports UP, then run `docker compose up -d`.
+When this bundle has TLS, apply section 7 before that start too.
 
 ## 1. Database
 
@@ -124,9 +125,9 @@ the containers derive their keys from the new secret.
 ${secret_key_note}
 ## 6. Start order
 
-SonarQube reports UP from section 1. Start it before `docker compose up -d`: the
-orchestrator stores its state in SonarQube's database and keeps failing its health check until
-SonarQube has created the schema.
+Start SonarQube, or restart it if it is already running, after the properties above are saved.
+Wait until it reports UP, then run `docker compose up -d`. The orchestrator stores its state in
+SonarQube's database and stays unhealthy until the schema exists.
 
 A warning that a property from sections 3, 4 or 5 is not a recognized system property is expected.
 Leave the property in `sonar.properties`.

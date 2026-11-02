@@ -1,0 +1,6 @@
+## Before `docker compose up`
+
+Apply `ZIP-INSTRUCTIONS.md` to your SonarQube Server. It must be SonarQube Server 2026.5 or later.
+Start it, or restart it if it is already running: it reads `sonar.properties` only at startup.
+Wait until `/api/system/status` reports UP, then run the command below.
+
