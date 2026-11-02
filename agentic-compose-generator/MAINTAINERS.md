@@ -132,7 +132,7 @@ per-component *defaults* — changing an image's `name` (or a pinned `digest`) m
 
 ## Supported combinations
 
-All four editions × all four storage backends × both DB modes × both TLS states × all five legal
+All three editions × all four storage backends × both DB modes × both TLS states × all five legal
 component sets (`hunter`; `vortex`; `hunter,vortex`; `remediation,vortex`; `hunter,remediation,vortex`)
 are supported, subject to the two `--edition none` constraints above. `profiles/*.json` exercises a
 representative slice of this matrix and is what CI lints against.
@@ -141,6 +141,7 @@ representative slice of this matrix and is what CI lints against.
 
 The generator fails closed (`exit 1`, no files written) if:
 
+- `--edition developer` is not supported;
 - a storage/DB requirement is missing for the chosen mode (e.g. `--storage nfs` without
   `--nfs-server`/`--nfs-export`);
 - `--edition none` is combined with `--storage local`;

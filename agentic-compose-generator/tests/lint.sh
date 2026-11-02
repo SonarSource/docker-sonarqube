@@ -80,15 +80,16 @@ refuse() {
   fi
   rm -rf "$OUT_DIR/refused"
 }
-printf '{"edition": "developer", "tls_server_nmae": "x"}' > "$OUT_DIR/typo.json"
+printf '{"edition": "enterprise", "tls_server_nmae": "x"}' > "$OUT_DIR/typo.json"
+refuse "--edition developer" --edition developer
 refuse "an unknown profile key" --profile "$OUT_DIR/typo.json"
-refuse "a newline in --image-tag" --edition developer --image-tag "$(printf '1.0\nx: y')"
-refuse "a space in --sonarqube-registry" --edition developer --sonarqube-registry "a b"
-refuse "an invalid --s3-bucket with --s3-endpoint" --edition developer --storage s3 \
+refuse "a newline in --image-tag" --edition enterprise --image-tag "$(printf '1.0\nx: y')"
+refuse "a space in --sonarqube-registry" --edition enterprise --sonarqube-registry "a b"
+refuse "an invalid --s3-bucket with --s3-endpoint" --edition enterprise --storage s3 \
   --s3-endpoint http://minio:9000 --s3-bucket 'Bad$Bucket'
-refuse "a port above 65535" --edition developer --db external --db-host db --db-password p --db-port 70000
-refuse "an invalid --project-name" --edition developer --project-name "Agentic Dev"
-refuse "an IPv6 --tls-server-name" --edition developer --tls-server-name fe80::1
+refuse "a port above 65535" --edition enterprise --db external --db-host db --db-password p --db-port 70000
+refuse "an invalid --project-name" --edition enterprise --project-name "Agentic Dev"
+refuse "an IPv6 --tls-server-name" --edition enterprise --tls-server-name fe80::1
 refuse "a --custom-ca-dir outside the bundle" --edition none --tls on --storage s3 --db-host db \
   --db-password p --custom-ca-dir ../escaped
 if [[ -e "$OUT_DIR/escaped" ]]; then
