@@ -7,21 +7,25 @@ is a single `docker-compose.yaml` plus an `.env` and a few support files: you st
 
 The bundle can run in front of:
 
-- a new SonarQube Server that it runs for you: Developer, Enterprise or Data Center Edition;
+- a new SonarQube Server that it runs for you: Enterprise or Data Center Edition;
 - your existing SonarQube install (`--edition none`). In that case it only runs the agentic
   services, and writes a `ZIP-INSTRUCTIONS.md` listing the changes to make in your `sonar.properties`.
+
+Developer Edition is not supported. The Hunter Agent and the Remediation Agent run on Enterprise
+Edition and Data Center Edition only.
 
 ## Prerequisites
 
 - **SonarQube Server 2026.5 or later.** It is the first release that ships the agentic pack; this
-  applies both to the image the bundle runs and to your own install with `--edition none`.
+  applies both to the image the bundle runs and to your own install with `--edition none`, which
+  must be an existing Enterprise or Data Center install.
 - **Python 3.9 or later** to run the generator. It uses the standard library only; there is
   nothing to install. The commands in this README say `python3`; on Windows, run `python` or `py`
   instead. Without a local Python, run it in a container instead:
 
   ```bash
   docker run --rm -u "$(id -u):$(id -g)" -v "$PWD":/work -w /work python:3.13-slim \
-    python generate.py --edition developer --out my-bundle
+    python generate.py --edition enterprise --out my-bundle
   ```
 
   The image also has the `openssl` that `--edition none --tls on` needs. `-u` keeps the bundle
@@ -43,7 +47,7 @@ The bundle can run in front of:
 ## Quick start
 
 ```bash
-python3 generate.py --edition developer --out my-bundle
+python3 generate.py --edition enterprise --out my-bundle
 cd my-bundle
 docker compose up -d
 docker compose ps
@@ -51,7 +55,7 @@ docker compose ps
 
 With the defaults this runs:
 
-- SonarQube Server Developer Edition;
+- SonarQube Server Enterprise Edition;
 - a bundled PostgreSQL;
 - all three agentic components;
 - local storage;
@@ -88,7 +92,7 @@ Without `--out`, the bundle goes to `out/<edition>`.
 
 | Flag | Values | Default | Effect |
 |---|---|---|---|
-| `--edition` | `developer` \| `enterprise` \| `datacenter` \| `none` | *required* | The SonarQube Server edition to run, or `none` to use your existing install |
+| `--edition` | `enterprise` \| `datacenter` \| `none` | *required* | The SonarQube Server edition to run, or `none` to use your existing install. Developer Edition is not supported |
 | `--components` | comma-separated subset of `hunter,remediation,vortex` | all three | Services to run. `remediation` needs `vortex` and adds it if missing |
 | `--sonarqube-tag` | SonarQube version, 2026.5 or later, e.g. `2026.5.0` | see `default-images.json` | SonarQube image version; the edition suffix is added for you |
 | `--image-tag` | a tag published for all four agentic images | see `default-images.json` | Overrides the tag of all four agentic images at once. Their default tags can differ, since an image is only republished when it changes (e.g. `2026.5.2` for Agent Orchestrator and Hunter Agent, `2026.5.1` for Remediation Agent and Vortex), so only pass a tag that exists for every agentic image, or omit it to use the per-image defaults |
@@ -314,13 +318,17 @@ Regenerating into an existing bundle directory is safe:
   either, the generator stops; rerun with `--force` to issue a new CA and certificates, then
   re-import the new `tls/ca.crt` wherever you trusted the old one.
 
-Your data stays in the named volumes and your database. Don't run `docker compose down -v`: it
-deletes the named volumes, including the bundled database, SonarQube's data and `local` storage.
+Your data stays in the named volumes and your database, as long as the Compose project name stays
+the same. The default project name is `agentic-<edition>`, so changing `--edition` starts a new
+project and leaves the previous volumes unused. Pass the previous name with `--project-name`. A
+Developer bundle that used the default is `agentic-developer`. Don't run `docker compose down -v`:
+it deletes the named volumes, including the bundled database, SonarQube's data and `local` storage.
 
 ## When the generator refuses your options
 
 The generator writes nothing and exits with an error in these cases:
 
+- `--edition developer` is not supported;
 - a required flag is missing for the chosen mode, e.g. `--storage nfs` without `--nfs-server`, or
   `--db external` without `--db-host` or `--db-password`;
 - `--edition none` is combined with `--storage local`;

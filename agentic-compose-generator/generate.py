@@ -31,7 +31,14 @@ TEMPLATES = HERE / "templates"
 DEFAULT_IMAGES_FILE = HERE / "default-images.json"
 DEFAULT_IMAGES: dict = json.loads(read_utf8(DEFAULT_IMAGES_FILE))
 
-EDITIONS = ("developer", "enterprise", "datacenter", "none")
+EDITIONS = ("enterprise", "datacenter", "none")
+DEVELOPER_EDITION_ERROR = (
+    "--edition developer is not supported: the Hunter Agent and the Remediation Agent "
+    "run on Enterprise Edition and Data Center Edition only. Use enterprise or datacenter, "
+    "or none with an existing Enterprise or Data Center install. "
+    "To regenerate an existing Developer bundle as enterprise and keep its volumes, also pass "
+    "--project-name agentic-developer (or the --project-name that bundle already uses)"
+)
 ALL_COMPONENTS = ("hunter", "remediation", "vortex")
 DB_MODES = ("local", "external")
 STORAGE_MODES = ("local", "nfs", "hostpath", "s3")
@@ -115,8 +122,9 @@ def build_argparser() -> argparse.ArgumentParser:
     )
     p.add_argument("--profile", help="JSON file with any of the flags below as keys")
     p.add_argument("--print-inputs-schema", action="store_true", help="print the JSON Schema for a profile and exit")
-    p.add_argument("--edition", choices=EDITIONS, help="SonarQube edition ('datacenter' runs a 2-app/3-search cluster behind a load "
-                         "balancer), or 'none' to target an existing zip install")
+    p.add_argument("--edition", help="enterprise or datacenter, or none to target an existing zip install. "
+                         "datacenter runs a 2-app/3-search cluster behind a load balancer. "
+                         "Developer Edition is not supported")
     p.add_argument("--components", default="hunter,remediation,vortex", help="csv subset of hunter,remediation,vortex")
     p.add_argument("--db", dest="db_mode", choices=DB_MODES, default="local")
     p.add_argument("--db-host")
@@ -220,7 +228,11 @@ def load_config(argv: list[str]) -> tuple[argparse.Namespace, argparse.ArgumentP
             setattr(args, key, value)
 
     if not args.edition:
-        raise ConfigError("--edition is required (developer|enterprise|datacenter|none), or set it in --profile")
+        raise ConfigError("--edition is required (enterprise|datacenter|none), or set it in --profile")
+    if args.edition == "developer":
+        raise ConfigError(DEVELOPER_EDITION_ERROR)
+    if args.edition not in EDITIONS:
+        raise ConfigError(f"--edition '{args.edition}' is not one of {', '.join(EDITIONS)}")
 
     args.components = {c.strip() for c in str(args.components).split(",") if c.strip()}
     unknown = args.components - set(ALL_COMPONENTS)
@@ -670,7 +682,7 @@ def build_truststore_init(args: argparse.Namespace) -> str:
 
 
 def sonarqube_image(args: argparse.Namespace, suffix: str) -> str:
-    """SonarQube image ref; `suffix` is the edition part of the tag (e.g. `-developer`)."""
+    """SonarQube image ref; `suffix` is the edition part of the tag (e.g. `-enterprise`)."""
     defaults = DEFAULT_IMAGES.get("sonarqube", {})
     registry = args.sonarqube_registry if args.sonarqube_registry is not None else defaults.get("registry", "")
     name = defaults.get("name", "sonarqube")
