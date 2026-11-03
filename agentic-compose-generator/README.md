@@ -90,7 +90,7 @@ Without `--out`, the bundle goes to `out/<edition>`.
 | `--edition` | `developer` \| `enterprise` \| `datacenter` \| `none` | *required* | The SonarQube Server edition to run, or `none` to use your existing install |
 | `--components` | comma-separated subset of `hunter,remediation,vortex` | all three | Services to run. `remediation` needs `vortex` and adds it if missing |
 | `--sonarqube-tag` | SonarQube version, 2026.5 or later, e.g. `2026.5.0` | see `default-images.json` | SonarQube image version; the edition suffix is added for you |
-| `--image-tag` | agentic pack version | see `default-images.json` | Version of all four agentic images |
+| `--image-tag` | a tag published for all four agentic images | see `default-images.json` | Overrides the tag of all four agentic images at once. Their default tags can differ, since an image is only republished when it changes (e.g. `2026.5.2` for Agent Orchestrator and Hunter Agent, `2026.5.1` for Remediation Agent and Vortex), so only pass a tag that exists for every agentic image, or omit it to use the per-image defaults |
 | `--sonarqube-registry`, `--image-registry` | registry host, optionally with a port and a path, e.g. `mirror.example.com:5000/sonar` | Docker Hub | Pull from a mirror of the official images instead |
 | `--project-name` | lowercase letters, digits, `_`, `-` | `agentic-<edition>` | Compose project name, the prefix of every container, network and volume. Give two bundles of the same edition on one host different names |
 
@@ -284,7 +284,9 @@ The bundle's `README.md` has the details.
 ## Upgrading and regenerating
 
 1. Regenerate the bundle into the same directory, reusing your profile, with the new
-   `--sonarqube-tag` or `--image-tag`, or with any other option you want to change.
+   `--sonarqube-tag` or any other option you want to change. A newer generator already carries
+   the latest agentic image defaults, so you usually don't need `--image-tag`; if you pass it,
+   use a tag that exists for all four agentic images.
 2. Run `docker compose up -d`.
 
 Regenerating into an existing bundle directory is safe:
