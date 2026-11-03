@@ -141,7 +141,8 @@ def build_argparser() -> argparse.ArgumentParser:
                          "the official Docker Hub image; per-component defaults come from "
                          "default-images.json")
     p.add_argument("--image-tag", default=None,
-                    help="overrides the tag for every agentic component image; "
+                    help="overrides the tag of all four agentic component images at once, "
+                         "so only use a tag published for each of them; "
                          "per-component defaults come from default-images.json")
     p.add_argument("--sonarqube-registry", default=None,
                     help="SonarQube image registry, blank for the official Docker Hub image; "
