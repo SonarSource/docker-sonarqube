@@ -114,7 +114,7 @@ Bump it with a small, direct edit to the file, referencing the ticket in the com
 proposes digest bumps for the third-party images.
 
 All defaults are public Docker Hub coordinates: the official `sonarqube` image
-(`sonarqube:<tag>-<edition>`, e.g. `sonarqube:2026.5.3-datacenter-app`), and for the four agentic
+(`sonarqube:<tag>-<edition>`, e.g. `sonarqube:2026.5.4-datacenter-app`), and for the four agentic
 components `sonarsource/sonarqube-agent-orchestrator`, `sonarqube-hunter-agent`,
 `sonarqube-remediation-agent` and `sonar-vortex`, tagged with the SonarQube Server line they ship
 with and a patch of their own (e.g. `2026.5.2` alongside SonarQube Server `2026.5.4`). The tags
