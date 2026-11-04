@@ -20,10 +20,16 @@ import sys
 import tempfile
 from pathlib import Path
 
+
+def read_utf8(path: Path) -> str:
+    """Every file the generator reads is UTF-8; the platform default is not (cp1252 on Windows)."""
+    return path.read_text(encoding="utf-8")
+
+
 HERE = Path(__file__).resolve().parent
 TEMPLATES = HERE / "templates"
 DEFAULT_IMAGES_FILE = HERE / "default-images.json"
-DEFAULT_IMAGES: dict = json.loads(DEFAULT_IMAGES_FILE.read_text())
+DEFAULT_IMAGES: dict = json.loads(read_utf8(DEFAULT_IMAGES_FILE))
 
 EDITIONS = ("developer", "enterprise", "datacenter", "none")
 ALL_COMPONENTS = ("hunter", "remediation", "vortex")
@@ -81,7 +87,7 @@ FORBIDDEN_STRINGS = tuple(s for s in os.environ.get("AGENTIC_GEN_FORBIDDEN", "")
 
 
 def render(template_name: str, **substitutions: str) -> str:
-    text = (TEMPLATES / template_name).read_text()
+    text = read_utf8(TEMPLATES / template_name)
     return string.Template(text).safe_substitute(**substitutions)
 
 
@@ -189,7 +195,7 @@ def load_config(argv: list[str]) -> tuple[argparse.Namespace, argparse.ArgumentP
 
     if args.profile:
         try:
-            profile = json.loads(Path(args.profile).read_text())
+            profile = json.loads(read_utf8(Path(args.profile)))
         except OSError as exc:
             raise ConfigError(f"--profile: cannot read {args.profile}: {exc.strerror}") from exc
         except json.JSONDecodeError as exc:
@@ -1113,8 +1119,8 @@ def build_kit(args: argparse.Namespace) -> dict[str, str]:
         f"{SONARQUBE_KIT_DIR}/docker-compose.yaml": render("kit/docker-compose.tmpl", **subs),
         f"{SONARQUBE_KIT_DIR}/README.md": render("kit/readme.tmpl", **subs),
         f"{SONARQUBE_KIT_DIR}/nginx/sonarqube-tls.conf": render("kit/sonarqube-tls.conf.tmpl", **subs),
-        f"{SONARQUBE_KIT_DIR}/entrypoint.sh": (HERE / "tls-proxy" / "entrypoint.sh").read_text(),
-        f"{SONARQUBE_KIT_DIR}/nginx.kit.conf.template": (HERE / "tls-proxy" / "nginx.kit.conf.template").read_text(),
+        f"{SONARQUBE_KIT_DIR}/entrypoint.sh": read_utf8(HERE / "tls-proxy" / "entrypoint.sh"),
+        f"{SONARQUBE_KIT_DIR}/nginx.kit.conf.template": read_utf8(HERE / "tls-proxy" / "nginx.kit.conf.template"),
     }
 
 
@@ -1224,13 +1230,14 @@ def write_bundle_certs(args: argparse.Namespace, out_dir: Path, reissue: bool) -
     notes = []
     if reissue:
         with tempfile.TemporaryDirectory() as work:
-            Path(work, "ca.cnf").write_text(CA_CONFIG)
+            write_file(Path(work, "ca.cnf"), CA_CONFIG.encode())
             openssl(work, "req", "-x509", "-new", "-newkey", "rsa:2048", "-nodes", "-sha256", "-days", "3650",
                     "-config", "ca.cnf", "-extensions", "v3_ca", "-keyout", "ca.key", "-out", CA_CERT_FILE)
             ca_cert.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(Path(work, CA_CERT_FILE), ca_cert)
             for leaf_dir, names in leaves.items():
-                Path(work, LEAF_CONFIG_FILE).write_text(LEAF_CONFIG.format(cn=names[0], san=san_entries(names)))
+                write_file(Path(work, LEAF_CONFIG_FILE),
+                           LEAF_CONFIG.format(cn=names[0], san=san_entries(names)).encode())
                 openssl(work, "req", "-new", "-newkey", "rsa:2048", "-nodes", "-config", LEAF_CONFIG_FILE,
                         "-keyout", "leaf.key", "-out", "leaf.csr")
                 # 825 days: the longest lifetime Safari and Chrome still accept for a leaf certificate.
@@ -1239,7 +1246,8 @@ def write_bundle_certs(args: argparse.Namespace, out_dir: Path, reissue: bool) -
                         "-extfile", LEAF_CONFIG_FILE, "-extensions", "v3_leaf", "-out", "leaf.crt")
                 leaf_dir.mkdir(parents=True, exist_ok=True)
                 # Full chain, so a client that only has the CA can still build the path.
-                (leaf_dir / LEAF_CERT_FILE).write_text(Path(work, "leaf.crt").read_text() + Path(work, CA_CERT_FILE).read_text())
+                chain = read_utf8(Path(work, "leaf.crt")) + read_utf8(Path(work, CA_CERT_FILE))
+                write_file(leaf_dir / LEAF_CERT_FILE, chain.encode())
                 write_file(leaf_dir / "tls.key", Path(work, "leaf.key").read_bytes(), 0o600)
 
     if Path(args.custom_ca_dir).is_absolute():
@@ -1310,7 +1318,7 @@ def read_manifest(out_dir: Path) -> dict[str, str]:
     if not path.exists():
         return {}
     try:
-        files = json.loads(path.read_text()).get("files", {})
+        files = json.loads(read_utf8(path)).get("files", {})
     except (ValueError, AttributeError) as exc:
         raise ConfigError(f"{path} is corrupt; delete it and rerun with --force") from exc
     return files if isinstance(files, dict) else {}
@@ -1319,7 +1327,7 @@ def read_manifest(out_dir: Path) -> dict[str, str]:
 def read_env_values(env_file: Path) -> dict[str, str]:
     values = {}
     if env_file.exists():
-        for line in env_file.read_text().splitlines():
+        for line in read_utf8(env_file).splitlines():
             key, sep, value = line.partition("=")
             if sep and not key.lstrip().startswith("#"):
                 # compose uses the last occurrence of a duplicated key.
@@ -1384,7 +1392,8 @@ def write_file(path: Path, data: bytes, mode: int | None = None) -> None:
     # Created with the final mode, so a secret is never readable by others, even briefly.
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, mode)
     with os.fdopen(fd, "wb") as handle:
-        os.fchmod(handle.fileno(), mode)
+        # By path: os.fchmod doesn't exist on Windows before Python 3.13.
+        os.chmod(path, mode)
         handle.write(data)
 
 

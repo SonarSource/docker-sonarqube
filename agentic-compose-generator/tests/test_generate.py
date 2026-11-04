@@ -8,11 +8,14 @@ import contextlib
 import importlib.util
 import io
 import json
+import os
 import stat
+import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 SCRIPT_PATH = Path(__file__).resolve().parent.parent / "generate.py"
 
@@ -204,6 +207,7 @@ class RegenerationTest(unittest.TestCase):
         code, _, err = run("--edition", "developer", "--tls", "off", "--out", str(self.bundle), *extra)
         return code, err
 
+    @unittest.skipIf(os.name == "nt", "Windows has no POSIX file modes")
     def test_env_is_private(self):
         self.assertEqual(self.generate()[0], 0)
         self.assertEqual(stat.S_IMODE((self.bundle / ".env").stat().st_mode), 0o600)
@@ -231,6 +235,29 @@ class RegenerationTest(unittest.TestCase):
 
         self.assertEqual(self.generate("--force")[0], 0)
         self.assertNotIn("# my edit", compose.read_text())
+
+
+class WindowsTest(unittest.TestCase):
+    def test_runs_twice_with_an_ascii_default_encoding(self):
+        # Windows reads text as cp1252 unless told otherwise, and the templates hold non-ASCII
+        # characters; an ASCII default reproduces the failure on any OS.
+        env = {**os.environ, "LC_ALL": "C", "LANG": "C", "PYTHONCOERCECLOCALE": "0", "PYTHONUTF8": "0"}
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            for attempt in ("first", "second"):
+                result = subprocess.run([sys.executable, str(SCRIPT_PATH), "--edition", "enterprise",
+                                         "--tls", "off", "--out", str(bundle)], env=env, capture_output=True)
+                self.assertEqual(result.returncode, 0, f"{attempt} run: {result.stderr.decode(errors='replace')}")
+            compose = (bundle / "docker-compose.yaml").read_bytes().decode("utf-8")
+            self.assertIn("\u2014", compose)
+            self.assertNotIn("\u00e2\u20ac", compose)
+
+    def test_env_is_written_without_os_fchmod(self):
+        # os.fchmod doesn't exist on Windows before Python 3.13.
+        no_fchmod = mock.patch.object(os, "fchmod", create=True, side_effect=AttributeError("no os.fchmod"))
+        with tempfile.TemporaryDirectory() as tmp, no_fchmod:
+            code, _, err = run("--edition", "enterprise", "--tls", "off", "--out", str(Path(tmp) / "bundle"))
+        self.assertEqual(code, 0, err)
 
 
 class ZipDatabaseCaTest(unittest.TestCase):

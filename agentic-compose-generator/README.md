@@ -16,7 +16,8 @@ The bundle can run in front of:
 - **SonarQube Server 2026.5 or later.** It is the first release that ships the agentic pack; this
   applies both to the image the bundle runs and to your own install with `--edition none`.
 - **Python 3.9 or later** to run the generator. It uses the standard library only; there is
-  nothing to install. Without a local Python, run it in a container instead:
+  nothing to install. The commands in this README say `python3`; on Windows, run `python` or `py`
+  instead. Without a local Python, run it in a container instead:
 
   ```bash
   docker run --rm -u "$(id -u):$(id -g)" -v "$PWD":/work -w /work python:3.13-slim \

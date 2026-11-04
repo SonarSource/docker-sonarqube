@@ -54,6 +54,30 @@ jobs:
       - name: Lint every profile
         run: ./tests/lint.sh
 
+  # Windows is a supported place to run the generator; Python 3.9 has no os.fchmod there.
+  test-windows:
+    name: Unit tests (Windows, Python ${{ matrix.python-version }})
+    runs-on: github-windows-latest-s
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.13']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # The tests that issue certificates need openssl, which Git for Windows ships.
+      - name: Add Git's openssl to the PATH
+        run: Add-Content -Path $env:GITHUB_PATH -Value 'C:\Program Files\Git\usr\bin'
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+
   egress-proxy:
     name: Egress proxy allowlist
     runs-on: github-ubuntu-latest-s
