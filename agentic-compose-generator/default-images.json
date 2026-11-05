@@ -12,7 +12,7 @@
   "remediation-agent": {
     "registry": "sonarsource",
     "name": "sonarqube-remediation-agent",
-    "tag": "2026.5.1"
+    "tag": "2026.5.2"
   },
   "vortex": {
     "registry": "sonarsource",
