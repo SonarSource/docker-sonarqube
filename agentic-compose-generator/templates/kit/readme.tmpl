@@ -10,8 +10,8 @@ they do today.
 
 ## Requirements
 
-- **Docker with Docker Compose v2** on the SonarQube machine. Without Docker, use your own nginx
-  instead; see [Using your own nginx](#using-your-own-nginx).
+- **Docker with Docker Compose v2** on the SonarQube machine. Without Docker, for example on
+  Windows, use your own nginx instead; see [Using your own nginx](#using-your-own-nginx).
 - **Port ${kit_port}** on the SonarQube machine, reachable from the host that runs the bundle.
 - **`${server_name}` resolving to the SonarQube machine** from the bundle's containers. The
   certificate is issued for that name.
@@ -66,10 +66,28 @@ To serve your own certificate instead:
 ## Using your own nginx
 
 `nginx/sonarqube-tls.conf` is the same proxy as a server block, for an nginx you already run on the
-SonarQube machine:
+SonarQube machine. It needs no Docker. The certificate paths in it are relative, so they resolve
+against the `conf` directory of your nginx, wherever it is installed.
 
-1. Copy `tls/tls.crt` and `tls/tls.key` to `/etc/nginx/sonarqube-tls/`, readable by nginx only.
+1. In the `conf` directory of your nginx, create a `sonarqube-tls` directory. Copy `tls/tls.crt` and
+   `tls/tls.key` into it, readable by nginx only.
 2. Include `nginx/sonarqube-tls.conf` inside the `http { }` block of your nginx configuration.
-3. Run `nginx -t`, then reload nginx.
+3. Test the configuration, then reload nginx.
+
+On Linux, the `conf` directory is usually `/etc/nginx`:
+
+```bash
+nginx -t
+nginx -s reload
+```
+
+On Windows, nginx is a zip you extract anywhere, and the `conf` directory is the one inside it. Run
+these from the nginx directory. In the `include` line, use forward slashes in the path, because
+nginx reads a backslash as an escape:
+
+```
+nginx.exe -t
+nginx.exe -s reload
+```
 
 It forwards to `127.0.0.1:${upstream_port}`; edit `proxy_pass` if SonarQube listens elsewhere.
