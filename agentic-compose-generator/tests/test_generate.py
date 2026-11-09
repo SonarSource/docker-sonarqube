@@ -203,6 +203,91 @@ class ImageRefTest(unittest.TestCase):
                 self.assertTrue(image.get("digest", "").startswith("sha256:"))
 
 
+class CustomCaDirTest(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.bundle = Path(self._tmp.name) / "bundle"
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def generate(self, ca_dir: str) -> tuple[int, str]:
+        code, _, err = run("--edition", "enterprise", "--tls", "off", "--custom-ca-dir", ca_dir,
+                           "--out", str(self.bundle))
+        return code, err
+
+    def test_bare_name_is_written_as_a_path(self):
+        code, err = self.generate("certs")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(env_value(self.bundle, "CUSTOM_CA_DIR"), "./certs")
+        self.assertIn("named volume", err)
+        self.assertTrue((self.bundle / "certs").is_dir())
+
+    def test_nested_bare_name_is_written_as_a_path(self):
+        self.assertEqual(self.generate("a/b")[0], 0)
+        self.assertEqual(env_value(self.bundle, "CUSTOM_CA_DIR"), "./a/b")
+
+    def test_path_forms_are_kept(self):
+        for value in ("./certs", ".certs", "/opt/certs"):
+            with self.subTest(value=value):
+                code, err = self.generate(value)
+                self.assertEqual(code, 0, err)
+                self.assertEqual(env_value(self.bundle, "CUSTOM_CA_DIR"), value)
+                self.assertNotIn("named volume", err)
+
+    def test_empty_directory_is_warned_about_by_name(self):
+        code, err = self.generate("./certs")
+        self.assertEqual(code, 0, err)
+        self.assertIn("warning: --custom-ca-dir './certs' holds no CA file", err)
+        self.assertNotIn("does not exist", err)
+
+    def test_missing_absolute_directory_is_warned_about_by_name(self):
+        missing = (Path(self._tmp.name) / "missing").as_posix()  # the generator refuses backslashes
+        code, err = self.generate(missing)
+        self.assertEqual(code, 0, err)
+        self.assertIn(f"warning: --custom-ca-dir '{missing}' does not exist", err)
+        self.assertNotIn("holds no CA file", err)
+
+    def test_other_users_home_directory_is_refused(self):
+        for value in ("~certs", "~nosuchuser/ca"):
+            with self.subTest(value=value):
+                code, _, err = run("--edition", "enterprise", "--custom-ca-dir", value, "--out", "-")
+                self.assertEqual(code, 1, err)
+                self.assertIn("must be '~' or '~/name'", err)
+                self.assertNotIn("Traceback", err)
+
+    def test_home_directory_path_is_resolved_on_the_host(self):
+        home = Path(self._tmp.name) / "home"
+        (home / "certs").mkdir(parents=True)
+        with mock.patch.dict(os.environ, {"HOME": str(home), "USERPROFILE": str(home)}):
+            code, err = self.generate("~/certs")
+            self.assertEqual(code, 0, err)
+            self.assertEqual(env_value(self.bundle, "CUSTOM_CA_DIR"), "~/certs")
+            self.assertIn("holds no CA file", err)
+            self.assertFalse((self.bundle / "~").exists(), "created a literal ~ directory in the bundle")
+            (home / "certs" / "my-ca.pem").write_text("x")
+            code, err = self.generate("~/certs")
+            self.assertEqual(code, 0, err)
+            self.assertNotIn("warning", err)
+
+    def test_directory_with_a_ca_file_is_not_warned_about(self):
+        for name in ("my-ca.crt", "my-ca.pem"):
+            with self.subTest(name=name):
+                ca_dir = Path(self._tmp.name) / "abs"
+                ca_dir.mkdir(exist_ok=True)
+                (ca_dir / name).write_text("x")
+                code, err = self.generate(ca_dir.as_posix())
+                self.assertEqual(code, 0, err)
+                self.assertNotIn("holds no CA file", err)
+                (ca_dir / name).unlink()
+
+    def test_bundle_ca_directory_is_not_warned_about(self):
+        code, _, err = run("--edition", "none", "--tls", "on", "--storage", "s3", "--db-host", "db",
+                           "--db-password", "p", "--out", str(self.bundle))
+        self.assertEqual(code, 0, err)
+        self.assertNotIn("holds no CA file", err)
+
+
 class RegenerationTest(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
