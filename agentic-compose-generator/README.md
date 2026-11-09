@@ -123,8 +123,8 @@ other's jobs.
 | `--storage` | Required flags | Use it for |
 |---|---|---|
 | `local` | — | Evaluation: a Docker volume on this host, removed by `docker compose down -v` |
-| `hostpath` | `--storage-path` (absolute path) | A directory you already provision on the host, e.g. an EFS or NFS mount |
-| `nfs` | `--nfs-server`, `--nfs-export`; with `--edition none`, also `--storage-path` (where your SonarQube host mounts the export) | An NFS export that Docker mounts for you |
+| `hostpath` | `--storage-path` (absolute Linux path; a Windows path is refused, use `s3`) | A directory you already provision on the host, e.g. an EFS or NFS mount |
+| `nfs` | `--nfs-server`, `--nfs-export`; with `--edition none`, also `--storage-path` (where your SonarQube host mounts the export, a Linux path) | An NFS export that Docker mounts for you |
 | `s3` | `--s3-bucket`, `--s3-region`, `--s3-access-key`, `--s3-secret-key` | An S3 bucket. Add `--s3-endpoint` for an S3-compatible service. Addressing is virtual-hosted on AWS (path-style for bucket names with dots) and path-style with `--s3-endpoint`; `--s3-path-style` overrides it |
 
 Per-job LLM provider keys are stored in plaintext in this storage: restrict access to it as you
@@ -156,7 +156,8 @@ This mode has two requirements:
 - **`--db external`**, pointed at your SonarQube's database. `--db-host` is the name the
   containers use. On a zip install the host in `sonar.jdbc.url` can differ; see [TLS](#tls).
 - **Storage other than `local`**, reachable from both your SonarQube host and the containers.
-  With `--storage hostpath`, mount it at the same path on both.
+  With `--storage hostpath`, mount it at the same path on both. On a Windows SonarQube host, use
+  `--storage s3`: the containers are Linux and can't mount a Windows path.
 
 On Docker Desktop, Rancher Desktop or colima, pass `--sandbox runc` and `--host-gateway off`.
 
@@ -185,7 +186,8 @@ Then follow the bundle's `ZIP-INSTRUCTIONS.md`.
   - **From the containers to SonarQube:** the bundle includes `sonarqube-tls-proxy/`, a small TLS
     proxy that you run on your SonarQube machine. It serves https on port 9443 and forwards to
     SonarQube's own port. Only the agentic services use it: your users and scanners keep reaching
-    SonarQube as they do today. If your SonarQube already serves https, pass
+    SonarQube as they do today. It runs in Docker; without Docker on that machine, for example on
+    Windows, use your own nginx, as the kit's `README.md` explains. If your SonarQube already serves https, pass
     `--sonarqube-external-scheme https` and the containers call it directly, with no proxy.
   - **Certificates:** the generator creates a CA for the bundle, `tls/ca.crt`, and uses it to issue
     the certificates of both proxies: `agentic-proxy` for `--tls-server-name`, and
