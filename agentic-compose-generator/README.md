@@ -139,7 +139,7 @@ would a credential store.
 | `--sandbox` | a Docker runtime name | `runsc` | Container runtime of the two agent runtime services; see [Sandboxing](#sandboxing) |
 | `--llm-domains` | comma-separated host names | `api.anthropic.com` | The only LLM hosts the agent runtimes may reach |
 | `--github-api-base-url` | URL | public GitHub | Set for GitHub Enterprise, e.g. `https://github.example.com/api/v3` |
-| `--custom-ca-dir` | directory | unset (`./custom-ca` with `--edition none --tls on`) | PEM CA certificates (`*.crt`, `*.pem`) to trust for outbound TLS; see [TLS](#tls) |
+| `--custom-ca-dir` | directory | unset (`./custom-ca` with `--edition none --tls on`) | PEM CA certificates (`*.crt`, `*.pem`) to trust for outbound TLS; see [TLS](#tls). Use `./name` (relative to the bundle, created for you), an absolute path or `~/name`. A bare `name` is rewritten to `./name`, because Compose would read it as a named volume. The generator warns when the directory holds no CA file |
 | `--sonar-secret-key-file` | file | unset | SonarQube's settings encryption key (`sonar-secret.txt`), mounted into SonarQube (as `sonar.secretKeyPath`) and the orchestrator, so both decrypt the same `{aes-gcm}` values. With `--edition none`, point it at the key your SonarQube already uses |
 
 ### Using your existing SonarQube (`--edition none`)
