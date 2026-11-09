@@ -99,6 +99,10 @@ class RefusalsTest(unittest.TestCase):
                                         "--db-host", "db.internal", "--db-password", "x", *extra,
                                         message="Use --storage s3")
 
+    def test_windows_hostpath_on_a_bundled_edition_points_to_local_or_s3(self):
+        self.assert_refused("--edition", "enterprise", "--storage", "hostpath", "--storage-path", "C:\\agentic",
+                            message="Use --storage local")
+
     def test_edition_none_with_local_storage(self):
         self.assert_refused("--edition", "none", "--storage", "local", message="--storage")
 
