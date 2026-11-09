@@ -22,20 +22,9 @@ on:
       - '.trivyignore.yaml'
       - 'run-tests.sh'
       - 'docker-official-images/**/*'
+  # No paths filter: release branches require QA Validator, which a skipped workflow never reports.
+  # The changes job below decides instead whether a pull request has an image to build.
   pull_request:
-    paths:
-      - 'commercial-editions/**/*'
-      - 'community-build/*'
-      - '.github/workflows/scripts/**'
-      - '.github/workflows/push_and_pr.yml'
-      - '.github/workflows/multi-arch-build-template.yml'
-      - '.github/workflows/multi-arch-test-template.yml'
-      - '.github/workflows/gcp-build-template.yml'
-      - '.github/github_env.yaml'
-      - '.github/trivy.yaml'
-      - '.trivyignore.yaml'
-      - 'run-tests.sh'
-      - 'docker-official-images/**/*'
   workflow_call:
     inputs:
       run_builds:
@@ -96,7 +85,60 @@ on:
           - community-only
 
 jobs:
+  # Pull requests touching none of these paths skip every build, test and scan job, and QA Validator
+  # still reports. Other events always build: push has its own paths filter (keep both lists in sync).
+  changes:
+    name: Detect image changes
+    runs-on: github-ubuntu-latest-s
+    permissions:
+      contents: read
+    outputs:
+      images: ${{ steps.filter.outputs.images }}
+    steps:
+      - name: Checkout code
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # The pull request merge commit and its first parent, the base branch.
+          fetch-depth: 2
+
+      - id: filter
+        name: Check changed paths
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [[ "${EVENT_NAME}" != 'pull_request' ]]; then
+            echo "images=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Glob pathspecs match like GitHub path filters: "*" stops at "/", "**" doesn't.
+          paths=(
+            'commercial-editions/**/*'
+            'community-build/*'
+            '.github/workflows/scripts/**'
+            '.github/workflows/push_and_pr.yml'
+            '.github/workflows/multi-arch-build-template.yml'
+            '.github/workflows/multi-arch-test-template.yml'
+            '.github/workflows/gcp-build-template.yml'
+            '.github/github_env.yaml'
+            '.github/trivy.yaml'
+            '.trivyignore.yaml'
+            'run-tests.sh'
+            'docker-official-images/**/*'
+          )
+          changed=$(git diff --name-only HEAD^1 HEAD -- "${paths[@]/#/:(glob)}")
+          if [[ -n "${changed}" ]]; then
+            echo "Image paths changed:"
+            echo "${changed}"
+            echo "images=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No image path changed: skipping the build, test and scan jobs."
+            echo "images=false" >> "$GITHUB_OUTPUT"
+          fi
+
   load-config:
+    needs: changes
+    if: needs.changes.outputs.images == 'true'
     uses: ./.github/workflows/load-config.yml
 
   # Build phase - all editions in parallel
@@ -146,8 +188,10 @@ jobs:
 
   # Test phase - runs immediately after builds complete (no workflow_run delay)
   test-commercial-editions:
-    needs: [load-config, build-commercial-editions]
+    needs: [changes, load-config, build-commercial-editions]
+    # always() below drops the implicit success() check, so gate on changes explicitly.
     if: |
+      needs.changes.outputs.images == 'true' &&
       (github.event_name != 'workflow_dispatch' || (always() && inputs.run_tests)) &&
       (github.event_name != 'workflow_dispatch' || (always() && (inputs.editions == 'all' || inputs.editions == 'commercial-only')))
     name: Test commercial edition (${{ matrix.test_name }}, ${{ matrix.architecture }})
@@ -185,8 +229,9 @@ jobs:
       runs_on: ${{ matrix.architecture == 'arm64' && 'github-ubuntu-24.04-arm-s' || 'github-ubuntu-latest-s' }}
 
   test-community-build:
-    needs: [load-config, build-community-build]
+    needs: [changes, load-config, build-community-build]
     if: |
+      needs.changes.outputs.images == 'true' &&
       (github.event_name != 'workflow_dispatch' || (always() && inputs.run_tests)) &&
       (github.event_name != 'workflow_dispatch' || (always() && (inputs.editions == 'all' || inputs.editions == 'community-only')))
     name: Test community edition (${{ matrix.architecture }})
@@ -209,6 +254,8 @@ jobs:
   # the build/scan jobs below -- it only needs the script and its test fixtures, not a
   # built image -- so it can run immediately without waiting on load-config.
   test-trivy-policy-script:
+    needs: changes
+    if: needs.changes.outputs.images == 'true'
     name: Test Trivy CVSS policy script
     runs-on: github-ubuntu-latest-s
     steps:
@@ -230,9 +277,9 @@ jobs:
   # build-commercial-editions / build-community-build split so every staging image
   # (developer, enterprise, datacenter-app, datacenter-search, community) is scanned.
   trivy-scan-commercial-editions:
-    needs: [load-config, build-commercial-editions]
+    needs: [changes, load-config, build-commercial-editions]
     if: |
-      always() &&
+      always() && needs.changes.outputs.images == 'true' &&
       (github.event_name != 'workflow_dispatch' || inputs.editions == 'all' || inputs.editions == 'commercial-only')
     name: Security Scan (${{ matrix.edition }})
     runs-on: github-ubuntu-latest-s
@@ -316,9 +363,9 @@ jobs:
           category: 'image-${{ matrix.edition }}'
 
   trivy-scan-community-build:
-    needs: [load-config, build-community-build]
+    needs: [changes, load-config, build-community-build]
     if: |
-      always() &&
+      always() && needs.changes.outputs.images == 'true' &&
       (github.event_name != 'workflow_dispatch' || inputs.editions == 'all' || inputs.editions == 'community-only')
     name: Security Scan (community)
     runs-on: github-ubuntu-latest-s
@@ -433,7 +480,10 @@ jobs:
   qa-validator:
     if: always()
     name: QA Validator
+    # changes must succeed (it is not an allowed skip): if it fails, QA Validator fails instead of
+    # passing on a run where every other job was skipped.
     needs:
+      - changes
       - load-config
       - test-trivy-policy-script
       - build-commercial-editions
@@ -452,7 +502,7 @@ jobs:
         id: alls-green
         with:
           jobs: ${{ toJSON(needs) }}
-          allowed-skips: 'load-config,build-commercial-editions,build-community-build,test-commercial-editions,test-community-build,trivy-scan-commercial-editions,trivy-scan-community-build,gcp-build-staging-app,gcp-build-staging-search'
+          allowed-skips: 'load-config,test-trivy-policy-script,build-commercial-editions,build-community-build,test-commercial-editions,test-community-build,trivy-scan-commercial-editions,trivy-scan-community-build,gcp-build-staging-app,gcp-build-staging-search'
 
   notify-slack-on-failure:
     name: Notify on Failure
