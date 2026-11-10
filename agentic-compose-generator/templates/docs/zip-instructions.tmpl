@@ -8,6 +8,11 @@ already have a zip/host install of SonarQube running, and only starts the contai
 Section 1 is enough for SonarQube to start and report UP. Sections 2 to 5 connect it to this
 bundle. When this bundle has TLS, section 7 does too. Apply those before `docker compose up -d`.
 
+**Windows:** sections 1 and 5 still need bash and Docker. On a Windows host, run them from WSL, or
+on another machine with Docker, and copy the resulting files over, as those sections explain.
+Without the signing key files, Vortex reports `Unauthorized`. Native Windows steps are not
+available yet.
+
 ## 1. Database
 
 This bundle points the containers at the same external database you passed to `generate.py`.

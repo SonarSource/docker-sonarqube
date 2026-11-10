@@ -1047,18 +1047,20 @@ def zip_s3_credentials(args: argparse.Namespace) -> dict[str, str]:
                          "endpoint, and leaving it empty would point SonarQube at AWS S3.")
     else:
         endpoint_note = "`endpoint` is empty for AWS S3: leave it empty."
-    if args.s3_access_key or args.s3_secret_key:
-        lines = {prefix: (f"sonar.agentic.{prefix}.access-key=<the --s3-access-key you passed to generate.py>\n"
-                          f"sonar.agentic.{prefix}.secret-key=<the --s3-secret-key you passed to generate.py>\n")
-                 for prefix in ("storage", "orchestrator.storage")}
-        credentials_note = ""
-    else:
-        lines = {"storage": "", "orchestrator.storage": ""}
-        credentials_note = ("\n\nNo access or secret key was passed, so the `access-key` and `secret-key` "
-                            "properties are not listed: leave them unset and SonarQube uses the AWS default "
-                            "credential chain (for example an instance role).")
-    return {"credential_lines_storage": lines["storage"],
-            "credential_lines_orchestrator": lines["orchestrator.storage"],
+    has_keys = bool(args.s3_access_key or args.s3_secret_key)
+
+    def key_lines(prefix: str) -> str:
+        if not has_keys:
+            return ""
+        return (f"sonar.agentic.{prefix}.access-key=<the --s3-access-key you passed to generate.py>\n"
+                f"sonar.agentic.{prefix}.secret-key=<the --s3-secret-key you passed to generate.py>\n")
+
+    credentials_note = "" if has_keys else (
+        "\n\nNo access or secret key was passed, so the `access-key` and `secret-key` properties are not "
+        "listed: leave them unset and SonarQube uses the AWS default credential chain (for example an "
+        "instance role).")
+    return {"credential_lines_storage": key_lines("storage"),
+            "credential_lines_orchestrator": key_lines("orchestrator.storage"),
             "s3_endpoint_note": endpoint_note, "s3_credentials_note": credentials_note}
 
 

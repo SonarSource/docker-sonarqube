@@ -396,6 +396,7 @@ class ZipStorageS3Test(unittest.TestCase):
                 self.assertNotIn(f"{prefix}.secret-key=", text)
             self.assertNotIn("FILESYSTEM", text)
             self.assertNotIn("<the --s3-access-key", text)
+            self.assertIn("sections 1 and 5 still need bash and Docker", text)
             self.assertIn("AWS default credential chain", text)
             self.assertIn("`endpoint` is empty for AWS S3", text)
 
