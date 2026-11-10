@@ -90,6 +90,23 @@ class RefusalsTest(unittest.TestCase):
             profile.write_text(json.dumps({"edition": "developer"}))
             self.assert_refused("--profile", str(profile), message="not supported")
 
+    def test_windows_storage_path_points_to_object_storage(self):
+        for path in ("C:\\agentic", "D:/agentic", "\\\\fileserver\\agentic"):
+            for storage in ("hostpath", "nfs"):
+                with self.subTest(path=path, storage=storage):
+                    extra = ("--nfs-server", "nfs.internal", "--nfs-export", "/export") if storage == "nfs" else ()
+                    self.assert_refused("--edition", "none", "--storage", storage, "--storage-path", path,
+                                        "--db-host", "db.internal", "--db-password", "x", *extra,
+                                        message="Use --storage s3")
+
+    def test_windows_hostpath_on_a_bundled_edition_points_to_local_or_s3(self):
+        self.assert_refused("--edition", "enterprise", "--storage", "hostpath", "--storage-path", "C:\\agentic",
+                            message="Use --storage local")
+
+    def test_double_slash_linux_path_is_not_a_windows_path(self):
+        self.assertFalse(gen.is_windows_path("//mnt/agentic"))
+        self.assertTrue(gen.is_windows_path("C:\\agentic"))
+
     def test_edition_none_with_local_storage(self):
         self.assert_refused("--edition", "none", "--storage", "local", message="--storage")
 
@@ -361,6 +378,60 @@ class ZipProxyCheckTest(unittest.TestCase):
             instructions = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
             self.assertIn("start it from that directory", instructions)
             self.assertNotIn("copy the directory there", instructions)
+
+
+class ZipStorageS3Test(unittest.TestCase):
+    def test_s3_lists_the_storage_properties(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run("--profile", str(SCRIPT_PATH.parent / "profiles" / "none-s3.json"),
+                               "--out", str(bundle))
+            self.assertEqual(code, 0, err)
+            text = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
+            for prefix in ("sonar.agentic.storage", "sonar.agentic.orchestrator.storage"):
+                self.assertIn(f"{prefix}.type=S3", text)
+                self.assertIn(f"{prefix}.bucket=acme-agentic-jobs", text)
+                self.assertIn(f"{prefix}.region=eu-west-1", text)
+                self.assertNotIn(f"{prefix}.access-key=", text)
+                self.assertNotIn(f"{prefix}.secret-key=", text)
+            self.assertNotIn("FILESYSTEM", text)
+            self.assertNotIn("<the --s3-access-key", text)
+            self.assertIn("sections 1 and 5 still need bash and Docker", text)
+            self.assertIn("AWS default credential chain", text)
+            self.assertIn("`endpoint` is empty for AWS S3", text)
+
+    def test_s3_with_keys_and_endpoint(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run("--profile", str(SCRIPT_PATH.parent / "profiles" / "none-s3.json"),
+                               "--s3-endpoint", "https://minio.internal:9000",
+                               "--s3-access-key", "ak", "--s3-secret-key", "sk", "--out", str(bundle))
+            self.assertEqual(code, 0, err)
+            text = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
+            for prefix in ("sonar.agentic.storage", "sonar.agentic.orchestrator.storage"):
+                self.assertIn(f"{prefix}.access-key=<the --s3-access-key you passed to generate.py>", text)
+                self.assertIn(f"{prefix}.secret-key=<the --s3-secret-key you passed to generate.py>", text)
+            self.assertNotIn("`endpoint` is empty for AWS S3", text)
+            self.assertIn("S3-compatible service", text)
+            self.assertNotIn("AWS default credential chain", text)
+
+
+class KitWithoutDockerTest(unittest.TestCase):
+    def test_own_nginx_is_documented_for_windows_with_relative_cert_paths(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run("--profile", str(SCRIPT_PATH.parent / "profiles" / "none-nfs-tls.json"),
+                               "--out", str(bundle))
+            self.assertEqual(code, 0, err)
+            kit = bundle / "sonarqube-tls-proxy"
+            conf = (kit / "nginx" / "sonarqube-tls.conf").read_text()
+            self.assertIn("ssl_certificate     sonarqube-tls/tls.crt;", conf)
+            self.assertNotIn("/etc/nginx", conf)
+            readme = (kit / "README.md").read_text()
+            self.assertIn("nginx.exe -t", readme)
+            self.assertIn("include C:/path/to/sonarqube-tls-proxy/nginx/sonarqube-tls.conf;", readme)
+            self.assertIn("icacls", readme)
+            self.assertIn("use your own nginx instead", (bundle / "ZIP-INSTRUCTIONS.md").read_text())
 
 
 class ZipTlsOffTest(unittest.TestCase):

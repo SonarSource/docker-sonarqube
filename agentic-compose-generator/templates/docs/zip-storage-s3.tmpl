@@ -1,0 +1,19 @@
+SonarQube and the containers must use the same bucket and credentials. Set the values you passed to
+`generate.py` (`AGENTIC_STORAGE_*` in `.env`):
+
+```
+sonar.agentic.storage.type=S3
+sonar.agentic.storage.bucket=${s3_bucket}
+sonar.agentic.storage.region=${s3_region}
+sonar.agentic.storage.endpoint=${s3_endpoint}
+${credential_lines_storage}sonar.agentic.storage.path-style-access=${s3_path_style}
+sonar.agentic.storage.presign-ttl-seconds=${s3_presign_ttl}
+sonar.agentic.orchestrator.storage.type=S3
+sonar.agentic.orchestrator.storage.bucket=${s3_bucket}
+sonar.agentic.orchestrator.storage.region=${s3_region}
+sonar.agentic.orchestrator.storage.endpoint=${s3_endpoint}
+${credential_lines_orchestrator}sonar.agentic.orchestrator.storage.path-style-access=${s3_path_style}
+sonar.agentic.orchestrator.storage.presign-ttl-seconds=${s3_presign_ttl}
+```
+
+${s3_endpoint_note}${s3_credentials_note}

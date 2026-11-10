@@ -8,6 +8,11 @@ already have a zip/host install of SonarQube running, and only starts the contai
 Section 1 is enough for SonarQube to start and report UP. Sections 2 to 5 connect it to this
 bundle. When this bundle has TLS, section 7 does too. Apply those before `docker compose up -d`.
 
+**Windows:** sections 1 and 5 still need bash and Docker. On a Windows host, run them from WSL, or
+on another machine with Docker, and copy the resulting files over, as those sections explain.
+Without the signing key files, Vortex reports `Unauthorized`. Native Windows steps are not
+available yet.
+
 ## 1. Database
 
 This bundle points the containers at the same external database you passed to `generate.py`.
@@ -38,6 +43,11 @@ exists, keep it and import the database CA into it. In `sonar.properties`, use t
 of that file.
 
 `<your database CA certificate>` is the CA that signed your database certificate. The generator does not create it.
+
+The commands below are for Linux or macOS. On Windows, run them in WSL or Git Bash, or do the same
+steps by hand: copy `%JAVA_HOME%\lib\security\cacerts` to a `sonarqube-truststore.jks` of your
+choice, and import the CA with `keytool`. In `sonar.properties`, use forward slashes in absolute
+paths, for example `C:/sonarqube/sonarqube-truststore.jks`.
 
 ```
 mkdir -p ~/.sonarqube
@@ -94,7 +104,11 @@ ${storage_note}
 
 Every agentic request between SonarQube, the orchestrator, and Vortex is signed. Derive your copy
 of the shared key from this bundle's `AGENTIC_SIGNING_SECRET` (in `.env`) and point SonarQube at
-it. From this bundle's directory, read `AGENTIC_SIGNING_SECRET` from `.env`. For `docker run`, use the
+it. The commands below are for Linux or macOS and need Docker, which the bundle host has. If your
+SonarQube runs on Windows, run them on the bundle host (or in WSL), then copy the two files
+`instance-secret` and `agentic-shared.key` to the Windows machine, and use their absolute paths with
+forward slashes in `sonar.properties`, for example `C:/sonarqube/agentic-signing/instance-secret`.
+From this bundle's directory, read `AGENTIC_SIGNING_SECRET` from `.env`. For `docker run`, use the
 `image:` of the `orchestrator` service in this bundle's `docker-compose.yaml`. In
 `sonar.properties`, use the absolute path of `~/.sonarqube/agentic-signing`.
 

@@ -253,6 +253,22 @@ def load_config(argv: list[str]) -> tuple[argparse.Namespace, argparse.ArgumentP
 # --------------------------------------------------------------------------------------------------
 
 
+WINDOWS_PATH_RE = re.compile(r"^[A-Za-z]:|^\\\\|\\")
+# --edition none: SonarQube runs on the host, so the containers must mount the storage at the path
+# the host sees it at, which a Linux container can't do for a Windows path.
+WINDOWS_STORAGE_PATH_ERROR_NONE = (
+    "{flag} can't use a Windows path: the containers are Linux and mount the storage at the same "
+    "absolute path SonarQube sees. Use --storage s3 (object storage) instead.")
+WINDOWS_STORAGE_PATH_ERROR_BUNDLED = (
+    "--storage hostpath needs a Linux absolute --storage-path (starting with '/'), not a Windows path. "
+    "Use --storage local (a Docker volume) or --storage s3 instead.")
+
+
+def is_windows_path(path: str | None) -> bool:
+    """A drive-letter (C:\\x, C:/x), UNC (\\\\server\\share) or backslash path."""
+    return bool(path) and WINDOWS_PATH_RE.search(path) is not None
+
+
 def resolve_s3_egress(args: argparse.Namespace) -> list[str]:
     """Defaults the S3 addressing style and derives the host and port egress-proxy allowlists.
 
@@ -310,10 +326,15 @@ def validate_and_normalize(args: argparse.Namespace) -> list[str]:
             raise ConfigError("--nfs-export must be an absolute export path, e.g. /export/agentic")
         # The host SonarQube and the containers exchange absolute file paths, so the containers
         # must mount the export where the host has it mounted.
+        if args.edition == "none" and is_windows_path(args.storage_path):
+            raise ConfigError(WINDOWS_STORAGE_PATH_ERROR_NONE.format(flag="--storage nfs --edition none"))
         if args.edition == "none" and (not args.storage_path or not args.storage_path.startswith("/")):
             raise ConfigError("--storage nfs --edition none requires an absolute --storage-path: where "
                               "your SonarQube host mounts the export, e.g. /mnt/agentic")
     if args.storage == "hostpath":
+        if is_windows_path(args.storage_path):
+            raise ConfigError(WINDOWS_STORAGE_PATH_ERROR_NONE.format(flag="--storage hostpath")
+                              if args.edition == "none" else WINDOWS_STORAGE_PATH_ERROR_BUNDLED)
         if not args.storage_path or not args.storage_path.startswith("/"):
             raise ConfigError("--storage hostpath requires an absolute --storage-path")
 
@@ -1016,11 +1037,42 @@ def build_env(args: argparse.Namespace) -> str:
     return "\n".join(parts) + "\n"
 
 
+def zip_s3_credentials(args: argparse.Namespace) -> dict[str, str]:
+    """Credential lines and notes for zip-storage-s3.tmpl.
+
+    Blank keys are valid: SonarQube then uses the AWS default credential chain.
+    """
+    if args.s3_endpoint:
+        endpoint_note = ("`endpoint` is your S3-compatible service. Keep it: the containers use the same "
+                         "endpoint, and leaving it empty would point SonarQube at AWS S3.")
+    else:
+        endpoint_note = "`endpoint` is empty for AWS S3: leave it empty."
+    has_keys = bool(args.s3_access_key or args.s3_secret_key)
+
+    def key_lines(prefix: str) -> str:
+        if not has_keys:
+            return ""
+        return (f"sonar.agentic.{prefix}.access-key=<the --s3-access-key you passed to generate.py>\n"
+                f"sonar.agentic.{prefix}.secret-key=<the --s3-secret-key you passed to generate.py>\n")
+
+    credentials_note = "" if has_keys else (
+        "\n\nNo access or secret key was passed, so the `access-key` and `secret-key` properties are not "
+        "listed: leave them unset and SonarQube uses the AWS default credential chain (for example an "
+        "instance role).")
+    return {"credential_lines_storage": key_lines("storage"),
+            "credential_lines_orchestrator": key_lines("orchestrator.storage"),
+            "s3_endpoint_note": endpoint_note, "s3_credentials_note": credentials_note}
+
+
 def zip_storage_note(args: argparse.Namespace) -> str:
     if args.storage == "hostpath":
         return render("docs/zip-storage-hostpath.tmpl", storage_path=args.storage_path)
     if args.storage == "nfs":
         return render("docs/zip-storage-nfs.tmpl", storage_path=args.storage_path)
+    if args.storage == "s3":
+        return render("docs/zip-storage-s3.tmpl", s3_bucket=args.s3_bucket, s3_region=args.s3_region,
+                      s3_endpoint=args.s3_endpoint, s3_path_style=args.s3_path_style,
+                      s3_presign_ttl=args.s3_presign_ttl, **zip_s3_credentials(args))
     return ""
 
 

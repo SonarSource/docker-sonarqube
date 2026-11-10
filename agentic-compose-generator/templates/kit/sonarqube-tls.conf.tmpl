@@ -1,14 +1,15 @@
 # TLS proxy for your SonarQube, for an nginx you already run on the SonarQube machine. Include this
-# file inside your `http { }` block, copy ../tls/tls.crt and ../tls/tls.key to
-# /etc/nginx/sonarqube-tls/, then reload nginx. See ../README.md.
+# file inside your `http { }` block, copy ../tls/tls.crt and ../tls/tls.key to the `sonarqube-tls/`
+# directory in your nginx's configuration directory, then reload nginx. See ../README.md.
 server {
   # nginx before 1.25.1: `listen ${kit_port} ssl http2;` and drop the `http2 on;` line.
   listen ${kit_port} ssl;
   http2 on;
   server_name ${server_name};
 
-  ssl_certificate     /etc/nginx/sonarqube-tls/tls.crt;
-  ssl_certificate_key /etc/nginx/sonarqube-tls/tls.key;
+  # Relative paths resolve against nginx's configuration directory, on Linux and Windows alike.
+  ssl_certificate     sonarqube-tls/tls.crt;
+  ssl_certificate_key sonarqube-tls/tls.key;
   ssl_protocols       TLSv1.2 TLSv1.3;
   ssl_prefer_server_ciphers off;
 
