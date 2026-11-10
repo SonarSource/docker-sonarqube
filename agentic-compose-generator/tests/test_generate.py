@@ -287,6 +287,62 @@ class CustomCaDirTest(unittest.TestCase):
         self.assertEqual(code, 0, err)
         self.assertNotIn("holds no CA file", err)
 
+    def test_null_in_a_profile_means_no_custom_ca_dir(self):
+        profile = Path(self._tmp.name) / "profile.json"
+        profile.write_text(json.dumps({"edition": "enterprise", "tls": "off", "custom_ca_dir": None}))
+        code, _, err = run("--profile", str(profile), "--out", str(self.bundle))
+        self.assertEqual(code, 0, err)
+        self.assertNotIn("Traceback", err)
+        self.assertNotIn("CUSTOM_CA_DIR", (self.bundle / ".env").read_text())
+
+    def test_plain_value_error_wins_over_the_home_directory_error(self):
+        code, _, err = run("--edition", "enterprise", "--custom-ca-dir", "~$HOME/ca", "--out", "-")
+        self.assertEqual(code, 1, err)
+        self.assertIn("must not contain whitespace, quotes, '$'", err)
+
+    def test_drive_letter_path_is_external_on_every_host(self):
+        code, _, err = run("--edition", "none", "--tls", "on", "--storage", "s3", "--db-host", "db",
+                           "--db-password", "p", "--custom-ca-dir", "C:/certs", "--out", str(self.bundle))
+        self.assertEqual(code, 0, err)
+        self.assertEqual(env_value(self.bundle, "CUSTOM_CA_DIR"), "C:/certs")
+        self.assertIn("copy tls/ca.crt into C:/certs", err)
+        self.assertNotIn("--custom-ca-dir 'C:/certs' would be read", err)
+        if os.name != "nt":
+            self.assertFalse((self.bundle / "C:").exists(), "created a literal C: directory in the bundle")
+            self.assertNotIn("does not exist", err)
+
+    def test_path_that_is_a_file_is_not_called_missing(self):
+        not_a_dir = Path(self._tmp.name) / "ca.pem"
+        not_a_dir.write_text("x")
+        code, err = self.generate(not_a_dir.as_posix())
+        self.assertEqual(code, 0, err)
+        self.assertIn("is not a directory on this machine", err)
+        self.assertNotIn("does not exist", err)
+
+    def test_only_regular_files_with_the_exact_suffix_count(self):
+        ca_dir = Path(self._tmp.name) / "abs"
+        (ca_dir / "old.crt").mkdir(parents=True)
+        (ca_dir / "UPPER.PEM").write_text("x")  # truststore-init's glob is case-sensitive
+        if os.name != "nt":
+            (ca_dir / "dangling.pem").symlink_to(Path(self._tmp.name) / "nowhere")
+        code, err = self.generate(ca_dir.as_posix())
+        self.assertEqual(code, 0, err)
+        self.assertIn("holds no CA file", err)
+
+    def test_unreadable_directory_does_not_fail_the_run(self):
+        ca_dir = Path(self._tmp.name) / "abs"
+        ca_dir.mkdir()
+        with mock.patch.object(Path, "iterdir", side_effect=PermissionError("denied")):
+            code, err = self.generate(ca_dir.as_posix())
+        self.assertEqual(code, 0, err)
+        self.assertNotIn("Traceback", err)
+        self.assertIn("wrote bundle", err)
+
+    def test_warning_for_a_host_path_says_which_machine(self):
+        code, err = self.generate((Path(self._tmp.name) / "missing").as_posix())
+        self.assertEqual(code, 0, err)
+        self.assertIn("does not exist on this machine", err)
+
 
 class RegenerationTest(unittest.TestCase):
     def setUp(self):
