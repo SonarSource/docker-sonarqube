@@ -123,9 +123,9 @@ other's jobs.
 | `--storage` | Required flags | Use it for |
 |---|---|---|
 | `local` | — | Evaluation: a Docker volume on this host, removed by `docker compose down -v` |
-| `hostpath` | `--storage-path` (absolute Linux path; a Windows path is refused, use `s3`) | A directory you already provision on the host, e.g. an EFS or NFS mount |
+| `hostpath` | `--storage-path` (absolute Linux path; a Windows path is refused: use `s3`, or `local` with a bundled edition) | A directory you already provision on the host, e.g. an EFS or NFS mount |
 | `nfs` | `--nfs-server`, `--nfs-export`; with `--edition none`, also `--storage-path` (where your SonarQube host mounts the export, a Linux path) | An NFS export that Docker mounts for you |
-| `s3` | `--s3-bucket`, `--s3-region`, `--s3-access-key`, `--s3-secret-key` | An S3 bucket. Add `--s3-endpoint` for an S3-compatible service. Addressing is virtual-hosted on AWS (path-style for bucket names with dots) and path-style with `--s3-endpoint`; `--s3-path-style` overrides it |
+| `s3` | `--s3-bucket`, `--s3-region`; `--s3-access-key` and `--s3-secret-key` unless the environment provides AWS credentials | An S3 bucket. Without keys, the services use the AWS default credential chain (for example an instance role). Add `--s3-endpoint` for an S3-compatible service. Addressing is virtual-hosted on AWS (path-style for bucket names with dots) and path-style with `--s3-endpoint`; `--s3-path-style` overrides it |
 
 Per-job LLM provider keys are stored in plaintext in this storage: restrict access to it as you
 would a credential store.
@@ -157,7 +157,8 @@ This mode has two requirements:
   containers use. On a zip install the host in `sonar.jdbc.url` can differ; see [TLS](#tls).
 - **Storage other than `local`**, reachable from both your SonarQube host and the containers.
   With `--storage hostpath`, mount it at the same path on both. On a Windows SonarQube host, use
-  `--storage s3`: the containers are Linux and can't mount a Windows path.
+  `--storage s3`: the containers are Linux and can't mount a Windows path. The shell snippets in
+  `ZIP-INSTRUCTIONS.md` (sections 1 and 5) are for Linux: see the notes there for Windows.
 
 On Docker Desktop, Rancher Desktop or colima, pass `--sandbox runc` and `--host-gateway off`.
 

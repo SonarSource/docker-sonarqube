@@ -253,7 +253,7 @@ def load_config(argv: list[str]) -> tuple[argparse.Namespace, argparse.ArgumentP
 # --------------------------------------------------------------------------------------------------
 
 
-WINDOWS_PATH_RE = re.compile(r"^[A-Za-z]:|^\\\\|^//|\\")
+WINDOWS_PATH_RE = re.compile(r"^[A-Za-z]:|^\\\\|\\")
 # --edition none: SonarQube runs on the host, so the containers must mount the storage at the path
 # the host sees it at, which a Linux container can't do for a Windows path.
 WINDOWS_STORAGE_PATH_ERROR_NONE = (
@@ -1037,6 +1037,31 @@ def build_env(args: argparse.Namespace) -> str:
     return "\n".join(parts) + "\n"
 
 
+def zip_s3_credentials(args: argparse.Namespace) -> dict[str, str]:
+    """Credential lines and notes for zip-storage-s3.tmpl.
+
+    Blank keys are valid: SonarQube then uses the AWS default credential chain.
+    """
+    if args.s3_endpoint:
+        endpoint_note = ("`endpoint` is your S3-compatible service. Keep it: the containers use the same "
+                         "endpoint, and leaving it empty would point SonarQube at AWS S3.")
+    else:
+        endpoint_note = "`endpoint` is empty for AWS S3: leave it empty."
+    if args.s3_access_key or args.s3_secret_key:
+        lines = {prefix: (f"sonar.agentic.{prefix}.access-key=<the --s3-access-key you passed to generate.py>\n"
+                          f"sonar.agentic.{prefix}.secret-key=<the --s3-secret-key you passed to generate.py>\n")
+                 for prefix in ("storage", "orchestrator.storage")}
+        credentials_note = ""
+    else:
+        lines = {"storage": "", "orchestrator.storage": ""}
+        credentials_note = ("\n\nNo access or secret key was passed, so the `access-key` and `secret-key` "
+                            "properties are not listed: leave them unset and SonarQube uses the AWS default "
+                            "credential chain (for example an instance role).")
+    return {"credential_lines_storage": lines["storage"],
+            "credential_lines_orchestrator": lines["orchestrator.storage"],
+            "s3_endpoint_note": endpoint_note, "s3_credentials_note": credentials_note}
+
+
 def zip_storage_note(args: argparse.Namespace) -> str:
     if args.storage == "hostpath":
         return render("docs/zip-storage-hostpath.tmpl", storage_path=args.storage_path)
@@ -1045,7 +1070,7 @@ def zip_storage_note(args: argparse.Namespace) -> str:
     if args.storage == "s3":
         return render("docs/zip-storage-s3.tmpl", s3_bucket=args.s3_bucket, s3_region=args.s3_region,
                       s3_endpoint=args.s3_endpoint, s3_path_style=args.s3_path_style,
-                      s3_presign_ttl=args.s3_presign_ttl)
+                      s3_presign_ttl=args.s3_presign_ttl, **zip_s3_credentials(args))
     return ""
 
 

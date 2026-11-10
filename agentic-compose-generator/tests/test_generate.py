@@ -103,6 +103,10 @@ class RefusalsTest(unittest.TestCase):
         self.assert_refused("--edition", "enterprise", "--storage", "hostpath", "--storage-path", "C:\\agentic",
                             message="Use --storage local")
 
+    def test_double_slash_linux_path_is_not_a_windows_path(self):
+        self.assertFalse(gen.is_windows_path("//mnt/agentic"))
+        self.assertTrue(gen.is_windows_path("C:\\agentic"))
+
     def test_edition_none_with_local_storage(self):
         self.assert_refused("--edition", "none", "--storage", "local", message="--storage")
 
@@ -388,9 +392,27 @@ class ZipStorageS3Test(unittest.TestCase):
                 self.assertIn(f"{prefix}.type=S3", text)
                 self.assertIn(f"{prefix}.bucket=acme-agentic-jobs", text)
                 self.assertIn(f"{prefix}.region=eu-west-1", text)
-                self.assertIn(f"{prefix}.access-key=", text)
-                self.assertIn(f"{prefix}.secret-key=", text)
+                self.assertNotIn(f"{prefix}.access-key=", text)
+                self.assertNotIn(f"{prefix}.secret-key=", text)
             self.assertNotIn("FILESYSTEM", text)
+            self.assertNotIn("<the --s3-access-key", text)
+            self.assertIn("AWS default credential chain", text)
+            self.assertIn("`endpoint` is empty for AWS S3", text)
+
+    def test_s3_with_keys_and_endpoint(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run("--profile", str(SCRIPT_PATH.parent / "profiles" / "none-s3.json"),
+                               "--s3-endpoint", "https://minio.internal:9000",
+                               "--s3-access-key", "ak", "--s3-secret-key", "sk", "--out", str(bundle))
+            self.assertEqual(code, 0, err)
+            text = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
+            for prefix in ("sonar.agentic.storage", "sonar.agentic.orchestrator.storage"):
+                self.assertIn(f"{prefix}.access-key=<the --s3-access-key you passed to generate.py>", text)
+                self.assertIn(f"{prefix}.secret-key=<the --s3-secret-key you passed to generate.py>", text)
+            self.assertNotIn("`endpoint` is empty for AWS S3", text)
+            self.assertIn("S3-compatible service", text)
+            self.assertNotIn("AWS default credential chain", text)
 
 
 class KitWithoutDockerTest(unittest.TestCase):
@@ -406,6 +428,8 @@ class KitWithoutDockerTest(unittest.TestCase):
             self.assertNotIn("/etc/nginx", conf)
             readme = (kit / "README.md").read_text()
             self.assertIn("nginx.exe -t", readme)
+            self.assertIn("include C:/path/to/sonarqube-tls-proxy/nginx/sonarqube-tls.conf;", readme)
+            self.assertIn("icacls", readme)
             self.assertIn("use your own nginx instead", (bundle / "ZIP-INSTRUCTIONS.md").read_text())
 
 
