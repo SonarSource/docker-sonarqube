@@ -323,6 +323,7 @@ class CustomCaDirTest(unittest.TestCase):
         ca_dir = Path(self._tmp.name) / "abs"
         (ca_dir / "old.crt").mkdir(parents=True)
         (ca_dir / "UPPER.PEM").write_text("x")  # truststore-init's glob is case-sensitive
+        (ca_dir / ".hidden.crt").write_text("x")  # and a shell '*' never matches a leading dot
         if os.name != "nt":
             (ca_dir / "dangling.pem").symlink_to(Path(self._tmp.name) / "nowhere")
         code, err = self.generate(ca_dir.as_posix())
@@ -337,6 +338,18 @@ class CustomCaDirTest(unittest.TestCase):
         self.assertEqual(code, 0, err)
         self.assertNotIn("Traceback", err)
         self.assertIn("wrote bundle", err)
+
+    @unittest.skipIf(os.name == "nt", "needs POSIX symlinks")
+    def test_symlink_out_of_the_bundle_is_refused_before_anything_is_written(self):
+        outside = Path(self._tmp.name) / "outside"
+        outside.mkdir()
+        self.bundle.mkdir()
+        (self.bundle / "link").symlink_to(outside)
+        code, err = self.generate("./link/ca")
+        self.assertEqual(code, 1, err)
+        self.assertIn("must stay inside the bundle directory", err)
+        self.assertFalse((outside / "ca").exists())
+        self.assertFalse((self.bundle / "docker-compose.yaml").exists())
 
     def test_warning_for_a_host_path_says_which_machine(self):
         code, err = self.generate((Path(self._tmp.name) / "missing").as_posix())
