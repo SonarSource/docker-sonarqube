@@ -6,18 +6,14 @@ sonar.agentic.storage.type=S3
 sonar.agentic.storage.bucket=${s3_bucket}
 sonar.agentic.storage.region=${s3_region}
 sonar.agentic.storage.endpoint=${s3_endpoint}
-sonar.agentic.storage.access-key=<the --s3-access-key you passed to generate.py>
-sonar.agentic.storage.secret-key=<the --s3-secret-key you passed to generate.py>
-sonar.agentic.storage.path-style-access=${s3_path_style}
+${credential_lines_storage}sonar.agentic.storage.path-style-access=${s3_path_style}
 sonar.agentic.storage.presign-ttl-seconds=${s3_presign_ttl}
 sonar.agentic.orchestrator.storage.type=S3
 sonar.agentic.orchestrator.storage.bucket=${s3_bucket}
 sonar.agentic.orchestrator.storage.region=${s3_region}
 sonar.agentic.orchestrator.storage.endpoint=${s3_endpoint}
-sonar.agentic.orchestrator.storage.access-key=<the --s3-access-key you passed to generate.py>
-sonar.agentic.orchestrator.storage.secret-key=<the --s3-secret-key you passed to generate.py>
-sonar.agentic.orchestrator.storage.path-style-access=${s3_path_style}
+${credential_lines_orchestrator}sonar.agentic.orchestrator.storage.path-style-access=${s3_path_style}
 sonar.agentic.orchestrator.storage.presign-ttl-seconds=${s3_presign_ttl}
 ```
 
-`endpoint` is empty for AWS S3: leave it empty.
+${s3_endpoint_note}${s3_credentials_note}

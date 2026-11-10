@@ -70,8 +70,24 @@ SonarQube machine. It needs no Docker. The certificate paths in it are relative,
 against the `conf` directory of your nginx, wherever it is installed.
 
 1. In the `conf` directory of your nginx, create a `sonarqube-tls` directory. Copy `tls/tls.crt` and
-   `tls/tls.key` into it, readable by nginx only.
-2. Include `nginx/sonarqube-tls.conf` inside the `http { }` block of your nginx configuration.
+   `tls/tls.key` into it, readable by nginx only. On Linux, `chmod 600 tls.key`. On Windows, drop the
+   inherited permissions and grant read to the account that runs nginx only:
+
+   ```
+   icacls conf\sonarqube-tls\tls.key /inheritance:r /grant:r "<account that runs nginx>:R"
+   ```
+2. Include `nginx/sonarqube-tls.conf` inside the `http { }` block of your nginx configuration, with
+   the path of this kit's file. On Linux:
+
+   ```
+   include /path/to/sonarqube-tls-proxy/nginx/sonarqube-tls.conf;
+   ```
+
+   On Windows, use forward slashes in the path, because nginx reads a backslash as an escape:
+
+   ```
+   include C:/path/to/sonarqube-tls-proxy/nginx/sonarqube-tls.conf;
+   ```
 3. Test the configuration, then reload nginx.
 
 On Linux, the `conf` directory is usually `/etc/nginx`:
@@ -82,8 +98,7 @@ nginx -s reload
 ```
 
 On Windows, nginx is a zip you extract anywhere, and the `conf` directory is the one inside it. Run
-these from the nginx directory. In the `include` line, use forward slashes in the path, because
-nginx reads a backslash as an escape:
+these from the nginx directory:
 
 ```
 nginx.exe -t
