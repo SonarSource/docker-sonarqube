@@ -9,6 +9,7 @@ import importlib.util
 import io
 import json
 import os
+import shutil
 import stat
 import subprocess
 import sys
@@ -363,6 +364,20 @@ class CustomCaDirTest(unittest.TestCase):
         self.assertEqual(code, 0, err)
         self.assertEqual(env_value(self.bundle, "CUSTOM_CA_DIR"), "./certs")
         self.assertNotIn("warning", err)
+
+    @unittest.skipIf(os.name == "nt", "needs POSIX symlinks")
+    def test_something_in_the_way_is_warned_about_not_fatal(self):
+        nowhere = Path(self._tmp.name) / "not-mounted-yet"
+        for name, value, make in (("dangling", "./certs", lambda b: (b / "certs").symlink_to(nowhere)),
+                                  ("dangling parent", "./link/ca", lambda b: (b / "link").symlink_to(nowhere)),
+                                  ("file", "./certs", lambda b: (b / "certs").write_text("x"))):
+            with self.subTest(name):
+                shutil.rmtree(self.bundle, ignore_errors=True)
+                self.bundle.mkdir()
+                make(self.bundle)
+                code, err = self.generate(value)
+                self.assertEqual(code, 0, err)
+                self.assertIn(f"warning: --custom-ca-dir '{value}'", err)
 
     def test_climbing_out_of_the_bundle_is_refused(self):
         for value in ("../ca", "./certs/../../ca"):
