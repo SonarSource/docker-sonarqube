@@ -340,16 +340,44 @@ class CustomCaDirTest(unittest.TestCase):
         self.assertIn("wrote bundle", err)
 
     @unittest.skipIf(os.name == "nt", "needs POSIX symlinks")
-    def test_symlink_out_of_the_bundle_is_refused_before_anything_is_written(self):
+    def test_symlink_out_of_the_bundle_is_refused_before_the_bundle_ca_is_written(self):
         outside = Path(self._tmp.name) / "outside"
         outside.mkdir()
         self.bundle.mkdir()
         (self.bundle / "link").symlink_to(outside)
-        code, err = self.generate("./link/ca")
+        code, _, err = run("--edition", "none", "--tls", "on", "--storage", "s3", "--db-host", "db",
+                           "--db-password", "p", "--custom-ca-dir", "./link/ca", "--out", str(self.bundle))
         self.assertEqual(code, 1, err)
         self.assertIn("must stay inside the bundle directory", err)
         self.assertFalse((outside / "ca").exists())
         self.assertFalse((self.bundle / "docker-compose.yaml").exists())
+
+    @unittest.skipIf(os.name == "nt", "needs POSIX symlinks")
+    def test_symlinked_directory_is_kept_when_nothing_is_written_into_it(self):
+        outside = Path(self._tmp.name) / "my-ca"
+        outside.mkdir()
+        (outside / "ca.crt").write_text("x")
+        self.bundle.mkdir()
+        (self.bundle / "certs").symlink_to(outside)
+        code, err = self.generate("./certs")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(env_value(self.bundle, "CUSTOM_CA_DIR"), "./certs")
+        self.assertNotIn("warning", err)
+
+    def test_climbing_out_of_the_bundle_is_refused(self):
+        for value in ("../ca", "./certs/../../ca"):
+            with self.subTest(value=value):
+                code, err = self.generate(value)
+                self.assertEqual(code, 1, err)
+                self.assertIn("must stay inside the bundle directory", err)
+
+    def test_unresolvable_home_does_not_fail_the_run(self):
+        # No HOME and no passwd entry, as in some CI containers.
+        no_home = mock.patch.object(Path, "expanduser", side_effect=RuntimeError("Could not determine home directory."))
+        with no_home:
+            code, err = self.generate("~/certs")
+        self.assertEqual(code, 0, err)
+        self.assertIn("wrote bundle", err)
 
     def test_warning_for_a_host_path_says_which_machine(self):
         code, err = self.generate((Path(self._tmp.name) / "missing").as_posix())
