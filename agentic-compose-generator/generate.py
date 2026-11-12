@@ -1581,6 +1581,19 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
 
+def create_bundle_ca_dir(args: argparse.Namespace, out_dir: Path) -> None:
+    """Created so the certs have somewhere to go, and so Docker doesn't create a root-owned empty one
+    on the first `up`."""
+    writes_into = uses_bundle_ca(args)
+    try:
+        bundle_ca_dir(args.custom_ca_dir, out_dir, writes_into).mkdir(parents=True, exist_ok=True)
+    except (FileExistsError, NotADirectoryError):
+        if writes_into:
+            raise
+        # A file or a dangling symlink is in the way, e.g. a link to a CA dir not mounted yet; the
+        # no-CA warning names it.
+
+
 def warn_if_custom_ca_dir_has_no_ca(args: argparse.Namespace, out_dir: Path) -> None:
     """Best effort, so it never fails a finished run. Mirrors truststore-init's shell glob: regular,
     non-hidden files whose names end in a case-sensitive .crt or .pem."""
@@ -1638,9 +1651,7 @@ def write_bundle(args: argparse.Namespace, out_dir: Path, compose_text: str, son
         {"files": {rel: file_digest(rel, data) for rel, data in sorted(files.items())}}, indent=2) + "\n").encode())
 
     if args.custom_ca_dir and not custom_ca_is_external(args.custom_ca_dir):
-        # Created here so the certs have somewhere to go, and so Docker doesn't create a
-        # root-owned empty one on the first `up`.
-        bundle_ca_dir(args.custom_ca_dir, out_dir, writes_into=False).mkdir(parents=True, exist_ok=True)
+        create_bundle_ca_dir(args, out_dir)
     if uses_bundle_ca(args):
         notes += cert_notes + write_bundle_certs(args, out_dir, reissue_certs)
     for note in notes:
