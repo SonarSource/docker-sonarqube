@@ -31,7 +31,6 @@ RUN set -eux; \
     deluser ubuntu; \
     useradd --system --uid 1000 --gid 0 sonarqube; \
     apt-get update; \
-    # CVE fixes not yet in the base image (SONAR-33371); a no-op once it ships them.
     apt-get --no-install-recommends -y install --only-upgrade apt libapt-pkg6.0t64 libpcre2-8-0 perl-base; \
     apt-get --no-install-recommends -y install \
         bash \
