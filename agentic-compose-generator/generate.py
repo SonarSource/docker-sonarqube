@@ -76,6 +76,8 @@ S3_BUCKET_RE = re.compile(r"^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$")
 # `docker compose -p` rules; also becomes the prefix of every container, network and volume.
 PROJECT_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 PLAIN_VALUE_RE = re.compile(r"""^[^\s$#'"\\]+$""")
+COMPOSE_HOST_PATH_RE = re.compile(r"^([./~]|[A-Za-z]:)")
+DRIVE_PATH_RE = re.compile(r"^[A-Za-z]:")
 
 # --edition datacenter topology: application nodes behind a load balancer named `sonarqube`, so
 # every other service addresses the cluster exactly like a single node. Each application node gets
@@ -171,7 +173,8 @@ def build_argparser() -> argparse.ArgumentParser:
                     help="--edition none only: how the containers call your SonarQube")
     p.add_argument("--custom-ca-dir", default="",
                     help="host directory of PEM CA certs (*.crt/*.pem) every container trusts, e.g. "
-                         "for an https SonarQube; relative to the bundle")
+                         "for an https SonarQube. Use ./name or name (relative to the bundle; a bare name becomes "
+                         "./name), an absolute path, ~ or ~/name (the home directory, not ~name), or C:/name")
     p.add_argument("--sonar-secret-key-file", default="",
                     help="host file holding SonarQube's settings encryption key (sonar-secret.txt), "
                          "shared by SonarQube and the orchestrator so both decrypt the same "
@@ -339,7 +342,20 @@ def validate_and_normalize(args: argparse.Namespace) -> list[str]:
                            "SonarQube is reached over the compose network")
 
     args.tls_on = args.tls == "on"
+    args.custom_ca_dir = args.custom_ca_dir or ""  # a profile may carry an explicit null
     validate_plain_values(args)
+    # Compose expands only a leading '~/' as the home directory; pathlib would read '~name' as another
+    # user's home, so the two would disagree about which directory is meant.
+    if args.custom_ca_dir.startswith("~") and args.custom_ca_dir != "~" and not args.custom_ca_dir.startswith("~/"):
+        raise ConfigError(f"--custom-ca-dir '{args.custom_ca_dir}' must be '~' or '~/name'; "
+                          f"'~name' is not a supported home-directory form")
+    # Compose reads a volume source as a host path only if it starts with '.', '/', '~' or a drive
+    # letter; any other value is a named volume, which the bundle doesn't declare.
+    if args.custom_ca_dir and not COMPOSE_HOST_PATH_RE.match(args.custom_ca_dir):
+        normalized = f"./{args.custom_ca_dir}"
+        notes.append(f"--custom-ca-dir '{args.custom_ca_dir}' would be read by Compose as a named volume; "
+                     f"using '{normalized}'.")
+        args.custom_ca_dir = normalized
     if uses_bundle_ca(args):
         if args.out != "-" and not shutil.which("openssl"):
             raise ConfigError("--edition none --tls on needs the openssl command to issue the bundle's "
@@ -418,7 +434,7 @@ def validate_plain_values(args: argparse.Namespace) -> None:
             raise ConfigError(f"{flag} '{value}' must not contain whitespace, quotes, '$', '#' or '\\'")
     # The generator creates a relative --custom-ca-dir and writes the bundle CA into it, so it must
     # not climb out of the bundle; a directory elsewhere is passed as an absolute path.
-    if args.custom_ca_dir and not Path(args.custom_ca_dir).is_absolute() and ".." in Path(args.custom_ca_dir).parts:
+    if args.custom_ca_dir and not custom_ca_is_external(args.custom_ca_dir) and ".." in Path(args.custom_ca_dir).parts:
         raise ConfigError(f"--custom-ca-dir '{args.custom_ca_dir}' must stay inside the bundle directory; "
                           f"pass an absolute path for a directory outside it")
 
@@ -628,6 +644,35 @@ def db_url_params(args: argparse.Namespace) -> str:
 
 def uses_bundle_ca(args: argparse.Namespace) -> bool:
     return args.edition == "none" and args.tls == "on"
+
+
+def custom_ca_is_external(value: str) -> bool:
+    """True for an absolute, '~' or drive-letter path: Compose resolves it on the host, so the generator
+    neither creates it nor writes into it. Decided on the text, not the generator's OS: 'C:/certs' is
+    external on every platform."""
+    return value.startswith(("/", "~")) or bool(DRIVE_PATH_RE.match(value))
+
+
+def bundle_ca_dir(value: str, out_dir: Path, writes_into: bool) -> Path:
+    """The bundle-relative --custom-ca-dir, which the generator creates. Refuses one that climbs out of
+    the bundle through '..'. When the generator also writes the bundle CA into it, refuses one that
+    leaves the bundle through a symlink; otherwise a symlink is the user's own way to mount a directory
+    kept elsewhere."""
+    resolve = os.path.realpath if writes_into else os.path.abspath
+    base = resolve(out_dir)
+    resolved = resolve(os.path.join(base, value))
+    if resolved != base and not resolved.startswith(base + os.sep):
+        raise ConfigError(f"--custom-ca-dir '{value}' must stay inside the bundle directory; "
+                          f"pass an absolute path for a directory outside it")
+    return Path(resolved)
+
+
+def custom_ca_host_dir(value: str, out_dir: Path) -> Path | None:
+    """The directory on this machine that --custom-ca-dir names, or None when it can't be resolved here
+    (a drive-letter path on a non-Windows generator host)."""
+    if DRIVE_PATH_RE.match(value):
+        return Path(value) if os.name == "nt" else None
+    return out_dir / Path(value).expanduser()  # an absolute right-hand side wins
 
 
 def uses_kit(args: argparse.Namespace) -> bool:
@@ -1067,7 +1112,7 @@ def zip_ca_note(args: argparse.Namespace) -> str:
     note = render("docs/zip-custom-ca.tmpl", custom_ca_dir=args.custom_ca_dir)
     if not uses_bundle_ca(args):
         return note
-    if Path(args.custom_ca_dir).is_absolute():
+    if custom_ca_is_external(args.custom_ca_dir):
         return note + (f"\nCopy `tls/ca.crt` from this directory there as `{BUNDLE_CA_FILE}`. It is the CA\n"
                        f"behind `agentic-proxy` and `{SONARQUBE_KIT_DIR}`: the containers reach neither without it.\n")
     return note + (f"\nThe generator put `{BUNDLE_CA_FILE}` there. It is the CA behind `agentic-proxy` and\n"
@@ -1262,11 +1307,11 @@ def write_bundle_certs(args: argparse.Namespace, out_dir: Path, reissue: bool) -
                 write_file(leaf_dir / LEAF_CERT_FILE, chain.encode())
                 write_file(leaf_dir / "tls.key", Path(work, "leaf.key").read_bytes(), 0o600)
 
-    if Path(args.custom_ca_dir).is_absolute():
+    if custom_ca_is_external(args.custom_ca_dir):
         notes.append(f"copy tls/ca.crt into {args.custom_ca_dir} as {BUNDLE_CA_FILE}: the containers "
                      f"can't reach agentic-proxy or your SonarQube without it.")
     else:
-        shutil.copyfile(ca_cert, out_dir / args.custom_ca_dir / BUNDLE_CA_FILE)
+        shutil.copyfile(ca_cert, bundle_ca_dir(args.custom_ca_dir, out_dir, writes_into=True) / BUNDLE_CA_FILE)
     return notes
 
 
@@ -1476,7 +1521,9 @@ INPUTS_SCHEMA = {
         "sonarqube_external_scheme": {"type": "string", "enum": ["http", "https"], "default": "http"},
         "custom_ca_dir": {"type": "string",
                           "description": "host directory of PEM CA certs every container trusts; "
-                                          "relative paths resolve against the bundle directory"},
+                                          "relative paths resolve against the bundle directory; a bare "
+                                          "name becomes ./name; '~' and '~/name' mean the home directory "
+                                          "('~name' is rejected); on Windows use C:/name"},
         "sonar_secret_key_file": {"type": "string",
                                   "description": "host file holding SonarQube's settings encryption key, "
                                                   "shared with the orchestrator; relative paths resolve "
@@ -1534,8 +1581,49 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
 
+def create_bundle_ca_dir(args: argparse.Namespace, out_dir: Path) -> None:
+    """Created so the certs have somewhere to go, and so Docker doesn't create a root-owned empty one
+    on the first `up`."""
+    writes_into = uses_bundle_ca(args)
+    try:
+        bundle_ca_dir(args.custom_ca_dir, out_dir, writes_into).mkdir(parents=True, exist_ok=True)
+    except (FileExistsError, NotADirectoryError):
+        if writes_into:
+            raise
+        # A file or a dangling symlink is in the way, e.g. a link to a CA dir not mounted yet; the
+        # no-CA warning names it.
+
+
+def warn_if_custom_ca_dir_has_no_ca(args: argparse.Namespace, out_dir: Path) -> None:
+    """Best effort, so it never fails a finished run. Mirrors truststore-init's shell glob: regular,
+    non-hidden files whose names end in a case-sensitive .crt or .pem."""
+    if not args.custom_ca_dir:
+        return
+    where = " on this machine" if custom_ca_is_external(args.custom_ca_dir) else ""
+    consequence = "the orchestrator exits with 'PKIX path building failed' until it does"
+    try:
+        ca_dir = custom_ca_host_dir(args.custom_ca_dir, out_dir)
+        if ca_dir is None:
+            return
+        if not ca_dir.exists():
+            problem = f"does not exist{where}; create it and put a CA file (*.crt, *.pem) in it"
+        elif not ca_dir.is_dir():
+            problem = f"is not a directory{where}; point it at a directory holding a CA file (*.crt, *.pem)"
+        elif not any(not f.name.startswith(".") and f.suffix in (".crt", ".pem") and f.is_file()
+                     for f in ca_dir.iterdir()):
+            problem = f"holds no CA file (*.crt, *.pem){where}; add one"
+        else:
+            return
+    except (OSError, RuntimeError):  # unreadable directory, or no resolvable home for '~'
+        return
+    print(f"warning: --custom-ca-dir '{args.custom_ca_dir}' {problem} before `docker compose up`, "
+          f"or {consequence}.", file=sys.stderr)
+
+
 def write_bundle(args: argparse.Namespace, out_dir: Path, compose_text: str, sonar_properties: str,
                  texts: dict[str, str]) -> int:
+    if args.custom_ca_dir and not custom_ca_is_external(args.custom_ca_dir):
+        bundle_ca_dir(args.custom_ca_dir, out_dir, uses_bundle_ca(args))  # refuse before anything is written
     notes = reuse_env_values(args, out_dir)
     env_text = build_env(args)
 
@@ -1562,14 +1650,13 @@ def write_bundle(args: argparse.Namespace, out_dir: Path, compose_text: str, son
     write_file(out_dir / MANIFEST_FILE, (json.dumps(
         {"files": {rel: file_digest(rel, data) for rel, data in sorted(files.items())}}, indent=2) + "\n").encode())
 
-    if args.custom_ca_dir and not Path(args.custom_ca_dir).is_absolute():
-        # Created here so the certs have somewhere to go, and so Docker doesn't create a
-        # root-owned empty one on the first `up`.
-        (out_dir / args.custom_ca_dir).mkdir(parents=True, exist_ok=True)
+    if args.custom_ca_dir and not custom_ca_is_external(args.custom_ca_dir):
+        create_bundle_ca_dir(args, out_dir)
     if uses_bundle_ca(args):
         notes += cert_notes + write_bundle_certs(args, out_dir, reissue_certs)
     for note in notes:
         print(f"note: {note}", file=sys.stderr)
+    warn_if_custom_ca_dir_has_no_ca(args, out_dir)
 
     print(f"wrote bundle to {out_dir}", file=sys.stderr)
     return 0
