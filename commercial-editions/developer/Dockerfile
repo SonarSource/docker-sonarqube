@@ -14,7 +14,7 @@ ENV LANG='en_US.UTF-8' \
 #
 # SonarQube setup
 #
-ARG SONARQUBE_VERSION=2026.5.4.134003
+ARG SONARQUBE_VERSION=2026.5.5.134787
 ARG SONARQUBE_ZIP_URL=https://binaries.sonarsource.com/CommercialDistribution/sonarqube-developer/sonarqube-developer-${SONARQUBE_VERSION}.zip
 ENV DOCKER_RUNNING="true" \
     JAVA_HOME='/opt/java/openjdk' \
@@ -33,7 +33,7 @@ RUN set -eux; \
     useradd --system --uid 1000 --gid 0 sonarqube; \
     apt-get update; \
     # CVE fixes not yet in the base image (SONAR-33371); a no-op once it ships them.
-    apt-get --no-install-recommends -y install --only-upgrade apt libapt-pkg6.0t64 libpcre2-8-0; \
+    apt-get --no-install-recommends -y install --only-upgrade apt libapt-pkg6.0t64 libpcre2-8-0 perl-base; \
     apt-get --no-install-recommends -y install \
         bash \
         ca-certificates \
