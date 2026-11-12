@@ -653,11 +653,14 @@ def custom_ca_is_external(value: str) -> bool:
     return value.startswith(("/", "~")) or bool(DRIVE_PATH_RE.match(value))
 
 
-def bundle_ca_dir(value: str, out_dir: Path) -> Path:
-    """The bundle-relative --custom-ca-dir, which the generator creates and writes into. Refuses a
-    directory that resolves outside the bundle, whether through '..' or a symlink."""
-    base = os.path.realpath(out_dir)
-    resolved = os.path.realpath(os.path.join(base, value))
+def bundle_ca_dir(value: str, out_dir: Path, writes_into: bool) -> Path:
+    """The bundle-relative --custom-ca-dir, which the generator creates. Refuses one that climbs out of
+    the bundle through '..'. When the generator also writes the bundle CA into it, refuses one that
+    leaves the bundle through a symlink; otherwise a symlink is the user's own way to mount a directory
+    kept elsewhere."""
+    resolve = os.path.realpath if writes_into else os.path.abspath
+    base = resolve(out_dir)
+    resolved = resolve(os.path.join(base, value))
     if resolved != base and not resolved.startswith(base + os.sep):
         raise ConfigError(f"--custom-ca-dir '{value}' must stay inside the bundle directory; "
                           f"pass an absolute path for a directory outside it")
@@ -1308,7 +1311,7 @@ def write_bundle_certs(args: argparse.Namespace, out_dir: Path, reissue: bool) -
         notes.append(f"copy tls/ca.crt into {args.custom_ca_dir} as {BUNDLE_CA_FILE}: the containers "
                      f"can't reach agentic-proxy or your SonarQube without it.")
     else:
-        shutil.copyfile(ca_cert, bundle_ca_dir(args.custom_ca_dir, out_dir) / BUNDLE_CA_FILE)
+        shutil.copyfile(ca_cert, bundle_ca_dir(args.custom_ca_dir, out_dir, writes_into=True) / BUNDLE_CA_FILE)
     return notes
 
 
@@ -1583,12 +1586,12 @@ def warn_if_custom_ca_dir_has_no_ca(args: argparse.Namespace, out_dir: Path) -> 
     non-hidden files whose names end in a case-sensitive .crt or .pem."""
     if not args.custom_ca_dir:
         return
-    ca_dir = custom_ca_host_dir(args.custom_ca_dir, out_dir)
-    if ca_dir is None:
-        return
     where = " on this machine" if custom_ca_is_external(args.custom_ca_dir) else ""
     consequence = "the orchestrator exits with 'PKIX path building failed' until it does"
     try:
+        ca_dir = custom_ca_host_dir(args.custom_ca_dir, out_dir)
+        if ca_dir is None:
+            return
         if not ca_dir.exists():
             problem = f"does not exist{where}; create it and put a CA file (*.crt, *.pem) in it"
         elif not ca_dir.is_dir():
@@ -1607,7 +1610,7 @@ def warn_if_custom_ca_dir_has_no_ca(args: argparse.Namespace, out_dir: Path) -> 
 def write_bundle(args: argparse.Namespace, out_dir: Path, compose_text: str, sonar_properties: str,
                  texts: dict[str, str]) -> int:
     if args.custom_ca_dir and not custom_ca_is_external(args.custom_ca_dir):
-        bundle_ca_dir(args.custom_ca_dir, out_dir)  # refuse before anything is written
+        bundle_ca_dir(args.custom_ca_dir, out_dir, uses_bundle_ca(args))  # refuse before anything is written
     notes = reuse_env_values(args, out_dir)
     env_text = build_env(args)
 
@@ -1637,7 +1640,7 @@ def write_bundle(args: argparse.Namespace, out_dir: Path, compose_text: str, son
     if args.custom_ca_dir and not custom_ca_is_external(args.custom_ca_dir):
         # Created here so the certs have somewhere to go, and so Docker doesn't create a
         # root-owned empty one on the first `up`.
-        bundle_ca_dir(args.custom_ca_dir, out_dir).mkdir(parents=True, exist_ok=True)
+        bundle_ca_dir(args.custom_ca_dir, out_dir, writes_into=False).mkdir(parents=True, exist_ok=True)
     if uses_bundle_ca(args):
         notes += cert_notes + write_bundle_certs(args, out_dir, reissue_certs)
     for note in notes:
