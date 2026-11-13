@@ -836,6 +836,18 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-10
+  - id: CVE-2026-82560
+    statement: >-
+      Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) perl-base OS package vulnerability (USN-9006-1,
+      perl-base 5.38.2-3.2ubuntu0.6 -> 5.38.2-3.2ubuntu0.7; the amd64 base still ships 0.6,
+      arm64 already ships 0.7). CPU and memory exhaustion in Pod::Text when formatting a
+      crafted POD document. Pod::Text ships in perl-modules-5.38, which is not installed in
+      our images: only the Essential perl-base package is present, Pod::Text is not on the
+      filesystem, SonarQube ships no Perl code, and nothing in the image runs perl, so this
+      is not reachable from our attack surface. The next docker-library base image refresh
+      brings perl-base 0.7 to amd64. Tracked in SONAR-33427 and SONAR-31880.
+    expired_at: 2026-12-12
   - id: CVE-2026-84782
     statement: >-
       Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
