@@ -36,7 +36,8 @@ services:
       POSTGRES_PASSWORD: sonar
       POSTGRES_DB: sonar
     volumes:
-      - postgresql:/var/lib/postgresql
+      # postgres <=17 keeps its data in /var/lib/postgresql/data; postgres 18+ uses /var/lib/postgresql
+      - postgresql:/var/lib/postgresql/data
     networks:
       - ${NETWORK_TYPE:-ipv4}
 
