@@ -866,15 +866,18 @@ vulnerabilities:
       Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
       (eclipse-temurin:25-jdk-noble) glibc OS package vulnerability (USN-9065-1,
       libc6/libc-bin/locales 2.39-0ubuntu8.9 -> 2.39-0ubuntu8.12; the fix reached noble-security on
-      2026-11-12, after the base images the published 2026.5.5 images were built from). gettext
-      loads message catalogs from LANGUAGE entries containing '/' or '..'. Exploiting it requires an
-      attacker to set LANGUAGE and LANG in the environment of a program that uses gettext across a
-      trust boundary, for example through an SSH server accepting client environment variables, and
-      to place a crafted .mo file. No JDK or SonarQube native library uses gettext; only bash does.
-      Our images have no SSH server, and every process, bash included, gets its environment from
-      whoever deploys the image (pod spec or docker run), which already requires full control of the
-      container. This is not reachable from our attack surface. Tracked in SONAR-33427 and
-      SONAR-31880.
+      2026-11-12, after the base images the published 2026.5.5 images were built from). gettext,
+      used by many programs in the base image, loads message catalogs from LANGUAGE entries
+      containing '/' or '..', except in setuid/setgid (AT_SECURE) programs, where glibc already
+      rejects such entries; the setuid/setgid binaries in our images are therefore not affected.
+      Exploiting it requires a program without AT_SECURE that receives LANGUAGE and LANG from a
+      less-trusted party across a trust boundary, for example an SSH server accepting client
+      environment variables for a forced command, plus a crafted .mo file. Our images have no SSH
+      server or other component that runs programs with an environment supplied by another party:
+      processes inherit the environment set by whoever deploys the image (pod spec or docker run),
+      and a user who can already run commands in the container gains no extra privileges by setting
+      LANGUAGE for their own processes. This is not reachable from our attack surface. Tracked in
+      SONAR-33427 and SONAR-31880.
     expired_at: 2026-12-12
   - id: CVE-2026-84782
     statement: >-
