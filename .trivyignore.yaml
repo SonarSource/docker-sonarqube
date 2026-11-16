@@ -162,6 +162,17 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-07
+  - id: CVE-2026-18374
+    statement: >-
+      Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) glibc OS package vulnerability (USN-9065-1,
+      libc6/libc-bin/locales 2.39-0ubuntu8.9 -> 2.39-0ubuntu8.12; the fix reached noble-security on
+      2026-11-12, after the base images the published 2026.5.5 images were built from). Heap buffer
+      overflow in fopen when the ,ccs= part of the mode string is attacker controlled. Only glibc
+      itself contains that syntax in our images, and SonarQube's JVM never builds fopen mode strings
+      from user input, so this is not reachable from our attack surface. Tracked in SONAR-33427 and
+      SONAR-31880.
+    expired_at: 2026-12-12
   - id: CVE-2026-18938
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -848,6 +859,18 @@ vulnerabilities:
       is not reachable from our attack surface. The next docker-library base image refresh
       brings perl-base 0.7 to amd64. Tracked in SONAR-33427 and SONAR-31880.
     expired_at: 2026-12-12
+  - id: CVE-2026-84243
+    statement: >-
+      Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) glibc OS package vulnerability (USN-9065-1,
+      libc6/libc-bin/locales 2.39-0ubuntu8.9 -> 2.39-0ubuntu8.12; the fix reached noble-security on
+      2026-11-12, after the base images the published 2026.5.5 images were built from). gettext
+      loads message catalogs from LANGUAGE entries containing '/' or '..'. Exploiting it requires an
+      attacker to set LANGUAGE and LANG across a trust boundary, for example an SSH server accepting
+      client environment variables, and to place a crafted .mo file. Our images have no SSH server,
+      their environment is set by whoever deploys them, and the JVM does not use gettext, so this is
+      not reachable from our attack surface. Tracked in SONAR-33427 and SONAR-31880.
+    expired_at: 2026-12-12
   - id: CVE-2026-84782
     statement: >-
       Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -862,6 +885,39 @@ vulnerabilities:
       the specific patched package version or pick up an upstream base image bump before this
       expires.
     expired_at: 2026-12-01
+  - id: CVE-2026-8674
+    statement: >-
+      Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) glibc OS package vulnerability (USN-9065-1,
+      libc6/libc-bin/locales 2.39-0ubuntu8.9 -> 2.39-0ubuntu8.12; the fix reached noble-security on
+      2026-11-12, after the base images the published 2026.5.5 images were built from). The DNS stub
+      resolver aborts only when /etc/resolv.conf or LOCALDOMAIN contains a single search domain that
+      does not fit in the remaining space of the 256-byte defdname buffer while the preceding
+      entries take at most 56 bytes, which requires one search domain of about 199 characters or
+      more among the first six. LOCALDOMAIN is not set in our images. The charts set no dnsConfig,
+      dnsPolicy or hostNetwork, so pods use the Kubernetes ClusterFirst resolver: the kubelet writes
+      the cluster search domains (at most 81, 17 and 13 characters with the default cluster domain)
+      followed by the node's own search domains. A search domain that long can therefore only come
+      from the node or Docker host DNS configuration, or a cluster-wide cluster domain setting, all
+      controlled by the cluster administrator. SonarQube users, network clients and processes in the
+      container cannot set it, so the condition is not reachable from our attack surface. On GCP,
+      node search domains are the short zonal and project .internal names served by Google's DHCP,
+      and the VPC carries no layer-2 broadcast that could inject DHCP options. Tracked in
+      SONAR-33427 and SONAR-31880.
+    expired_at: 2026-12-12
+  - id: CVE-2026-86805
+    statement: >-
+      Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) glibc OS package vulnerability (USN-9065-1,
+      libc6/libc-bin/locales 2.39-0ubuntu8.9 -> 2.39-0ubuntu8.12; the fix reached noble-security on
+      2026-11-12, after the base images the published 2026.5.5 images were built from).
+      Time-of-check to time-of-use race in the dynamic loader when expanding $ORIGIN in DT_RPATH for
+      setuid/setgid programs. None of the setuid/setgid binaries in our images (the Ubuntu base's
+      chage, chfn, chsh, expiry, gpasswd, mount, newgrp, passwd, su, umount, pam_extrausers_chkpwd,
+      unix_chkpwd) uses $ORIGIN, and the SonarQube containers run as a non-root user with
+      allowPrivilegeEscalation: false, so setuid never takes effect. This is not reachable from our
+      attack surface. Tracked in SONAR-33427 and SONAR-31880.
+    expired_at: 2026-12-12
   - id: CVE-2026-9538
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -872,3 +928,14 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-07
+  - id: CVE-2026-95818
+    statement: >-
+      Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) glibc OS package vulnerability (USN-9065-1,
+      libc6/libc-bin/locales 2.39-0ubuntu8.9 -> 2.39-0ubuntu8.12; the fix reached noble-security on
+      2026-11-12, after the base images the published 2026.5.5 images were built from). Stack buffer
+      overflow in the dynamic loader when a setuid/setgid program's DT_RPATH or DT_RUNPATH begins
+      with $ORIGIN. None of the setuid/setgid binaries in our images uses $ORIGIN, and the SonarQube
+      containers run as a non-root user with allowPrivilegeEscalation: false, so setuid never takes
+      effect. This is not reachable from our attack surface. Tracked in SONAR-33427 and SONAR-31880.
+    expired_at: 2026-12-12
