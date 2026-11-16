@@ -48,6 +48,32 @@ This bundle was generated with `--storage ${storage}`. Bucket credentials and pe
 provider keys are stored in plaintext under that backend — restrict access to it the same way
 you would any other credential store.
 
+### Orchestrator temporary storage
+
+The orchestrator mounts a local disk volume at `/tmp`, separate from shared job artifacts.
+Keep this volume private to one orchestrator instance. The root filesystem stays read-only
+unless custom CA import requires it to be writable.
+
+Size local disk for concurrent repository clones, Git metadata, compressed archives, and
+Remediation's extracted working copies, plus logs and headroom. The extracted repository
+limit is not a disk budget. Increase disk capacity before raising
+`AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_SIZE` or
+`AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_MEMBERS` in the shell or bundle's `.env`.
+The unchanged limits are 1,000,000,000 bytes and 100,000 entries.
+
+Agent Orchestrator and Hunter Agent `2026.5.2` support configured repository limits.
+Remediation Agent `2026.5.1` retains its 1,000,000,000-byte and 100,000-entry extraction caps;
+larger Remediation repositories require a future runtime release.
+With the updated orchestrator image, `/tmp/agent-orchestrator` is owner-only and cleared
+before the application starts, including after a crash. Do not store persistent files there.
+
+For an existing bundle, regenerate with the updated generator and your saved inputs, keeping
+`.env` and its signing secret. Recreate the enabled runtime services first with
+`docker compose up -d --force-recreate hunter-runtime remediation-agent-runtime`, omitting
+services absent from your bundle. Then recreate the orchestrator with
+`docker compose up -d --force-recreate orchestrator`. Regeneration preserves existing secrets. Do not remove data
+volumes to apply this change. Disk exhaustion fails jobs; monitor free space on the Docker host.
+
 ## Stopping it
 
 ```

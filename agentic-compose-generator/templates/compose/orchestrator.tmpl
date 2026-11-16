@@ -3,16 +3,18 @@
     # Covers the graceful web drain plus the two db-scheduler shutdown phases (5m + 15m) after it.
     stop_grace_period: 2580s
 ${read_only_line}
-    tmpfs: [/tmp]
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
     mem_limit: 1024M
     cpus: 1
     volumes:
+      - orchestrator_tmp:/tmp
       - agentic_signing_orchestrator:/run/agentic-signing:ro
 ${storage_volume_line}
     environment:
       <<: *job-storage-env
+      AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_SIZE: "${AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_SIZE-1000000000}"
+      AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_MEMBERS: "${AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_MEMBERS-100000}"
       # The URLs it presigns for a job must outlive the longest one (Hunter's 44400s deadline), so
       # it doesn't take AGENTIC_STORAGE_PRESIGN_TTL_SECONDS, which SonarQube and Vortex use.
       SONAR_AGENTIC_ORCHESTRATOR_STORAGE_PRESIGN_TTL_SECONDS: "45000"
