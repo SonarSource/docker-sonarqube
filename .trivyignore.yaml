@@ -174,7 +174,7 @@ vulnerabilities:
       our images, including the native libraries packaged inside the SonarQube and Elasticsearch
       jars, only glibc itself (libc.so.6 and ldconfig) contains the ,ccs= syntax, so no program in
       the image passes such a mode string to fopen, let alone one an attacker controls. This is not
-      reachable from our attack surface. Tracked in SONAR-33427 and SONAR-31880.
+      reachable from our attack surface. Tracked in SONAR-33441 and SONAR-31880.
     expired_at: 2026-12-12
   - id: CVE-2026-18938
     statement: >-
@@ -879,7 +879,7 @@ vulnerabilities:
       programs with an environment supplied by another party: processes inherit the environment set
       by whoever deploys the image (pod spec or docker run), and a user who can already run commands
       in the container gains no extra privileges by setting LANGUAGE for their own processes. This
-      is not reachable from our attack surface. Tracked in SONAR-33427 and SONAR-31880.
+      is not reachable from our attack surface. Tracked in SONAR-33441 and SONAR-31880.
     expired_at: 2026-12-12
   - id: CVE-2026-84782
     statement: >-
@@ -916,7 +916,7 @@ vulnerabilities:
       configuration, and the impact is limited to a process abort (availability), after which
       Kubernetes restarts the pod. On GCP the precondition cannot be met: node search domains are
       the short zonal and project .internal names served by Google's DHCP, and the VPC carries no
-      layer-2 broadcast that could inject DHCP options. Tracked in SONAR-33427 and SONAR-31880.
+      layer-2 broadcast that could inject DHCP options. Tracked in SONAR-33441 and SONAR-31880.
     expired_at: 2026-12-12
   - id: CVE-2026-86805
     statement: >-
@@ -932,7 +932,7 @@ vulnerabilities:
       DT_RPATH or DT_RUNPATH, and none contains $ORIGIN, so the vulnerable path is never taken. In
       addition, the charts run the SonarQube containers as a non-root user with
       allowPrivilegeEscalation: false, so setuid does not take effect there. This is not reachable
-      from our attack surface. Tracked in SONAR-33427 and SONAR-31880.
+      from our attack surface. Tracked in SONAR-33441 and SONAR-31880.
     expired_at: 2026-12-12
   - id: CVE-2026-9538
     statement: >-
@@ -958,5 +958,5 @@ vulnerabilities:
       DT_RPATH or DT_RUNPATH, and none contains $ORIGIN, so the vulnerable path is never taken. In
       addition, the charts run the SonarQube containers as a non-root user with
       allowPrivilegeEscalation: false, so setuid does not take effect there. This is not reachable
-      from our attack surface. Tracked in SONAR-33427 and SONAR-31880.
+      from our attack surface. Tracked in SONAR-33441 and SONAR-31880.
     expired_at: 2026-12-12
