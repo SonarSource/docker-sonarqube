@@ -24,7 +24,7 @@ jobs:
     needs: load-config
     if: |
       github.event_name == 'schedule' ||
-      github.event_name == 'release' ||
+      (github.event_name == 'release' && !startsWith(github.event.release.name, 'SonarQube Community Build')) ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_PROD_IMAGES')
     permissions:
       id-token: write
@@ -44,7 +44,7 @@ jobs:
     needs: load-config
     if: |
       github.event_name == 'schedule' ||
-      github.event_name == 'release' ||
+      (github.event_name == 'release' && !startsWith(github.event.release.name, 'SonarQube Community Build')) ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'PUSH_GCP_PROD_IMAGES')
     permissions:
       id-token: write

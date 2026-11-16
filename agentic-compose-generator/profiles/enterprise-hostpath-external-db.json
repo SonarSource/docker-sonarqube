@@ -1,5 +1,5 @@
 {
-  "edition": "developer",
+  "edition": "enterprise",
   "components": "vortex",
   "db_mode": "external",
   "db_host": "db.internal",

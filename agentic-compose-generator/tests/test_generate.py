@@ -8,11 +8,14 @@ import contextlib
 import importlib.util
 import io
 import json
+import os
 import stat
+import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 SCRIPT_PATH = Path(__file__).resolve().parent.parent / "generate.py"
 
@@ -49,6 +52,7 @@ class InputsSchemaTest(unittest.TestCase):
         schema = json.loads(out)
         self.assertEqual(schema["required"], ["edition"])
         self.assertIn("storage", schema["properties"])
+        self.assertEqual(schema["properties"]["edition"]["enum"], ["enterprise", "datacenter", "none"])
 
     def test_every_profile_matches_the_schema_keys(self):
         properties = set(json.loads(run("--print-inputs-schema")[1])["properties"])
@@ -77,19 +81,26 @@ class RefusalsTest(unittest.TestCase):
         self.assertIn(message, err)
 
     def test_nfs_without_server(self):
-        self.assert_refused("--edition", "developer", "--storage", "nfs", message="--nfs-server")
+        self.assert_refused("--edition", "enterprise", "--storage", "nfs", message="--nfs-server")
+
+    def test_developer_edition_is_refused(self):
+        self.assert_refused("--edition", "developer", message="not supported")
+        with tempfile.TemporaryDirectory() as tmp:
+            profile = Path(tmp) / "p.json"
+            profile.write_text(json.dumps({"edition": "developer"}))
+            self.assert_refused("--profile", str(profile), message="not supported")
 
     def test_edition_none_with_local_storage(self):
         self.assert_refused("--edition", "none", "--storage", "local", message="--storage")
 
     def test_external_db_without_host(self):
-        self.assert_refused("--edition", "developer", "--db", "external", "--db-password", "x",
+        self.assert_refused("--edition", "enterprise", "--db", "external", "--db-password", "x",
                             message="--db-host")
 
     def test_unknown_profile_key(self):
         with tempfile.TemporaryDirectory() as tmp:
             profile = Path(tmp) / "p.json"
-            profile.write_text(json.dumps({"edition": "developer", "storgae": "local"}))
+            profile.write_text(json.dumps({"edition": "enterprise", "storgae": "local"}))
             self.assert_refused("--profile", str(profile), message="storgae")
 
 
@@ -116,7 +127,7 @@ class ScanForbiddenTest(unittest.TestCase):
         saved = gen.FORBIDDEN_STRINGS
         gen.FORBIDDEN_STRINGS = ("agentic pack — generated bundle",)
         try:
-            code, out, err = run("--edition", "developer", "--out", "-")
+            code, out, err = run("--edition", "enterprise", "--out", "-")
         finally:
             gen.FORBIDDEN_STRINGS = saved
         self.assertEqual(code, 1, err)
@@ -127,12 +138,12 @@ class LoadConfigTest(unittest.TestCase):
     def test_abbreviated_flags_are_refused(self):
         # An abbreviation would escape the CLI-over-profile check, so argparse must reject it.
         with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
-            gen.load_config(["--edition", "developer", "--db-pass", "x"])
+            gen.load_config(["--edition", "enterprise", "--db-pass", "x"])
 
 
 class S3EgressTest(unittest.TestCase):
     def resolve(self, *argv: str):
-        args, _parser = gen.load_config(["--edition", "developer", "--storage", "s3",
+        args, _parser = gen.load_config(["--edition", "enterprise", "--storage", "s3",
                                          "--s3-bucket", "jobs", "--s3-region", "eu-west-1", *argv])
         notes = gen.validate_and_normalize(args)
         return args, notes
@@ -170,7 +181,7 @@ class S3EgressTest(unittest.TestCase):
 
 class ImageRefTest(unittest.TestCase):
     def args(self, *argv: str):
-        args, _ = gen.load_config(["--edition", "developer", *argv])
+        args, _ = gen.load_config(["--edition", "enterprise", *argv])
         gen.validate_and_normalize(args)
         return args
 
@@ -201,9 +212,10 @@ class RegenerationTest(unittest.TestCase):
         self._tmp.cleanup()
 
     def generate(self, *extra: str) -> tuple[int, str]:
-        code, _, err = run("--edition", "developer", "--tls", "off", "--out", str(self.bundle), *extra)
+        code, _, err = run("--edition", "enterprise", "--tls", "off", "--out", str(self.bundle), *extra)
         return code, err
 
+    @unittest.skipIf(os.name == "nt", "Windows has no POSIX file modes")
     def test_env_is_private(self):
         self.assertEqual(self.generate()[0], 0)
         self.assertEqual(stat.S_IMODE((self.bundle / ".env").stat().st_mode), 0o600)
@@ -258,6 +270,163 @@ class RegenerationTest(unittest.TestCase):
 
         self.assertEqual(self.generate("--force")[0], 0)
         self.assertNotIn("# my edit", compose.read_text())
+
+
+class WindowsTest(unittest.TestCase):
+    def test_runs_twice_with_an_ascii_default_encoding(self):
+        # Windows reads text as cp1252 unless told otherwise, and the templates hold non-ASCII
+        # characters; an ASCII default reproduces the failure on any OS.
+        env = {**os.environ, "LC_ALL": "C", "LANG": "C", "PYTHONCOERCECLOCALE": "0", "PYTHONUTF8": "0"}
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            for attempt in ("first", "second"):
+                result = subprocess.run([sys.executable, str(SCRIPT_PATH), "--edition", "enterprise",
+                                         "--tls", "off", "--out", str(bundle)], env=env, capture_output=True)
+                self.assertEqual(result.returncode, 0, f"{attempt} run: {result.stderr.decode(errors='replace')}")
+            compose = (bundle / "docker-compose.yaml").read_bytes().decode("utf-8")
+            self.assertIn("\u2014", compose)
+            self.assertNotIn("\u00e2\u20ac", compose)
+
+    def test_env_is_written_without_os_fchmod(self):
+        # os.fchmod doesn't exist on Windows before Python 3.13.
+        no_fchmod = mock.patch.object(os, "fchmod", create=True, side_effect=AttributeError("no os.fchmod"))
+        with tempfile.TemporaryDirectory() as tmp, no_fchmod:
+            code, _, err = run("--edition", "enterprise", "--tls", "off", "--out", str(Path(tmp) / "bundle"))
+        self.assertEqual(code, 0, err)
+
+
+class ZipDatabaseCaTest(unittest.TestCase):
+    def test_instructions_import_the_database_ca_for_both_sides(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run("--profile", str(SCRIPT_PATH.parent / "profiles" / "none-nfs-tls.json"),
+                               "--out", str(bundle))
+            self.assertEqual(code, 0, err)
+            text = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
+            self.assertIn("sslmode=verify-full", text)
+            self.assertIn("the CA that signed it must be in both places below", text)
+            self.assertNotIn("PKIX path building failed", text)
+            self.assertNotIn("Failed to initialize database dialect", text)
+            self.assertNotIn("### Zip install", text)
+            self.assertNotIn("### Bundled SonarQube", text)
+            self.assertIn("-alias database-ca", text)
+            self.assertIn("The generator does not create it.", text)
+            self.assertIn("The database connection stays TLS when this bundle disables TLS.", text)
+            self.assertIn("Section 1 is enough for SonarQube to start and report UP.", text)
+            self.assertIn("When this bundle has TLS, section 7 does too.", text)
+            self.assertIn("SonarQube reports UP from section 1.", text)
+            self.assertIn("With TLS, `agentic-proxy` waits for a healthy Vortex, so it doesn't start either until then.", text)
+            self.assertIn("append these flags to any options you already set", text)
+            self.assertIn("CUSTOM_CA_DIR", text)
+            self.assertIn("-alias agentic-bundle-ca", text)
+            self.assertNotIn('cp "$JAVA_HOME/lib/security/cacerts"', text.split("## 7.")[1])
+
+
+class ZipDatabaseHostTest(unittest.TestCase):
+    def test_instructions_split_the_database_host(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run("--profile", str(SCRIPT_PATH.parent / "profiles" / "none-nfs-tls.json"),
+                               "--out", str(bundle))
+            self.assertEqual(code, 0, err)
+            text = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
+            self.assertIn("for the orchestrator", text)
+            self.assertIn("use the host that resolves on the zip machine", text)
+            self.assertIn("sonar.jdbc.url=jdbc:postgresql://<host-that-resolves-on-the-zip-machine>:", text)
+            self.assertIn("Put both names on the database certificate", text)
+            self.assertNotIn("UnknownHostException", text)
+            self.assertNotIn("connection is refused", text)
+            self.assertNotIn("### Bundled SonarQube", text)
+
+
+class ZipTruststoreAndSigningTest(unittest.TestCase):
+    def test_instructions_use_a_writable_truststore_and_load_the_signing_secret(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run("--profile", str(SCRIPT_PATH.parent / "profiles" / "none-nfs-tls.json"),
+                               "--out", str(bundle))
+            self.assertEqual(code, 0, err)
+            text = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
+            self.assertNotIn("/opt/sonarqube-truststore.jks", text)
+            self.assertNotIn("/home/<you>", text)
+            self.assertIn("~/.sonarqube/sonarqube-truststore.jks", text)
+            self.assertIn("if [ ! -e ~/.sonarqube/sonarqube-truststore.jks ]; then", text)
+            self.assertIn("<absolute-path-of-~/.sonarqube/sonarqube-truststore.jks>", text)
+            self.assertIn("use the absolute path", text)
+            self.assertIn("only when that file does not exist yet", text)
+            self.assertNotIn("does not expand", text)
+            self.assertNotIn("Permission denied", text)
+            signing = text.split("## 5. Signing key", 1)[1].split("## 6.", 1)[0]
+            self.assertIn("read `AGENTIC_SIGNING_SECRET` from `.env`", signing)
+            self.assertIn("AGENTIC_SIGNING_SECRET=$(sed -n 's/^AGENTIC_SIGNING_SECRET=//p' .env)", signing)
+            self.assertIn("`image:` of the `orchestrator` service", signing)
+            self.assertIn("use the absolute path of `~/.sonarqube/agentic-signing`", signing)
+            self.assertIn("<absolute-path-of-~/.sonarqube/agentic-signing>", signing)
+            self.assertNotIn("angle brackets", signing)
+            self.assertNotIn("signing-init", signing)
+            start = text.split("## 6. Start order", 1)[1].split("## 7.", 1)[0]
+            self.assertIn("is not a recognized system property is expected", start)
+            self.assertIn("Leave the property in `sonar.properties`", start)
+
+
+class ZipProxyCheckTest(unittest.TestCase):
+    def test_proxy_check_uses_the_certificate_name_on_this_machine(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run("--profile", str(SCRIPT_PATH.parent / "profiles" / "none-nfs-tls.json"),
+                               "--out", str(bundle))
+            self.assertEqual(code, 0, err)
+            text = (bundle / "sonarqube-tls-proxy" / "README.md").read_text()
+            self.assertIn(
+                "curl --cacert tls/ca.crt --resolve host.docker.internal:9443:127.0.0.1 "
+                "https://host.docker.internal:9443/api/system/status",
+                text)
+            self.assertNotIn("### Zip install", text)
+            self.assertNotIn("### Bundled SonarQube", text)
+            self.assertIn("From this directory, on the machine that hosts SonarQube", text)
+            self.assertNotIn("Copy this directory to the SonarQube machine", text)
+            instructions = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
+            self.assertIn("start it from that directory", instructions)
+            self.assertNotIn("copy the directory there", instructions)
+
+
+class ZipTlsOffTest(unittest.TestCase):
+    def test_disabled_bundle_tls_leaves_the_database_connection(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run("--profile", str(SCRIPT_PATH.parent / "profiles" / "none-s3.json"),
+                               "--out", str(bundle))
+            self.assertEqual(code, 0, err)
+            text = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
+            self.assertIn("sslmode=verify-full", text)
+            self.assertIn("The database connection stays TLS when this bundle disables TLS.", text)
+            self.assertIn("Section 1 is enough for SonarQube to start and report UP.", text)
+            self.assertIn("SonarQube reports UP from section 1.", text)
+            self.assertIn("TLS is disabled between SonarQube and the containers.", text)
+            self.assertIn("Those connections are plain HTTP.", text)
+            self.assertIn("The database connection in section 1 stays TLS.", text)
+            self.assertNotIn("every hop is plain HTTP", text)
+            self.assertNotIn("sonarqube-tls-proxy", text)
+            self.assertNotIn("-alias agentic-bundle-ca", text)
+            self.assertNotIn("`agentic-proxy` waits for a healthy Vortex", text)
+
+
+class SandboxRuntimeTest(unittest.TestCase):
+    def test_readme_selects_runc_on_desktop(self):
+        text = (SCRIPT_PATH.parent / "README.md").read_text()
+        edition_none = text.split("### Using your existing SonarQube", 1)[1].split("## TLS", 1)[0]
+        self.assertIn("pass `--sandbox runc` and `--host-gateway off`", edition_none)
+        bundled = text.split("### Bundled SonarQube", 1)[1]
+        self.assertIn("trusts only the public CAs in its image", bundled)
+        self.assertIn("`--custom-ca-dir` is read by the orchestrator", bundled)
+        self.assertNotIn("Both containers use `--db-host` and trust only the public CAs", text)
+        sandbox = text.split("- **`runc`**:", 1)[1].split("- **", 1)[0]
+        self.assertIn("pass `--sandbox runc`", sandbox)
+        self.assertIn("also pass `--host-gateway off`", sandbox)
+        database = text.split("**To your database**", 1)[1].split("### Zip install", 1)[0]
+        self.assertIn("including when", database)
+        self.assertIn("`--tls` is `off`", database)
+        self.assertIn("`--tls` changes the connection between SonarQube and the containers.", database)
 
 
 if __name__ == "__main__":

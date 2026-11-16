@@ -1,0 +1,3 @@
+# The scripts and templates here are copied into the bundle and run in Linux containers, so a
+# Windows checkout must not turn their line endings into CRLF.
+* text=auto eol=lf

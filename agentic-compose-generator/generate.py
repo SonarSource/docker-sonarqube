@@ -20,12 +20,25 @@ import sys
 import tempfile
 from pathlib import Path
 
+
+def read_utf8(path: Path) -> str:
+    """Every file the generator reads is UTF-8; the platform default is not (cp1252 on Windows)."""
+    return path.read_text(encoding="utf-8")
+
+
 HERE = Path(__file__).resolve().parent
 TEMPLATES = HERE / "templates"
 DEFAULT_IMAGES_FILE = HERE / "default-images.json"
-DEFAULT_IMAGES: dict = json.loads(DEFAULT_IMAGES_FILE.read_text())
+DEFAULT_IMAGES: dict = json.loads(read_utf8(DEFAULT_IMAGES_FILE))
 
-EDITIONS = ("developer", "enterprise", "datacenter", "none")
+EDITIONS = ("enterprise", "datacenter", "none")
+DEVELOPER_EDITION_ERROR = (
+    "--edition developer is not supported: the Hunter Agent and the Remediation Agent "
+    "run on Enterprise Edition and Data Center Edition only. Use enterprise or datacenter, "
+    "or none with an existing Enterprise or Data Center install. "
+    "To regenerate an existing Developer bundle as enterprise and keep its volumes, also pass "
+    "--project-name agentic-developer (or the --project-name that bundle already uses)"
+)
 ALL_COMPONENTS = ("hunter", "remediation", "vortex")
 DB_MODES = ("local", "external")
 STORAGE_MODES = ("local", "nfs", "hostpath", "s3")
@@ -81,7 +94,7 @@ FORBIDDEN_STRINGS = tuple(s for s in os.environ.get("AGENTIC_GEN_FORBIDDEN", "")
 
 
 def render(template_name: str, **substitutions: str) -> str:
-    text = (TEMPLATES / template_name).read_text()
+    text = read_utf8(TEMPLATES / template_name)
     return string.Template(text).safe_substitute(**substitutions)
 
 
@@ -109,8 +122,9 @@ def build_argparser() -> argparse.ArgumentParser:
     )
     p.add_argument("--profile", help="JSON file with any of the flags below as keys")
     p.add_argument("--print-inputs-schema", action="store_true", help="print the JSON Schema for a profile and exit")
-    p.add_argument("--edition", choices=EDITIONS, help="SonarQube edition ('datacenter' runs a 2-app/3-search cluster behind a load "
-                         "balancer), or 'none' to target an existing zip install")
+    p.add_argument("--edition", help="enterprise or datacenter, or none to target an existing zip install. "
+                         "datacenter runs a 2-app/3-search cluster behind a load balancer. "
+                         "Developer Edition is not supported")
     p.add_argument("--components", default="hunter,remediation,vortex", help="csv subset of hunter,remediation,vortex")
     p.add_argument("--db", dest="db_mode", choices=DB_MODES, default="local")
     p.add_argument("--db-host")
@@ -141,7 +155,8 @@ def build_argparser() -> argparse.ArgumentParser:
                          "the official Docker Hub image; per-component defaults come from "
                          "default-images.json")
     p.add_argument("--image-tag", default=None,
-                    help="overrides the tag for every agentic component image; "
+                    help="overrides the tag of all four agentic component images at once, "
+                         "so only use a tag published for each of them; "
                          "per-component defaults come from default-images.json")
     p.add_argument("--sonarqube-registry", default=None,
                     help="SonarQube image registry, blank for the official Docker Hub image; "
@@ -188,7 +203,7 @@ def load_config(argv: list[str]) -> tuple[argparse.Namespace, argparse.ArgumentP
 
     if args.profile:
         try:
-            profile = json.loads(Path(args.profile).read_text())
+            profile = json.loads(read_utf8(Path(args.profile)))
         except OSError as exc:
             raise ConfigError(f"--profile: cannot read {args.profile}: {exc.strerror}") from exc
         except json.JSONDecodeError as exc:
@@ -213,7 +228,11 @@ def load_config(argv: list[str]) -> tuple[argparse.Namespace, argparse.ArgumentP
             setattr(args, key, value)
 
     if not args.edition:
-        raise ConfigError("--edition is required (developer|enterprise|datacenter|none), or set it in --profile")
+        raise ConfigError("--edition is required (enterprise|datacenter|none), or set it in --profile")
+    if args.edition == "developer":
+        raise ConfigError(DEVELOPER_EDITION_ERROR)
+    if args.edition not in EDITIONS:
+        raise ConfigError(f"--edition '{args.edition}' is not one of {', '.join(EDITIONS)}")
 
     args.components = {c.strip() for c in str(args.components).split(",") if c.strip()}
     unknown = args.components - set(ALL_COMPONENTS)
@@ -665,7 +684,7 @@ def build_truststore_init(args: argparse.Namespace) -> str:
 
 
 def sonarqube_image(args: argparse.Namespace, suffix: str) -> str:
-    """SonarQube image ref; `suffix` is the edition part of the tag (e.g. `-developer`)."""
+    """SonarQube image ref; `suffix` is the edition part of the tag (e.g. `-enterprise`)."""
     defaults = DEFAULT_IMAGES.get("sonarqube", {})
     registry = args.sonarqube_registry if args.sonarqube_registry is not None else defaults.get("registry", "")
     name = defaults.get("name", "sonarqube")
@@ -1038,6 +1057,13 @@ def zip_reachability_section(args: argparse.Namespace) -> str:
     return text
 
 
+def zip_agentic_proxy_note(args: argparse.Namespace) -> str:
+    if args.tls_on and "vortex" in args.components:
+        return (" With TLS, `agentic-proxy` waits for a healthy Vortex, "
+                "so it doesn't start either until then.")
+    return ""
+
+
 def zip_ca_note(args: argparse.Namespace) -> str:
     if not args.custom_ca_dir:
         return ""
@@ -1090,7 +1116,10 @@ def build_docs(args: argparse.Namespace) -> dict[str, str]:
                       "`VORTEX_PUBLISH_PORT` from `.env` instead if you set them.",
             storage_note=zip_storage_note(args),
             tls_section=render("docs/zip-tls-trust.tmpl", tls_server_name=args.tls_server_name)
-            if args.tls_on else "TLS is disabled in this bundle; every hop is plain HTTP.",
+            if args.tls_on else
+            "TLS is disabled between SonarQube and the containers. Those connections are plain HTTP. "
+            "The database connection in section 1 stays TLS.",
+            agentic_proxy_note=zip_agentic_proxy_note(args),
         )
     return docs
 
@@ -1105,8 +1134,8 @@ def build_kit(args: argparse.Namespace) -> dict[str, str]:
         f"{SONARQUBE_KIT_DIR}/docker-compose.yaml": render("kit/docker-compose.tmpl", **subs),
         f"{SONARQUBE_KIT_DIR}/README.md": render("kit/readme.tmpl", **subs),
         f"{SONARQUBE_KIT_DIR}/nginx/sonarqube-tls.conf": render("kit/sonarqube-tls.conf.tmpl", **subs),
-        f"{SONARQUBE_KIT_DIR}/entrypoint.sh": (HERE / "tls-proxy" / "entrypoint.sh").read_text(),
-        f"{SONARQUBE_KIT_DIR}/nginx.kit.conf.template": (HERE / "tls-proxy" / "nginx.kit.conf.template").read_text(),
+        f"{SONARQUBE_KIT_DIR}/entrypoint.sh": read_utf8(HERE / "tls-proxy" / "entrypoint.sh"),
+        f"{SONARQUBE_KIT_DIR}/nginx.kit.conf.template": read_utf8(HERE / "tls-proxy" / "nginx.kit.conf.template"),
     }
 
 
@@ -1216,13 +1245,14 @@ def write_bundle_certs(args: argparse.Namespace, out_dir: Path, reissue: bool) -
     notes = []
     if reissue:
         with tempfile.TemporaryDirectory() as work:
-            Path(work, "ca.cnf").write_text(CA_CONFIG)
+            write_file(Path(work, "ca.cnf"), CA_CONFIG.encode())
             openssl(work, "req", "-x509", "-new", "-newkey", "rsa:2048", "-nodes", "-sha256", "-days", "3650",
                     "-config", "ca.cnf", "-extensions", "v3_ca", "-keyout", "ca.key", "-out", CA_CERT_FILE)
             ca_cert.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(Path(work, CA_CERT_FILE), ca_cert)
             for leaf_dir, names in leaves.items():
-                Path(work, LEAF_CONFIG_FILE).write_text(LEAF_CONFIG.format(cn=names[0], san=san_entries(names)))
+                write_file(Path(work, LEAF_CONFIG_FILE),
+                           LEAF_CONFIG.format(cn=names[0], san=san_entries(names)).encode())
                 openssl(work, "req", "-new", "-newkey", "rsa:2048", "-nodes", "-config", LEAF_CONFIG_FILE,
                         "-keyout", "leaf.key", "-out", "leaf.csr")
                 # 825 days: the longest lifetime Safari and Chrome still accept for a leaf certificate.
@@ -1231,7 +1261,8 @@ def write_bundle_certs(args: argparse.Namespace, out_dir: Path, reissue: bool) -
                         "-extfile", LEAF_CONFIG_FILE, "-extensions", "v3_leaf", "-out", "leaf.crt")
                 leaf_dir.mkdir(parents=True, exist_ok=True)
                 # Full chain, so a client that only has the CA can still build the path.
-                (leaf_dir / LEAF_CERT_FILE).write_text(Path(work, "leaf.crt").read_text() + Path(work, CA_CERT_FILE).read_text())
+                chain = read_utf8(Path(work, "leaf.crt")) + read_utf8(Path(work, CA_CERT_FILE))
+                write_file(leaf_dir / LEAF_CERT_FILE, chain.encode())
                 write_file(leaf_dir / "tls.key", Path(work, "leaf.key").read_bytes(), 0o600)
 
     if Path(args.custom_ca_dir).is_absolute():
@@ -1304,7 +1335,7 @@ def read_manifest(out_dir: Path) -> dict[str, str]:
     if not path.exists():
         return {}
     try:
-        files = json.loads(path.read_text()).get("files", {})
+        files = json.loads(read_utf8(path)).get("files", {})
     except (ValueError, AttributeError) as exc:
         raise ConfigError(f"{path} is corrupt; delete it and rerun with --force") from exc
     return files if isinstance(files, dict) else {}
@@ -1313,7 +1344,7 @@ def read_manifest(out_dir: Path) -> dict[str, str]:
 def read_env_values(env_file: Path) -> dict[str, str]:
     values = {}
     if env_file.exists():
-        for line in env_file.read_text().splitlines():
+        for line in read_utf8(env_file).splitlines():
             key, sep, value = line.partition("=")
             if sep and not key.lstrip().startswith("#"):
                 # compose uses the last occurrence of a duplicated key.
@@ -1379,7 +1410,8 @@ def write_file(path: Path, data: bytes, mode: int | None = None) -> None:
     # Created with the final mode, so a secret is never readable by others, even briefly.
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, mode)
     with os.fdopen(fd, "wb") as handle:
-        os.fchmod(handle.fileno(), mode)
+        # By path: os.fchmod doesn't exist on Windows before Python 3.13.
+        os.chmod(path, mode)
         handle.write(data)
 
 

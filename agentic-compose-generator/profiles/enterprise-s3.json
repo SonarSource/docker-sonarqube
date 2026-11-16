@@ -1,5 +1,5 @@
 {
-  "edition": "developer",
+  "edition": "enterprise",
   "components": "hunter",
   "db_mode": "local",
   "storage": "s3",

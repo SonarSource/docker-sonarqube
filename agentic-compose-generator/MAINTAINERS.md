@@ -114,12 +114,15 @@ Bump it with a small, direct edit to the file, referencing the ticket in the com
 proposes digest bumps for the third-party images.
 
 All defaults are public Docker Hub coordinates: the official `sonarqube` image
-(`sonarqube:<tag>-<edition>`, e.g. `sonarqube:2026.5.3-datacenter-app`), and for the four agentic
+(`sonarqube:<tag>-<edition>`, e.g. `sonarqube:2026.5.4-datacenter-app`), and for the four agentic
 components `sonarsource/sonarqube-agent-orchestrator`, `sonarqube-hunter-agent`,
 `sonarqube-remediation-agent` and `sonar-vortex`, tagged with the SonarQube Server line they ship
-with and a patch of their own (e.g. `2026.5.1` alongside SonarQube Server `2026.5.3`): the three
-agent images always share one tag, Vortex has its own. `--image-registry`/`--image-tag`
-apply uniformly to the four agentic components only (`AGENTIC_IMAGES` in `generate.py`); the
+with and a patch of their own (e.g. `2026.5.2` alongside SonarQube Server `2026.5.4`). The tags
+can differ between components: an image is only republished when it changes (e.g. Agent
+Orchestrator and Hunter Agent `2026.5.2`, Remediation Agent and Vortex `2026.5.1`), so set each
+one in `default-images.json`. `--image-registry`/`--image-tag`
+apply uniformly to the four agentic components only (`AGENTIC_IMAGES` in `generate.py`), so
+only pass `--image-tag` with a tag that exists for all four; the
 third-party images (`postgres`, `storage-init`/`storage-probe`, `truststore-init`, `egress-proxy`,
 `tls-proxy`, `sonarqube-lb`) always
 use their `default-images.json` coordinates, since a customer's agentic tag means nothing for
@@ -129,7 +132,7 @@ per-component *defaults* — changing an image's `name` (or a pinned `digest`) m
 
 ## Supported combinations
 
-All four editions × all four storage backends × both DB modes × both TLS states × all five legal
+All three editions × all four storage backends × both DB modes × both TLS states × all five legal
 component sets (`hunter`; `vortex`; `hunter,vortex`; `remediation,vortex`; `hunter,remediation,vortex`)
 are supported, subject to the two `--edition none` constraints above. `profiles/*.json` exercises a
 representative slice of this matrix and is what CI lints against.
@@ -138,6 +141,7 @@ representative slice of this matrix and is what CI lints against.
 
 The generator fails closed (`exit 1`, no files written) if:
 
+- `--edition developer` is not supported;
 - a storage/DB requirement is missing for the chosen mode (e.g. `--storage nfs` without
   `--nfs-server`/`--nfs-export`);
 - `--edition none` is combined with `--storage local`;
