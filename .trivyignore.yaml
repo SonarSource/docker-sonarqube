@@ -167,13 +167,14 @@ vulnerabilities:
       Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
       (eclipse-temurin:25-jdk-noble) glibc OS package vulnerability (USN-9065-1,
       libc6/libc-bin/locales 2.39-0ubuntu8.9 -> 2.39-0ubuntu8.12; the fix reached noble-security on
-      2026-11-12, after the base images the published 2026.5.5 images were built from). Heap buffer
-      overflow in fopen when the ,ccs= part of the mode string is attacker controlled. Across the
-      whole filesystem of our images, including the native libraries packaged inside the SonarQube
-      and Elasticsearch jars, only glibc itself (libc.so.6 and ldconfig) contains the ,ccs= syntax,
-      so no program in the image passes such a mode string to fopen, let alone one an attacker
-      controls. This is not reachable from our attack surface. Tracked in SONAR-33427 and
-      SONAR-31880.
+      2026-11-12, after the base images the published 2026.5.5 images were built from). Our
+      Dockerfiles do not install or upgrade glibc: libc6, libc-bin and locales 2.39-0ubuntu8.9 in
+      the published images are the base image's packages, unchanged. Heap buffer overflow in fopen
+      when the ,ccs= part of the mode string is attacker controlled. Across the whole filesystem of
+      our images, including the native libraries packaged inside the SonarQube and Elasticsearch
+      jars, only glibc itself (libc.so.6 and ldconfig) contains the ,ccs= syntax, so no program in
+      the image passes such a mode string to fopen, let alone one an attacker controls. This is not
+      reachable from our attack surface. Tracked in SONAR-33427 and SONAR-31880.
     expired_at: 2026-12-12
   - id: CVE-2026-18938
     statement: >-
@@ -866,18 +867,19 @@ vulnerabilities:
       Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
       (eclipse-temurin:25-jdk-noble) glibc OS package vulnerability (USN-9065-1,
       libc6/libc-bin/locales 2.39-0ubuntu8.9 -> 2.39-0ubuntu8.12; the fix reached noble-security on
-      2026-11-12, after the base images the published 2026.5.5 images were built from). gettext,
-      used by many programs in the base image, loads message catalogs from LANGUAGE entries
-      containing '/' or '..', except in setuid/setgid (AT_SECURE) programs, where glibc already
-      rejects such entries; the setuid/setgid binaries in our images are therefore not affected.
-      Exploiting it requires a program without AT_SECURE that receives LANGUAGE and LANG from a
-      less-trusted party across a trust boundary, for example an SSH server accepting client
-      environment variables for a forced command, plus a crafted .mo file. Our images have no SSH
-      server or other component that runs programs with an environment supplied by another party:
-      processes inherit the environment set by whoever deploys the image (pod spec or docker run),
-      and a user who can already run commands in the container gains no extra privileges by setting
-      LANGUAGE for their own processes. This is not reachable from our attack surface. Tracked in
-      SONAR-33427 and SONAR-31880.
+      2026-11-12, after the base images the published 2026.5.5 images were built from). Our
+      Dockerfiles do not install or upgrade glibc: libc6, libc-bin and locales 2.39-0ubuntu8.9 in
+      the published images are the base image's packages, unchanged. gettext, used by many programs
+      in the base image, loads message catalogs from LANGUAGE entries containing '/' or '..', except
+      in setuid/setgid (AT_SECURE) programs, where glibc already rejects such entries; the
+      setuid/setgid binaries in our images are therefore not affected. Exploiting it requires a
+      program without AT_SECURE that receives LANGUAGE and LANG from a less-trusted party across a
+      trust boundary, for example an SSH server accepting client environment variables for a forced
+      command, plus a crafted .mo file. Our images have no SSH server or other component that runs
+      programs with an environment supplied by another party: processes inherit the environment set
+      by whoever deploys the image (pod spec or docker run), and a user who can already run commands
+      in the container gains no extra privileges by setting LANGUAGE for their own processes. This
+      is not reachable from our attack surface. Tracked in SONAR-33427 and SONAR-31880.
     expired_at: 2026-12-12
   - id: CVE-2026-84782
     statement: >-
@@ -898,36 +900,39 @@ vulnerabilities:
       Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
       (eclipse-temurin:25-jdk-noble) glibc OS package vulnerability (USN-9065-1,
       libc6/libc-bin/locales 2.39-0ubuntu8.9 -> 2.39-0ubuntu8.12; the fix reached noble-security on
-      2026-11-12, after the base images the published 2026.5.5 images were built from). The DNS stub
-      resolver aborts the process only when /etc/resolv.conf or LOCALDOMAIN contains a single search
-      domain that does not fit in the remaining space of the 256-byte defdname buffer while the
-      preceding entries take at most 56 bytes, which requires one search domain of about 199
-      characters or more among the first six. The JVM resolves names through glibc, so the only
-      input is the DNS configuration of the platform running the container: LOCALDOMAIN is not set
-      in our images, and the charts set no dnsConfig, dnsPolicy or hostNetwork, so pods use the
-      Kubernetes ClusterFirst resolver, whose cluster search domains are at most 81, 17 and 13
-      characters with the default cluster domain, followed by the node's own search domains. Neither
-      SonarQube users, nor its network clients, nor processes in the container can influence that
-      configuration, so this is not reachable through SonarQube; it requires tampering with the host
-      or cluster network configuration, and the impact is limited to a process abort (availability),
-      after which Kubernetes restarts the pod. On GCP the precondition cannot be met: node search
-      domains are the short zonal and project .internal names served by Google's DHCP, and the VPC
-      carries no layer-2 broadcast that could inject DHCP options. Tracked in SONAR-33427 and
-      SONAR-31880.
+      2026-11-12, after the base images the published 2026.5.5 images were built from). Our
+      Dockerfiles do not install or upgrade glibc: libc6, libc-bin and locales 2.39-0ubuntu8.9 in
+      the published images are the base image's packages, unchanged. The DNS stub resolver aborts
+      the process only when /etc/resolv.conf or LOCALDOMAIN contains a single search domain that
+      does not fit in the remaining space of the 256-byte defdname buffer while the preceding
+      entries take at most 56 bytes, which requires one search domain of about 199 characters or
+      more among the first six. The JVM resolves names through glibc, so the only input is the DNS
+      configuration of the platform running the container: LOCALDOMAIN is not set in our images, and
+      the charts set no dnsConfig, dnsPolicy or hostNetwork, so pods use the Kubernetes ClusterFirst
+      resolver, whose cluster search domains are at most 81, 17 and 13 characters with the default
+      cluster domain, followed by the node's own search domains. Neither SonarQube users, nor its
+      network clients, nor processes in the container can influence that configuration, so this is
+      not reachable through SonarQube; it requires tampering with the host or cluster network
+      configuration, and the impact is limited to a process abort (availability), after which
+      Kubernetes restarts the pod. On GCP the precondition cannot be met: node search domains are
+      the short zonal and project .internal names served by Google's DHCP, and the VPC carries no
+      layer-2 broadcast that could inject DHCP options. Tracked in SONAR-33427 and SONAR-31880.
     expired_at: 2026-12-12
   - id: CVE-2026-86805
     statement: >-
       Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
       (eclipse-temurin:25-jdk-noble) glibc OS package vulnerability (USN-9065-1,
       libc6/libc-bin/locales 2.39-0ubuntu8.9 -> 2.39-0ubuntu8.12; the fix reached noble-security on
-      2026-11-12, after the base images the published 2026.5.5 images were built from).
-      Time-of-check to time-of-use race in the dynamic loader when expanding $ORIGIN in DT_RPATH for
-      setuid/setgid programs. None of the 12 setuid/setgid binaries in our images (the Ubuntu base's
-      chage, chfn, chsh, expiry, gpasswd, mount, newgrp, passwd, su, umount, pam_extrausers_chkpwd
-      and unix_chkpwd) has a DT_RPATH or DT_RUNPATH, and none contains $ORIGIN, so the vulnerable
-      path is never taken. In addition, the charts run the SonarQube containers as a non-root user
-      with allowPrivilegeEscalation: false, so setuid does not take effect there. This is not
-      reachable from our attack surface. Tracked in SONAR-33427 and SONAR-31880.
+      2026-11-12, after the base images the published 2026.5.5 images were built from). Our
+      Dockerfiles do not install or upgrade glibc: libc6, libc-bin and locales 2.39-0ubuntu8.9 in
+      the published images are the base image's packages, unchanged. Time-of-check to time-of-use
+      race in the dynamic loader when expanding $ORIGIN in DT_RPATH for setuid/setgid programs. None
+      of the 12 setuid/setgid binaries in our images (the Ubuntu base's chage, chfn, chsh, expiry,
+      gpasswd, mount, newgrp, passwd, su, umount, pam_extrausers_chkpwd and unix_chkpwd) has a
+      DT_RPATH or DT_RUNPATH, and none contains $ORIGIN, so the vulnerable path is never taken. In
+      addition, the charts run the SonarQube containers as a non-root user with
+      allowPrivilegeEscalation: false, so setuid does not take effect there. This is not reachable
+      from our attack surface. Tracked in SONAR-33427 and SONAR-31880.
     expired_at: 2026-12-12
   - id: CVE-2026-9538
     statement: >-
@@ -944,12 +949,14 @@ vulnerabilities:
       Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
       (eclipse-temurin:25-jdk-noble) glibc OS package vulnerability (USN-9065-1,
       libc6/libc-bin/locales 2.39-0ubuntu8.9 -> 2.39-0ubuntu8.12; the fix reached noble-security on
-      2026-11-12, after the base images the published 2026.5.5 images were built from). Stack buffer
-      overflow in the dynamic loader when a setuid/setgid program's DT_RPATH or DT_RUNPATH begins
-      with $ORIGIN. None of the 12 setuid/setgid binaries in our images (the Ubuntu base's chage,
-      chfn, chsh, expiry, gpasswd, mount, newgrp, passwd, su, umount, pam_extrausers_chkpwd and
-      unix_chkpwd) has a DT_RPATH or DT_RUNPATH, and none contains $ORIGIN, so the vulnerable path
-      is never taken. In addition, the charts run the SonarQube containers as a non-root user with
+      2026-11-12, after the base images the published 2026.5.5 images were built from). Our
+      Dockerfiles do not install or upgrade glibc: libc6, libc-bin and locales 2.39-0ubuntu8.9 in
+      the published images are the base image's packages, unchanged. Stack buffer overflow in the
+      dynamic loader when a setuid/setgid program's DT_RPATH or DT_RUNPATH begins with $ORIGIN. None
+      of the 12 setuid/setgid binaries in our images (the Ubuntu base's chage, chfn, chsh, expiry,
+      gpasswd, mount, newgrp, passwd, su, umount, pam_extrausers_chkpwd and unix_chkpwd) has a
+      DT_RPATH or DT_RUNPATH, and none contains $ORIGIN, so the vulnerable path is never taken. In
+      addition, the charts run the SonarQube containers as a non-root user with
       allowPrivilegeEscalation: false, so setuid does not take effect there. This is not reachable
       from our attack surface. Tracked in SONAR-33427 and SONAR-31880.
     expired_at: 2026-12-12
