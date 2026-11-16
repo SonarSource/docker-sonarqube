@@ -37,7 +37,7 @@ services:
       POSTGRES_DB: sonar
     volumes:
       # postgres <=17 keeps its data in /var/lib/postgresql/data; postgres 18+ uses /var/lib/postgresql
-      - postgresql:/var/lib/postgresql/data
+      - postgresql_data:/var/lib/postgresql/data
     networks:
       - ${NETWORK_TYPE:-ipv4}
 
@@ -46,7 +46,7 @@ volumes:
   sonarqube_temp:
   sonarqube_extensions:
   sonarqube_logs:
-  postgresql:
+  postgresql_data:
 
 networks:
   ipv4:
