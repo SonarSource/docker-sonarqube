@@ -8,20 +8,50 @@ We consider the **docker image** as part of the SonarQube Server **product**. Th
 
 Release of a new version of the official SonarQube Server Docker images is made of several operations. 
 
-> Please note that steps 1 and 2 are fully automated with [renovate](https://developer.mend.io/). When the SonarQube Server binaries are made available, please activate the Renovate scan to trigger a new release (i.e., `docker-sonarqube` -> `Actions` -> `Run Renovate Scan`).
+1. Prepare and merge the version bump PR into the intended source branch.
+2. Validate the release commit, including image tests and security scans.
+3. Update Docker Hub documentation if needed.
+4. Submit the official-images PR for that commit and wait for the images to become available on Docker Hub.
+5. Publish the GitHub release and tag for the same commit. Commercial releases trigger GCP production image promotion and its release gate.
 
-1. Set the new version of SonarQube Server (`SONARQUBE_VERSION`) to be released in the Dockerfiles. In case of community build, please remember to update `community-build/Dockerfile` only.
-2. Set the new version in `.github/github_env.yaml`. If you are releasing a new LTA, set `versions.current` in `.github/github_env.yaml` on the related lta branch. Otherwise, if you are releasing a Community build, set `versions.community_build` only. In all the other cases where a paid edition is about to be releases, set `versions.current` (please note that the nightly build will fail before the public image becomes available).
-3. Update the docker hub SonarQube Server's documentation (if applicable)
-4. Update Docker Hub's SonarQube Server images
-5. Add a GIT tag for the new version (This needs to be done after the images become available on DockerHub)
-   1. If you are releasing a SonarQube Server version, you need to [Add a New Release](https://github.com/SonarSource/docker-sonarqube/releases/new), where the name matches "SonarQube Server", followed by the release version, e.g., "SonarQube Server 2025.1.0".
-   2. Likewise, if you are releasing a Community Build, the release name should match "Community Build", followed by the release version, e.g., "Community Build 25.1.0.102122".
-   3. The Git tag for the SonarQube Community Build release must be the full version, e.g., `25.1.0.102122`.
+## Prepare the version bump PR
 
-## Bump the version of SonarQube Server in Dockerfiles
+Use the intended `release/X.Y` branch for a release from a maintained release line, rather than assuming `master` is the source. Use `master` for releases prepared there. For Community Build, use the automation described below.
 
-The version of SonarQube Server is hardcoded in each Dockerfile of this repository and must be updated in master branch.
+Check `baseBranches` and the matching rules in [renovate.json5](renovate.json5) before relying on Renovate. The current configuration lists selected release branches (`release/2025.1` and `release/2025.4`), not every `release/X.Y` branch. Where configured, select `docker-sonarqube` in the [Mend developer portal](https://developer.mend.io/) and use **Actions > Run Renovate Scan** after the binaries become available. If Renovate does not cover the intended branch or version locations, open a manual bump PR against that branch.
+
+For a commercial release, review and update these locations together:
+
+- `SONARQUBE_VERSION` in `commercial-editions/developer/Dockerfile`, `commercial-editions/enterprise/Dockerfile`, `commercial-editions/datacenter/app/Dockerfile`, and `commercial-editions/datacenter/search/Dockerfile`. Use the full binary version and update the corresponding download checksum where present.
+- `versions.current` in `.github/github_env.yaml`. For an LTA release, update it on the corresponding LTA release branch. Nightly builds can fail until the public images become available.
+- Applicable version defaults in `agentic-compose-generator/default-images.json`.
+- Applicable image tags in `example-compose-files/`.
+
+### Community Build automation
+
+Use [Community Build Version Bump](.github/workflows/community-build-version-bump.yml), triggered by the `sonarqube-community-build-released` repository dispatch or run manually with `community_build_version` and the `jira_key` for the release. It opens a PR against the default branch to update `community-build/Dockerfile` and `versions.community_build` in `.github/github_env.yaml`. Leave the commercial version fields unchanged. Review applicable examples separately.
+
+Preserve the generated branch name `task/REL-N-bump-community-build-version-VERSION` and the `community-build-release` label. When that PR merges into `master`, [Community Build Release on Merge](.github/workflows/community-build-release-on-merge.yml) creates the draft GitHub release targeting the merge commit. It also dispatches `community-build-release.yml` in `SonarSource/helm-chart-sonarqube` with `community_build_number` and `jira_key`.
+
+A Renovate or manual bump PR without the required branch name and label does not trigger these steps. In that case, the release operator must prepare the draft release for the intended commit and arrange the Helm chart release dispatch separately. Draft creation does not publish the release: confirm Docker Hub availability before publication as described below.
+
+### Handle base-image scan findings
+
+Do not add package-upgrade commands to the dependent Dockerfiles to clear findings inherited from the base image. Docker Official Images require reproducible builds. First check whether a refreshed upstream base image supplies the fix, and validate that base on the release branch.
+
+If a temporary exception is justified, submit a reviewed change to `.trivyignore.yaml` on the release branch. Each entry needs the vulnerability `id`, a `statement` that names the owner and explains the justification, and an `expired_at` date. Record the affected package, reachability evidence, and the planned fix or upstream update in the justification. A failing scan alone does not justify an exception.
+
+Choose an expiry that meets the applicable remediation SLA. Reassess or remove the exception before it expires; do not extend it without new evidence and review. An expired exception no longer suppresses the finding. The scan and CVSS policy evaluation must pass before release and production promotion; do not bypass the gate.
+
+Validate image tests and scan results on both `linux/amd64` and `linux/arm64`. The base-image package versions can differ between architectures, so a passing result on one architecture does not establish that the other passes. The current CI Trivy jobs and GCP production release gate scan on amd64 runners; they do not establish arm64 scan coverage.
+
+For each affected edition image tag, run Trivy separately with `--platform linux/amd64` and `--platform linux/arm64`. Use `--config .github/trivy.yaml`, `--ignorefile .trivyignore.yaml`, `--ignore-unfixed`, `--show-suppressed`, `--severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL`, and `--format json`. Save each architecture's report separately. Run `.github/workflows/scripts/evaluate-trivy-report.py` with each report using Python 3, as the CI jobs do. Retain both scan reports and policy results with the release evidence. Both results must pass; the automated amd64 gate does not replace this arm64 validation.
+
+### GCP staging builds
+
+[push_and_pr.yml](.github/workflows/push_and_pr.yml) rebuilds the GCP staging app and search images after the image tests on qualifying pushes to `master` and `release/*`. Patch releases do not need a temporary staging branch.
+
+The push trigger has path filters for image sources, selected workflow and scan configuration, `run-tests.sh`, and `docker-official-images/`. Check the workflow's `on.push.paths` list for the exact scope. A documentation-only push, or another push outside those paths, does not trigger a staging rebuild.
 
 ## Update the docker hub SonarQube Server's documentation (if applicable)
 
@@ -48,13 +78,13 @@ In order to update the Docker Hub images, a Pull Request must be created on the 
 
 You need to update:
 
-* `GitCommit` must be updated to this repository master branch's HEAD.
-* `GitFetch` is the branch/tag (e.g., refs/tags/10.8.1) where the commit can be found. Setting this value is only needed if you are releasing from a branch different from master.
+* `GitCommit` must identify the validated HEAD of the actual source branch in this repository, for example `release/X.Y`.
+* `GitFetch` identifies the branch or tag where that commit can be fetched. For a release branch, use `refs/heads/release/X.Y`. It is needed when the source differs from `master`.
 * `Tags` and `Directory` must be added/updated appropriately for each edition
 
 Please check the https://github.com/docker-library/official-images/pull/8837/files as an example.
 
-> In the future, also åthe folliwing steps will be also automated through github actions.
+If the release branch advances after you open the official-images PR, validate the new head and update `GitCommit` in that PR. Update the target of the draft GitHub release to the same intended head before publication. Recheck that both references identify the exact commit that Docker Hub will build.
 
 Until SonarQube Server is released and the public artifacts are available, keep your PR a draft PR to make it clear it is not ready to be merged yet.
 
@@ -64,6 +94,13 @@ Until SonarQube Server is released and the public artifacts are available, keep 
 
 For more and up to date documentation, see https://github.com/docker-library/official-images.
 
-## Add a GIT tag for the new version
+## Publish the GitHub release and tag
 
-The commit referenced in the DockerHub Pull Request must be tagged with the (marketing) version of SQ: eg. `8.0`, `8.0.1`, `8.1`.
+Wait for official-images publication and confirm that all intended edition tags and architectures are available on Docker Hub. A merged official-images PR alone does not prove that image publication has finished.
+
+Create or update the [draft GitHub release](https://github.com/SonarSource/docker-sonarqube/releases/new). Its target must be the exact commit referenced by `GitCommit` in the official-images PR. If the release branch moved, reconcile both references and validate the intended head before publishing. Do not tag a different commit merely because it is now the branch head.
+
+- For SonarQube Server, use the marketing version as the tag, for example `2026.5.5`, and name the release `SonarQube Server 2026.5.5`.
+- For Community Build, use the full version as the tag, for example `26.11.0.134175`, and name the release `SonarQube Community Build 26.11.0.134175`. The `SonarQube Community Build` prefix lets the release workflow exclude it from commercial GCP promotion.
+
+Publish only after Docker Hub availability is confirmed. Publishing a commercial GitHub release triggers [release.yml](.github/workflows/release.yml), which promotes the Data Center app and search images from Docker Hub to GCP production through [gcp-build-template.yml](.github/workflows/gcp-build-template.yml). That template re-scans the amd64 variant of each Data Center component image and evaluates the CVSS policy before the production push. It does not scan arm64; complete the separate architecture validation above before release. Monitor the release gate and promotion jobs; do not bypass a failed gate. Community Build release publication skips these commercial production jobs.
