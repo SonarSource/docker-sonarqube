@@ -22,14 +22,19 @@ The `sq-with-postgres`, `sq-dce-postgres` and `sq-dce-custom-zip-postgres` examp
 
 The database is kept in the `postgresql_data` volume, mounted on `/var/lib/postgresql`, in a `<major-version>/docker` subdirectory. Versions 15 to 17 also create an empty, unused anonymous volume for `/var/lib/postgresql/data` each time the container is created.
 
-If the `db` container exits with `there appears to be PostgreSQL data in` after an update, your database is from an earlier version of these examples: move it to the new layout, then optionally upgrade it to 18. For a throwaway setup, run `docker compose down -v` to start over instead.
+If you ran an earlier version of these examples, move your database to the new layout before updating, then optionally upgrade it to 18:
+
+- `sq-dce-custom-zip-postgres`: until you do, the `db` container exits with `there appears to be PostgreSQL data in`.
+- `sq-with-postgres` and `sq-dce-postgres`: there is no error. The new compose file starts with an empty database, and your data stays in an anonymous volume no longer used by any container. Don't run `docker volume prune`.
+
+For a throwaway setup, run `docker compose down -v` to start over instead.
 
 ### Moving an existing database to the new layout
 
 This keeps your current PostgreSQL major version, without a dump. Stop the stack with the previous compose file, then find where your database is:
 
 - `sq-dce-custom-zip-postgres`, and other examples mounting `postgresql_data` on `/var/lib/postgresql/data`: at the root of the `<project>_postgresql_data` volume.
-- `sq-with-postgres` and `sq-dce-postgres` mounting a `postgresql` volume on `/var/lib/postgresql`: in an anonymous volume. Before stopping the stack, `docker inspect -f '{{range .Mounts}}{{if eq .Destination "/var/lib/postgresql/data"}}{{.Name}}{{end}}{{end}}' <db-container>` prints its name. The old `<project>_postgresql` volume only holds an empty `data` directory.
+- `sq-with-postgres` and `sq-dce-postgres` mounting a `postgresql` volume on `/var/lib/postgresql`: in an anonymous volume. Before stopping the stack, `docker inspect -f '{{range .Mounts}}{{if eq .Destination "/var/lib/postgresql/data"}}{{.Name}}{{end}}{{end}}' <db-container>` prints its name. If you already updated, look for it in `docker volume ls -qf dangling=true`. The old `<project>_postgresql` volume only holds an empty `data` directory.
 
 `cat PG_VERSION` at the root of either volume prints the major version. Switch to the new compose file, set that version in `.env`, then move the database (if your database is in an anonymous volume and you already started the new compose file, first remove the empty database it created with `docker compose down` and `docker volume rm <project>_postgresql_data`):
 
@@ -37,7 +42,7 @@ This keeps your current PostgreSQL major version, without a dump. Stop the stack
 # .env: POSTGRES_VERSION=<major-version>
 # database in <project>_postgresql_data:
 docker run --rm -v <project>_postgresql_data:/v alpine sh -c \
-  'cd /v && V=$(cat PG_VERSION) && mkdir .move && mv $(ls -A | grep -vx .move) .move/ && mkdir $V && mv .move $V/docker'
+  'cd /v && V=$(cat PG_VERSION) && for d in */docker; do rmdir "$d" "${d%/docker}" 2>/dev/null; done; mkdir .move && mv $(ls -A | grep -vx .move) .move/ && mkdir $V && mv .move $V/docker'
 # database in an anonymous volume:
 docker compose create db
 docker run --rm -v <anonymous-volume>:/from -v <project>_postgresql_data:/v alpine sh -c \
