@@ -374,8 +374,10 @@ The generator writes nothing and exits with an error in these cases:
   path, `--image-tag` or `--sonarqube-tag` isn't a valid image tag, or `--project-name` isn't a
   valid compose project name;
 - a path or URL (`--storage-path`, `--nfs-export`, `--custom-ca-dir`, `--sonar-secret-key-file`,
-  `--s3-endpoint`, `--github-api-base-url`) contains whitespace, a quote, `$`, `#` or `\`, or a
-  relative `--custom-ca-dir` climbs out of the bundle with `..`;
+  `--s3-endpoint`, `--github-api-base-url`) contains whitespace, a quote, `$`, `#` or `\`;
+- `--custom-ca-dir` starts with `~name` instead of `~` or `~/name`, or a relative one leaves the
+  bundle: through `..`, or, with `--edition none --tls on` (the generator writes the bundle CA into
+  it), through a symlink;
 - an S3 key contains a single quote or a newline;
 - with `--edition none --tls on`, `openssl` is missing from the host that runs the generator;
 - regenerating would overwrite a file you edited, or certificates that no longer match your
