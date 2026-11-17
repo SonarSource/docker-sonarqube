@@ -33,7 +33,7 @@ When all nodes are healthy with `docker-compose ps`
 bash
 ```
 NAME                                     IMAGE                                 SERVICE     CREATED          STATUS                      PORTS
-sq-dce-custom-zip-postgres-db-1          postgres:17                           db          10 minutes ago   Up 10 minutes (healthy)     5432/tcp
+sq-dce-custom-zip-postgres-db-1          postgres:18                           db          10 minutes ago   Up 10 minutes (healthy)     5432/tcp
 sq-dce-custom-zip-postgres-proxy-1       jwilder/nginx-proxy                   proxy       10 minutes ago   Up 10 minutes               0.0.0.0:80->80/tcp
 sq-dce-custom-zip-postgres-search-1-1    sq-dce-custom-zip-postgres-search-1   search-1    2 minutes ago    Up 2 minutes (healthy)      9000/tcp
 sq-dce-custom-zip-postgres-search-2-1    sq-dce-custom-zip-postgres-search-2   search-2    2 minutes ago    Up 2 minutes (healthy)      9000/tcp
@@ -54,7 +54,7 @@ You can access your SonarQube Server instance through the reverse proxy with thi
 
 If you experience random crash of SonarQube Server search/app, it will be likely due to memory shortage. Please make sure your Docker desktop has enough resources (we advise at least 18Gb of memory).
 
-If the `db` container exits with `database files are incompatible with server` after an update, see [Upgrading the PostgreSQL database](../README.md#upgrading-the-postgresql-database).
+If the `db` container exits with `there appears to be PostgreSQL data in` after an update, see [PostgreSQL version and upgrades](../README.md#postgresql-version-and-upgrades).
 
 ## External access
 
