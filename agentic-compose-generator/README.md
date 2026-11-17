@@ -183,8 +183,9 @@ This mode has two requirements:
   containers use. On a zip install the host in `sonar.jdbc.url` can differ; see [TLS](#tls).
 - **Storage other than `local`**, reachable from both your SonarQube host and the containers.
   With `--storage hostpath`, mount it at the same path on both. On a Windows SonarQube host, use
-  `--storage s3`: the containers are Linux and can't mount a Windows path. The shell snippets in
-  `ZIP-INSTRUCTIONS.md` (sections 1 and 5) are for Linux: see the notes there for Windows.
+  `--storage s3`: the containers are Linux and can't mount a Windows path. In
+  `ZIP-INSTRUCTIONS.md`, section 5 needs bash and Docker, so on Windows run it from WSL or another
+  machine and copy the key files over; section 1 has manual Windows steps with `keytool`.
 
 On Docker Desktop, Rancher Desktop or colima, pass `--sandbox runc` and `--host-gateway off`.
 
