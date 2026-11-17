@@ -48,17 +48,15 @@ services:
         retries: 9
         start_period: 55s
   db:
-    image: postgres:12
+    image: postgres:18
     environment:
       POSTGRES_USER: sonar
       POSTGRES_PASSWORD: sonar
     volumes:
-      - postgresql:/var/lib/postgresql
-      - postgresql_data:/var/lib/postgresql/data
+      - postgresql_data:/var/lib/postgresql
 
 volumes:
   sonarqube_extensions:
   sonarqube_logs:
   search-data:
-  postgresql:
   postgresql_data:
