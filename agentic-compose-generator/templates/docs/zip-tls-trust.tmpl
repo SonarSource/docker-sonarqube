@@ -11,6 +11,13 @@ keytool -importcert -noprompt -alias agentic-bundle-ca -file <this bundle>/tls/c
   -keystore ~/.sonarqube/sonarqube-truststore.jks -storepass changeit
 ```
 
+On Windows, run it as one line in cmd or PowerShell, with `-keystore` set to the truststore from
+section 1:
+
+```
+keytool -importcert -noprompt -alias agentic-bundle-ca -file "<this bundle>\tls\ca.crt" -keystore C:\sonarqube\sonarqube-truststore.jks -storepass changeit
+```
+
 Regenerating this bundle into the same directory keeps `tls/` and the certificates, so you import
 the CA once. The certificates are valid for 825 days. To issue new ones, for example after changing
 `--tls-server-name` or `--sonarqube-external-host`, delete `tls/` and regenerate, then import the new

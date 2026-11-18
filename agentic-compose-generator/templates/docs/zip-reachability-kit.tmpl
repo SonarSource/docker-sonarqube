@@ -1,6 +1,8 @@
 The containers reach your SonarQube over TLS at `${sonarqube_url}`, through the proxy in
 `sonarqube-tls-proxy/`. On the SonarQube machine, start it from that directory and follow its
 `README.md`. If that directory is on another machine, copy it onto the SonarQube machine first.
+If that machine has no Docker, for example a Windows server, use your own nginx instead: the same
+`README.md` explains how, for Linux and Windows.
 It forwards to SonarQube on port ${sonarqube_port} of that machine, and its
 certificate for `${sonarqube_host}` is signed by this bundle's CA, which the containers trust.
 
