@@ -582,6 +582,17 @@ class ZipTruststoreAndSigningTest(unittest.TestCase):
             self.assertIn("is not a recognized system property is expected", start)
             self.assertIn("Leave the property in `sonar.properties`", start)
 
+    def test_tls_trust_section_has_a_windows_keytool_one_liner(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            code, _, err = run("--profile", str(SCRIPT_PATH.parent / "profiles" / "none-nfs-tls.json"),
+                               "--out", str(bundle))
+            self.assertEqual(code, 0, err)
+            text = (bundle / "ZIP-INSTRUCTIONS.md").read_text()
+            trust = text.split("## 7.", 1)[1]
+            self.assertIn("On Windows, run it as one line", trust)
+            self.assertIn('-file "<this bundle>\\tls\\ca.crt" -keystore C:\\sonarqube\\sonarqube-truststore.jks', trust)
+
 
 class ZipProxyCheckTest(unittest.TestCase):
     def test_proxy_check_uses_the_certificate_name_on_this_machine(self):
