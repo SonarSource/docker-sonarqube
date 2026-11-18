@@ -9,6 +9,7 @@ import importlib.util
 import io
 import json
 import os
+import shutil
 import stat
 import subprocess
 import sys
@@ -201,6 +202,202 @@ class ImageRefTest(unittest.TestCase):
                 continue
             with self.subTest(component=component):
                 self.assertTrue(image.get("digest", "").startswith("sha256:"))
+
+
+class CustomCaDirTest(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.bundle = Path(self._tmp.name) / "bundle"
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def generate(self, ca_dir: str) -> tuple[int, str]:
+        code, _, err = run("--edition", "enterprise", "--tls", "off", "--custom-ca-dir", ca_dir,
+                           "--out", str(self.bundle))
+        return code, err
+
+    def test_bare_name_is_written_as_a_path(self):
+        code, err = self.generate("certs")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(env_value(self.bundle, "CUSTOM_CA_DIR"), "./certs")
+        self.assertIn("named volume", err)
+        self.assertTrue((self.bundle / "certs").is_dir())
+
+    def test_nested_bare_name_is_written_as_a_path(self):
+        self.assertEqual(self.generate("a/b")[0], 0)
+        self.assertEqual(env_value(self.bundle, "CUSTOM_CA_DIR"), "./a/b")
+
+    def test_path_forms_are_kept(self):
+        for value in ("./certs", ".certs", "/opt/certs"):
+            with self.subTest(value=value):
+                code, err = self.generate(value)
+                self.assertEqual(code, 0, err)
+                self.assertEqual(env_value(self.bundle, "CUSTOM_CA_DIR"), value)
+                self.assertNotIn("named volume", err)
+
+    def test_empty_directory_is_warned_about_by_name(self):
+        code, err = self.generate("./certs")
+        self.assertEqual(code, 0, err)
+        self.assertIn("warning: --custom-ca-dir './certs' holds no CA file", err)
+        self.assertNotIn("does not exist", err)
+
+    def test_missing_absolute_directory_is_warned_about_by_name(self):
+        missing = (Path(self._tmp.name) / "missing").as_posix()  # the generator refuses backslashes
+        code, err = self.generate(missing)
+        self.assertEqual(code, 0, err)
+        self.assertIn(f"warning: --custom-ca-dir '{missing}' does not exist", err)
+        self.assertNotIn("holds no CA file", err)
+
+    def test_other_users_home_directory_is_refused(self):
+        for value in ("~certs", "~nosuchuser/ca"):
+            with self.subTest(value=value):
+                code, _, err = run("--edition", "enterprise", "--custom-ca-dir", value, "--out", "-")
+                self.assertEqual(code, 1, err)
+                self.assertIn("must be '~' or '~/name'", err)
+                self.assertNotIn("Traceback", err)
+
+    def test_home_directory_path_is_resolved_on_the_host(self):
+        home = Path(self._tmp.name) / "home"
+        (home / "certs").mkdir(parents=True)
+        with mock.patch.dict(os.environ, {"HOME": str(home), "USERPROFILE": str(home)}):
+            code, err = self.generate("~/certs")
+            self.assertEqual(code, 0, err)
+            self.assertEqual(env_value(self.bundle, "CUSTOM_CA_DIR"), "~/certs")
+            self.assertIn("holds no CA file", err)
+            self.assertFalse((self.bundle / "~").exists(), "created a literal ~ directory in the bundle")
+            (home / "certs" / "my-ca.pem").write_text("x")
+            code, err = self.generate("~/certs")
+            self.assertEqual(code, 0, err)
+            self.assertNotIn("warning", err)
+
+    def test_directory_with_a_ca_file_is_not_warned_about(self):
+        for name in ("my-ca.crt", "my-ca.pem"):
+            with self.subTest(name=name):
+                ca_dir = Path(self._tmp.name) / "abs"
+                ca_dir.mkdir(exist_ok=True)
+                (ca_dir / name).write_text("x")
+                code, err = self.generate(ca_dir.as_posix())
+                self.assertEqual(code, 0, err)
+                self.assertNotIn("holds no CA file", err)
+                (ca_dir / name).unlink()
+
+    def test_bundle_ca_directory_is_not_warned_about(self):
+        code, _, err = run("--edition", "none", "--tls", "on", "--storage", "s3", "--db-host", "db",
+                           "--db-password", "p", "--out", str(self.bundle))
+        self.assertEqual(code, 0, err)
+        self.assertNotIn("holds no CA file", err)
+
+    def test_null_in_a_profile_means_no_custom_ca_dir(self):
+        profile = Path(self._tmp.name) / "profile.json"
+        profile.write_text(json.dumps({"edition": "enterprise", "tls": "off", "custom_ca_dir": None}))
+        code, _, err = run("--profile", str(profile), "--out", str(self.bundle))
+        self.assertEqual(code, 0, err)
+        self.assertNotIn("Traceback", err)
+        self.assertNotIn("CUSTOM_CA_DIR", (self.bundle / ".env").read_text())
+
+    def test_plain_value_error_wins_over_the_home_directory_error(self):
+        code, _, err = run("--edition", "enterprise", "--custom-ca-dir", "~$HOME/ca", "--out", "-")
+        self.assertEqual(code, 1, err)
+        self.assertIn("must not contain whitespace, quotes, '$'", err)
+
+    def test_drive_letter_path_is_external_on_every_host(self):
+        code, _, err = run("--edition", "none", "--tls", "on", "--storage", "s3", "--db-host", "db",
+                           "--db-password", "p", "--custom-ca-dir", "C:/certs", "--out", str(self.bundle))
+        self.assertEqual(code, 0, err)
+        self.assertEqual(env_value(self.bundle, "CUSTOM_CA_DIR"), "C:/certs")
+        self.assertIn("copy tls/ca.crt into C:/certs", err)
+        self.assertNotIn("--custom-ca-dir 'C:/certs' would be read", err)
+        if os.name != "nt":
+            self.assertFalse((self.bundle / "C:").exists(), "created a literal C: directory in the bundle")
+            self.assertNotIn("does not exist", err)
+
+    def test_path_that_is_a_file_is_not_called_missing(self):
+        not_a_dir = Path(self._tmp.name) / "ca.pem"
+        not_a_dir.write_text("x")
+        code, err = self.generate(not_a_dir.as_posix())
+        self.assertEqual(code, 0, err)
+        self.assertIn("is not a directory on this machine", err)
+        self.assertNotIn("does not exist", err)
+
+    def test_only_regular_files_with_the_exact_suffix_count(self):
+        ca_dir = Path(self._tmp.name) / "abs"
+        (ca_dir / "old.crt").mkdir(parents=True)
+        (ca_dir / "UPPER.PEM").write_text("x")  # truststore-init's glob is case-sensitive
+        (ca_dir / ".hidden.crt").write_text("x")  # and a shell '*' never matches a leading dot
+        if os.name != "nt":
+            (ca_dir / "dangling.pem").symlink_to(Path(self._tmp.name) / "nowhere")
+        code, err = self.generate(ca_dir.as_posix())
+        self.assertEqual(code, 0, err)
+        self.assertIn("holds no CA file", err)
+
+    def test_unreadable_directory_does_not_fail_the_run(self):
+        ca_dir = Path(self._tmp.name) / "abs"
+        ca_dir.mkdir()
+        with mock.patch.object(Path, "iterdir", side_effect=PermissionError("denied")):
+            code, err = self.generate(ca_dir.as_posix())
+        self.assertEqual(code, 0, err)
+        self.assertNotIn("Traceback", err)
+        self.assertIn("wrote bundle", err)
+
+    @unittest.skipIf(os.name == "nt", "needs POSIX symlinks")
+    def test_symlink_out_of_the_bundle_is_refused_before_the_bundle_ca_is_written(self):
+        outside = Path(self._tmp.name) / "outside"
+        outside.mkdir()
+        self.bundle.mkdir()
+        (self.bundle / "link").symlink_to(outside)
+        code, _, err = run("--edition", "none", "--tls", "on", "--storage", "s3", "--db-host", "db",
+                           "--db-password", "p", "--custom-ca-dir", "./link/ca", "--out", str(self.bundle))
+        self.assertEqual(code, 1, err)
+        self.assertIn("must stay inside the bundle directory", err)
+        self.assertFalse((outside / "ca").exists())
+        self.assertFalse((self.bundle / "docker-compose.yaml").exists())
+
+    @unittest.skipIf(os.name == "nt", "needs POSIX symlinks")
+    def test_symlinked_directory_is_kept_when_nothing_is_written_into_it(self):
+        outside = Path(self._tmp.name) / "my-ca"
+        outside.mkdir()
+        (outside / "ca.crt").write_text("x")
+        self.bundle.mkdir()
+        (self.bundle / "certs").symlink_to(outside)
+        code, err = self.generate("./certs")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(env_value(self.bundle, "CUSTOM_CA_DIR"), "./certs")
+        self.assertNotIn("warning", err)
+
+    @unittest.skipIf(os.name == "nt", "needs POSIX symlinks")
+    def test_something_in_the_way_is_warned_about_not_fatal(self):
+        nowhere = Path(self._tmp.name) / "not-mounted-yet"
+        for name, value, make in (("dangling", "./certs", lambda b: (b / "certs").symlink_to(nowhere)),
+                                  ("dangling parent", "./link/ca", lambda b: (b / "link").symlink_to(nowhere)),
+                                  ("file", "./certs", lambda b: (b / "certs").write_text("x"))):
+            with self.subTest(name):
+                shutil.rmtree(self.bundle, ignore_errors=True)
+                self.bundle.mkdir()
+                make(self.bundle)
+                code, err = self.generate(value)
+                self.assertEqual(code, 0, err)
+                self.assertIn(f"warning: --custom-ca-dir '{value}'", err)
+
+    def test_climbing_out_of_the_bundle_is_refused(self):
+        for value in ("../ca", "./certs/../../ca"):
+            with self.subTest(value=value):
+                code, err = self.generate(value)
+                self.assertEqual(code, 1, err)
+                self.assertIn("must stay inside the bundle directory", err)
+
+    def test_unresolvable_home_does_not_fail_the_run(self):
+        # No HOME and no passwd entry, as in some CI containers.
+        no_home = mock.patch.object(Path, "expanduser", side_effect=RuntimeError("Could not determine home directory."))
+        with no_home:
+            code, err = self.generate("~/certs")
+        self.assertEqual(code, 0, err)
+        self.assertIn("wrote bundle", err)
+
+    def test_warning_for_a_host_path_says_which_machine(self):
+        code, err = self.generate((Path(self._tmp.name) / "missing").as_posix())
+        self.assertEqual(code, 0, err)
+        self.assertIn("does not exist on this machine", err)
 
 
 class RegenerationTest(unittest.TestCase):

@@ -165,7 +165,7 @@ volumes to apply this change. Disk exhaustion fails jobs; monitor free space on 
 | `--sandbox` | a Docker runtime name | `runsc` | Container runtime of the two agent runtime services; see [Sandboxing](#sandboxing) |
 | `--llm-domains` | comma-separated host names | `api.anthropic.com` | The only LLM hosts the agent runtimes may reach |
 | `--github-api-base-url` | URL | public GitHub | Set for GitHub Enterprise, e.g. `https://github.example.com/api/v3` |
-| `--custom-ca-dir` | directory | unset (`./custom-ca` with `--edition none --tls on`) | PEM CA certificates (`*.crt`, `*.pem`) to trust for outbound TLS; see [TLS](#tls) |
+| `--custom-ca-dir` | directory | unset (`./custom-ca` with `--edition none --tls on`) | PEM CA certificates (`*.crt`, `*.pem`) to trust for outbound TLS; see [TLS](#tls). Use `./name` (relative to the bundle, created for you), an absolute path or `~/name`. A bare `name` is rewritten to `./name`, because Compose would read it as a named volume. On Windows, write `C:/certs` with forward slashes; the generator refuses `\`. The generator warns when the directory holds no CA file |
 | `--sonar-secret-key-file` | file | unset | SonarQube's settings encryption key (`sonar-secret.txt`), mounted into SonarQube (as `sonar.secretKeyPath`) and the orchestrator, so both decrypt the same `{aes-gcm}` values. With `--edition none`, point it at the key your SonarQube already uses |
 
 ### Using your existing SonarQube (`--edition none`)
@@ -374,8 +374,10 @@ The generator writes nothing and exits with an error in these cases:
   path, `--image-tag` or `--sonarqube-tag` isn't a valid image tag, or `--project-name` isn't a
   valid compose project name;
 - a path or URL (`--storage-path`, `--nfs-export`, `--custom-ca-dir`, `--sonar-secret-key-file`,
-  `--s3-endpoint`, `--github-api-base-url`) contains whitespace, a quote, `$`, `#` or `\`, or a
-  relative `--custom-ca-dir` climbs out of the bundle with `..`;
+  `--s3-endpoint`, `--github-api-base-url`) contains whitespace, a quote, `$`, `#` or `\`;
+- `--custom-ca-dir` starts with `~name` instead of `~` or `~/name`, or a relative one leaves the
+  bundle: through `..`, or, with `--edition none --tls on` (the generator writes the bundle CA into
+  it), through a symlink;
 - an S3 key contains a single quote or a newline;
 - with `--edition none --tls on`, `openssl` is missing from the host that runs the generator;
 - regenerating would overwrite a file you edited, or certificates that no longer match your
