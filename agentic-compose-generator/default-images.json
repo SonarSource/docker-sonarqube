@@ -28,42 +28,42 @@
     "registry": "",
     "name": "postgres",
     "tag": "18-alpine",
-    "digest": "sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873"
+    "digest": "sha256:ff64c9e3bdf8e2120107d3559de8db314e8305f7e38c5105903c6295876738ff"
   },
   "storage-init": {
     "registry": "",
     "name": "alpine",
-    "tag": "3.22",
-    "digest": "sha256:5291449c3df73caf6ed85e649dec1b9e818b39a5d8c871e97afc13e9cd5e8fa8"
+    "tag": "3.24",
+    "digest": "sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5a48c71bf"
   },
   "storage-probe": {
     "registry": "",
     "name": "alpine",
-    "tag": "3.22",
-    "digest": "sha256:5291449c3df73caf6ed85e649dec1b9e818b39a5d8c871e97afc13e9cd5e8fa8"
+    "tag": "3.24",
+    "digest": "sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5a48c71bf"
   },
   "egress-proxy": {
     "registry": "",
     "name": "ubuntu/squid",
     "tag": "7.2-26.04_edge",
-    "digest": "sha256:d11db6479501aa4618b3253f95a88b2547229e2d081726b6fb20dc75a98cc61b"
+    "digest": "sha256:42decc7f79b4e1044f4fe9b3a855af2cbfc76652f3191694726e21058443edc9"
   },
   "tls-proxy": {
     "registry": "",
     "name": "nginx",
-    "tag": "1.30-alpine",
-    "digest": "sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94"
+    "tag": "1.31-alpine",
+    "digest": "sha256:fb4658584bd9a916ffb6f6e365f97c25cfdb2923801f551ea08356e695f14ff7"
   },
   "sonarqube-lb": {
     "registry": "",
     "name": "nginx",
-    "tag": "1.30-alpine",
-    "digest": "sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94"
+    "tag": "1.31-alpine",
+    "digest": "sha256:fb4658584bd9a916ffb6f6e365f97c25cfdb2923801f551ea08356e695f14ff7"
   },
   "truststore-init": {
     "registry": "",
     "name": "eclipse-temurin",
     "tag": "21-jre",
-    "digest": "sha256:d7051a45dd955e4d5d1db4d3f4269fe13d1c6dff8cc6b7ef89fc8577b96c1982"
+    "digest": "sha256:d77e090ae1f6970c047b443c6f0a6c1358b0426d44432bb5a7753408cd43de0d"
   }
 }
