@@ -27,8 +27,8 @@
   "postgres": {
     "registry": "",
     "name": "postgres",
-    "tag": "18-alpine",
-    "digest": "sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873"
+    "tag": "19-alpine",
+    "digest": "sha256:8b0ff4cdf221f0c53d7fcda681d3b461be725c492cd881c5ec9c0ad25023f188"
   },
   "storage-init": {
     "registry": "",
@@ -63,7 +63,7 @@
   "truststore-init": {
     "registry": "",
     "name": "eclipse-temurin",
-    "tag": "21-jre",
-    "digest": "sha256:d7051a45dd955e4d5d1db4d3f4269fe13d1c6dff8cc6b7ef89fc8577b96c1982"
+    "tag": "27-jre",
+    "digest": "sha256:8f8cfda6393f63a029dbe83ceda4c19a31d268184662e96d9641f57afdaf870b"
   }
 }
