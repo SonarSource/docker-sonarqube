@@ -269,7 +269,7 @@ jobs:
 
       # Two invocations produce JSON (for the CVSS policy evaluator) and SARIF (for the
       # Security tab). --config/--ignorefile/--ignore-unfixed/--show-suppressed are kept
-      # identical across both; only format/output/severity (Security-tab display scope) differ.
+      # identical across both; only format and output differ.
       - name: Run Trivy vulnerability scanner (JSON, for policy evaluation)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         env:
@@ -290,15 +290,14 @@ jobs:
       - name: Run Trivy vulnerability scanner (SARIF, for GitHub Security tab)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         env:
-          # Set via env, not the `severity` input: the action only exports
-          # TRIVY_SEVERITY when the input differs from its own default (which is
-          # this exact string), otherwise it's silently dropped and Trivy falls
-          # back to .github/trivy.yaml's narrower severity list (no UNKNOWN).
+          # Keep the same severity scope as JSON, including UNKNOWN.
+          # limit-severities-for-sarif prevents the action from unsetting this value.
           TRIVY_SEVERITY: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           TRIVY_SHOW_SUPPRESSED: 'true'
         with:
           image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}'
           format: 'sarif'
+          limit-severities-for-sarif: true
           output: 'trivy-${{ matrix.edition }}.sarif'
           vuln-type: 'os'
           trivy-config: '.github/trivy.yaml'
@@ -306,7 +305,33 @@ jobs:
           ignore-unfixed: true
 
       - name: Evaluate Trivy report against CVSS policy
-        run: python3 .github/workflows/scripts/evaluate-trivy-report.py trivy-${{ matrix.edition }}.json
+        if: ${{ !cancelled() && hashFiles(format('trivy-{0}.json', matrix.edition)) != '' }}
+        run: python3 .github/workflows/scripts/evaluate-trivy-report.py trivy-${{ matrix.edition }}.json --summary-output trivy-${{ matrix.edition }}-summary.json
+
+      - name: Verify Trivy report files
+        if: ${{ !cancelled() }}
+        env:
+          REPORT_PREFIX: trivy-${{ matrix.edition }}
+        run: |
+          missing=0
+          for suffix in .json .sarif -summary.json; do
+            if [[ ! -s "${REPORT_PREFIX}${suffix}" ]]; then
+              echo "::error::Missing or empty Trivy report: ${REPORT_PREFIX}${suffix}"
+              missing=1
+            fi
+          done
+          exit "$missing"
+
+      - name: Retain Trivy reports and summary
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: trivy-${{ matrix.edition }}-attempt-${{ github.run_attempt }}
+          path: |
+            trivy-${{ matrix.edition }}.json
+            trivy-${{ matrix.edition }}.sarif
+            trivy-${{ matrix.edition }}-summary.json
+          if-no-files-found: error
 
       - name: Upload Trivy results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
@@ -366,15 +391,14 @@ jobs:
       - name: Run Trivy vulnerability scanner (SARIF, for GitHub Security tab)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         env:
-          # Set via env, not the `severity` input: the action only exports
-          # TRIVY_SEVERITY when the input differs from its own default (which is
-          # this exact string), otherwise it's silently dropped and Trivy falls
-          # back to .github/trivy.yaml's narrower severity list (no UNKNOWN).
+          # Keep the same severity scope as JSON, including UNKNOWN.
+          # limit-severities-for-sarif prevents the action from unsetting this value.
           TRIVY_SEVERITY: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           TRIVY_SHOW_SUPPRESSED: 'true'
         with:
           image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.community_build_version }}-master-community'
           format: 'sarif'
+          limit-severities-for-sarif: true
           output: 'trivy-community.sarif'
           vuln-type: 'os'
           trivy-config: '.github/trivy.yaml'
@@ -382,7 +406,33 @@ jobs:
           ignore-unfixed: true
 
       - name: Evaluate Trivy report against CVSS policy
-        run: python3 .github/workflows/scripts/evaluate-trivy-report.py trivy-community.json
+        if: ${{ !cancelled() && hashFiles('trivy-community.json') != '' }}
+        run: python3 .github/workflows/scripts/evaluate-trivy-report.py trivy-community.json --summary-output trivy-community-summary.json
+
+      - name: Verify Trivy report files
+        if: ${{ !cancelled() }}
+        env:
+          REPORT_PREFIX: trivy-community
+        run: |
+          missing=0
+          for suffix in .json .sarif -summary.json; do
+            if [[ ! -s "${REPORT_PREFIX}${suffix}" ]]; then
+              echo "::error::Missing or empty Trivy report: ${REPORT_PREFIX}${suffix}"
+              missing=1
+            fi
+          done
+          exit "$missing"
+
+      - name: Retain Trivy reports and summary
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: trivy-community-attempt-${{ github.run_attempt }}
+          path: |
+            trivy-community.json
+            trivy-community.sarif
+            trivy-community-summary.json
+          if-no-files-found: error
 
       - name: Upload Trivy results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
@@ -446,9 +496,27 @@ jobs:
       - gcp-build-staging-search
     runs-on: github-ubuntu-latest-s
     outputs:
-      SUCCESS: ${{ steps.alls-green.outputs.success }}
+      SUCCESS: ${{ steps.alls-green.outputs.success == 'true' && steps.required-scans.outcome == 'success' }}
     steps:
+      # alls-green allows intentional skips; reject skips for selected scans.
+      - name: Require selected image scans
+        id: required-scans
+        env:
+          COMMERCIAL_REQUIRED: ${{ needs.load-config.result == 'success' && (github.event_name != 'workflow_dispatch' || inputs.editions == 'all' || inputs.editions == 'commercial-only') }}
+          COMMERCIAL_SCAN: ${{ needs.trivy-scan-commercial-editions.result }}
+          COMMUNITY_REQUIRED: ${{ needs.load-config.result == 'success' && (github.event_name != 'workflow_dispatch' || inputs.editions == 'all' || inputs.editions == 'community-only') }}
+          COMMUNITY_SCAN: ${{ needs.trivy-scan-community-build.result }}
+        run: |
+          if [[ "$COMMERCIAL_REQUIRED" == true && "$COMMERCIAL_SCAN" != success ]]; then
+            echo "Commercial images require a successful security scan."
+            exit 1
+          fi
+          if [[ "$COMMUNITY_REQUIRED" == true && "$COMMUNITY_SCAN" != success ]]; then
+            echo "Community images require a successful security scan."
+            exit 1
+          fi
       - uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35 # v1.3.0
+        if: always()
         id: alls-green
         with:
           jobs: ${{ toJSON(needs) }}
