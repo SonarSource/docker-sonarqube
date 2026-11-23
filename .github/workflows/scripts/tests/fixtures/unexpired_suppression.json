@@ -1,0 +1,24 @@
+{
+  "SchemaVersion": 2,
+  "ArtifactName": "example/image:test",
+  "Results": [
+    {
+      "Target": "example/image:test (debian 12.5)",
+      "Class": "os-pkgs",
+      "Type": "debian",
+      "Vulnerabilities": [],
+      "ExperimentalModifiedFindings": [
+        {
+          "Type": "vulnerability",
+          "Status": "ignored",
+          "Statement": "Owner: alice@sonarsource.com. Justification: accepted risk, tracked in JIRA-1234.",
+          "Source": ".trivyignore.yaml",
+          "Finding": {
+            "VulnerabilityID": "CVE-2024-0008",
+            "PkgName": "libexample8"
+          }
+        }
+      ]
+    }
+  ]
+}

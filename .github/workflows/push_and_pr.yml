@@ -11,21 +11,25 @@ on:
       - 'release/**'
     paths:
       - 'commercial-editions/**/*'
-      - '.github/workflows/scripts/multi-arch-build.sh'
+      - '.github/workflows/scripts/**'
       - '.github/workflows/push_and_pr.yml'
       - '.github/workflows/multi-arch-build-template.yml'
       - '.github/workflows/multi-arch-test-template.yml'
       - '.github/github_env.yaml'
+      - '.github/trivy.yaml'
+      - '.trivyignore.yaml'
       - 'run-tests.sh'
       - 'docker-official-images/**/*'
   pull_request:
     paths:
       - 'commercial-editions/**/*'
-      - '.github/workflows/scripts/multi-arch-build.sh'
+      - '.github/workflows/scripts/**'
       - '.github/workflows/push_and_pr.yml'
       - '.github/workflows/multi-arch-build-template.yml'
       - '.github/workflows/multi-arch-test-template.yml'
       - '.github/github_env.yaml'
+      - '.github/trivy.yaml'
+      - '.trivyignore.yaml'
       - 'run-tests.sh'
       - 'docker-official-images/**/*'
   workflow_call:
@@ -160,56 +164,142 @@ jobs:
       architecture: ${{ matrix.architecture }}
       runs_on: ${{ matrix.architecture == 'arm64' && 'github-ubuntu-24.04-arm-s' || 'github-ubuntu-latest-s' }}
 
-  # Security scanning - runs after builds complete
-  trivy-scan-datacenter-app:
+  test-trivy-policy-script:
+    name: Test Trivy CVSS policy script
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: github-ubuntu-latest-s
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+
+      - name: Configure pip registry
+        uses: SonarSource/ci-github-actions/config-pip@43609e4795f6400aa0b66dc1f5277f1fc3fb4768
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+
+      - name: Install test dependencies
+        run: pip install pytest
+
+      - name: Run policy evaluator tests
+        run: python3 -m pytest .github/workflows/scripts/tests -v
+
+  trivy-scan-commercial-editions:
     needs: [load-config, build-commercial-editions]
     if: |
       always() &&
       (github.event_name != 'workflow_dispatch' || inputs.editions == 'all' || inputs.editions == 'commercial-only')
-    name: Security Scan (datacenter-app)
+    name: Security Scan (${{ matrix.edition }})
     runs-on: github-ubuntu-latest-s
     permissions:
       id-token: write
       contents: read
       security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        edition: [developer, enterprise, datacenter-app, datacenter-search]
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - id: secrets
         name: Retrieve secrets from Vault
-        uses: SonarSource/vault-action-wrapper@v3
+        uses: SonarSource/vault-action-wrapper@20728776e291b4027acb3618091a31fa15c61a30 # v3
         with:
           secrets: |
             development/kv/data/docker/sonardockerrw username | docker_username;
             development/kv/data/docker/sonardockerrw access_token_rwd | docker_password;
 
       - name: Login to Docker Hub
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           username: ${{ fromJSON(steps.secrets.outputs.vault).docker_username }}
           password: ${{ fromJSON(steps.secrets.outputs.vault).docker_password }}
 
       - name: Pull staging image
         run: |
-          docker pull ${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-datacenter-app
+          docker pull ${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}
 
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+      # Two invocations produce JSON (for the CVSS policy evaluator) and SARIF (for the
+      # Security tab). --config/--ignorefile/--ignore-unfixed/--show-suppressed are kept
+      # identical across both; only format and output differ.
+      - name: Run Trivy vulnerability scanner (JSON, for policy evaluation)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          # Trivy severity is not the enforcement gate: scan every severity band,
+          # including UNKNOWN, so the evaluator sees every finding and judges it by CVSS.
+          TRIVY_SEVERITY: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+          # show-suppressed has no dedicated action input; set it via env instead.
+          TRIVY_SHOW_SUPPRESSED: 'true'
         with:
-          image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-datacenter-app'
-          format: 'sarif'
-          output: 'trivy-datacenter-app.sarif'
-          severity: 'LOW,MEDIUM,HIGH,CRITICAL'
+          image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}'
+          format: 'json'
+          output: 'trivy-${{ matrix.edition }}.json'
           vuln-type: 'os'
+          trivy-config: '.github/trivy.yaml'
+          trivyignores: './.trivyignore.yaml'
+          ignore-unfixed: true
+
+      - name: Run Trivy vulnerability scanner (SARIF, for GitHub Security tab)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          # Keep the same severity scope as JSON, including UNKNOWN.
+          # limit-severities-for-sarif prevents the action from unsetting this value.
+          TRIVY_SEVERITY: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+          TRIVY_SHOW_SUPPRESSED: 'true'
+        with:
+          image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}'
+          format: 'sarif'
+          limit-severities-for-sarif: true
+          output: 'trivy-${{ matrix.edition }}.sarif'
+          vuln-type: 'os'
+          trivy-config: '.github/trivy.yaml'
+          trivyignores: './.trivyignore.yaml'
+          ignore-unfixed: true
+
+      - name: Evaluate Trivy report against CVSS policy
+        if: ${{ !cancelled() && hashFiles(format('trivy-{0}.json', matrix.edition)) != '' }}
+        run: python3 .github/workflows/scripts/evaluate-trivy-report.py trivy-${{ matrix.edition }}.json --summary-output trivy-${{ matrix.edition }}-summary.json
+
+      - name: Verify Trivy report files
+        if: ${{ !cancelled() }}
+        env:
+          REPORT_PREFIX: trivy-${{ matrix.edition }}
+        run: |
+          missing=0
+          for suffix in .json .sarif -summary.json; do
+            if [[ ! -s "${REPORT_PREFIX}${suffix}" ]]; then
+              echo "::error::Missing or empty Trivy report: ${REPORT_PREFIX}${suffix}"
+              missing=1
+            fi
+          done
+          exit "$missing"
+
+      - name: Retain Trivy reports and summary
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: trivy-${{ matrix.edition }}-attempt-${{ github.run_attempt }}
+          path: |
+            trivy-${{ matrix.edition }}.json
+            trivy-${{ matrix.edition }}.sarif
+            trivy-${{ matrix.edition }}-summary.json
+          if-no-files-found: error
 
       - name: Upload Trivy results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@5e7a52feb2a3dfb87f88be2af33b9e2275f48de6 # v4.32.4
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         if: always()
         with:
-          sarif_file: 'trivy-datacenter-app.sarif'
-          category: 'image-datacenter-app'
+          sarif_file: 'trivy-${{ matrix.edition }}.sarif'
+          category: 'image-${{ matrix.edition }}'
 
   # GCP staging builds - only on master or release branches, after tests pass
   gcp-build-staging-app:
@@ -255,20 +345,33 @@ jobs:
     name: QA Validator
     needs:
       - load-config
+      - test-trivy-policy-script
+      - trivy-scan-commercial-editions
       - build-commercial-editions
       - test-commercial-editions
-      - trivy-scan-datacenter-app
       - gcp-build-staging-app
       - gcp-build-staging-search
     runs-on: github-ubuntu-latest-s
     outputs:
-      SUCCESS: ${{ steps.alls-green.outputs.success }}
+      SUCCESS: ${{ steps.alls-green.outputs.success == 'true' && steps.required-scans.outcome == 'success' }}
     steps:
+      # alls-green allows intentional skips; reject skips for selected scans.
+      - name: Require selected image scans
+        id: required-scans
+        env:
+          COMMERCIAL_REQUIRED: ${{ needs.load-config.result == 'success' && (github.event_name != 'workflow_dispatch' || inputs.editions == 'all' || inputs.editions == 'commercial-only') }}
+          COMMERCIAL_SCAN: ${{ needs.trivy-scan-commercial-editions.result }}
+        run: |
+          if [[ "$COMMERCIAL_REQUIRED" == true && "$COMMERCIAL_SCAN" != success ]]; then
+            echo "Commercial images require a successful security scan."
+            exit 1
+          fi
       - uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
+        if: always()
         id: alls-green
         with:
           jobs: ${{ toJSON(needs) }}
-          allowed-skips: 'load-config,build-commercial-editions,test-commercial-editions,trivy-scan-datacenter-app,gcp-build-staging-app,gcp-build-staging-search'
+          allowed-skips: 'trivy-scan-commercial-editions,load-config,build-commercial-editions,test-commercial-editions,gcp-build-staging-app,gcp-build-staging-search'
 
   notify-slack-on-failure:
     name: Notify on Failure
