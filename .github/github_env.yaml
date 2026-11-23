@@ -2,7 +2,7 @@
 # This file contains all version numbers and common configurations used across workflows
 
 versions:
-  current: "2026.1.8"
+  current: "2026.1.9"
 
 images:
   staging: "sonarsource/sonarqube"
