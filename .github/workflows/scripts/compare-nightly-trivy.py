@@ -13,7 +13,8 @@ from urllib.parse import quote
 
 MAX_ARCHIVE_BYTES = 32 * 1024 * 1024
 MAX_SUMMARY_BYTES = 2 * 1024 * 1024
-MAX_MESSAGE_BYTES = 3500
+# Slack cuts attachment text at about 2000 characters.
+MAX_MESSAGE_BYTES = 1800
 MAX_BASELINE_RUNS = 100
 SCAN_JOB_NAME = re.compile(r"Security Scan \(([a-z-]+)\)")
 ARTIFACT_NAME = re.compile(r"trivy-([a-z-]+)-attempt-(\d+)")
@@ -142,16 +143,17 @@ def message(current, baseline, run):
     if not entries:
         return ""
     url = run["html_url"]
-    footer = f"<{url}|Nightly run> · <{url}#artifacts|Scan results>"
-    lines = [f"New Trivy policy findings on {slack_text(run['head_branch'])}"]
-    budget = MAX_MESSAGE_BYTES - len(footer.encode()) - 100
+    # Links come first so a truncated message still has them.
+    lines = [f"{len(entries)} new Trivy policy findings on {slack_text(run['head_branch'])}",
+             f"<{url}|Nightly run> · <{url}#artifacts|Scan results>"]
+    budget = MAX_MESSAGE_BYTES - 100
     for index, (edition, cve, package) in enumerate(entries):
         line = f"• {edition}: {slack_text(cve)} — {slack_text(package or '(package unknown)')}"
         if len(("\n".join(lines) + line).encode()) > budget:
             lines.append(f"…and {len(entries) - index} more findings. See scan results.")
             break
         lines.append(line)
-    return "\n".join([*lines, footer])
+    return "\n".join(lines)
 
 
 def baseline_findings(root, current, runs, branches, editions):

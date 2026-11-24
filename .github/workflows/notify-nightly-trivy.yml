@@ -60,6 +60,8 @@ jobs:
       message: ${{ fromJSON(needs.compare.outputs.message) }}
       title: New nightly Trivy findings
       color: warning
+      # Until the security team's channel is ready.
+      channel: squad-server-platform-vulnerabilities
 
   record:
     needs: [compare, notify]
