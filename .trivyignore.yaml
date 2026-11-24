@@ -1,0 +1,4 @@
+# Governed exceptions require an id, a statement with an owner and justification,
+# and an expired_at date (YYYY-MM-DD). Add an exception only with evidence for
+# the affected image on this branch. Trivy loads this file explicitly in CI.
+vulnerabilities: []
