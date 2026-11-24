@@ -1,15 +1,42 @@
-name: CI Scheduled (master nightly)
+name: CI Nightly Scheduler
 
 on:
   workflow_dispatch:
   schedule:
     - cron: '0 2 * * *'  # Daily at 2AM UTC
 
+permissions:
+  contents: read
+
 jobs:
-  run-ci:
-    name: CI
-    uses: ./.github/workflows/push_and_pr.yml
+  load-branches:
+    runs-on: github-ubuntu-latest-s
+    outputs:
+      branches: ${{ steps.branches.outputs.branches }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+      - name: Load supported branches
+        id: branches
+        run: |
+          branches=$(jq -ce '.supported_branches | select(type == "array" and length > 0) | select(all(.[]; type == "string" and length > 0)) | unique' .github/supported_branches.json)
+          echo "branches=$branches" >> "$GITHUB_OUTPUT"
+
+  dispatch-ci:
+    name: Dispatch nightly CI (${{ matrix.branch }})
+    needs: load-branches
+    runs-on: github-ubuntu-latest-s
     permissions:
-      id-token: write
-      contents: write
-      security-events: write
+      actions: write
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: ${{ fromJSON(needs.load-branches.outputs.branches) }}
+    steps:
+      - name: Start branch CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TARGET_BRANCH: ${{ matrix.branch }}
+        run: gh workflow run push_and_pr.yml --ref "$TARGET_BRANCH" -f nightly=true
