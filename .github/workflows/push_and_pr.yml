@@ -1,7 +1,8 @@
 name: CI - Build and Test
+run-name: ${{ inputs.nightly && format('Nightly CI ({0})', github.ref_name) || github.event.pull_request.title || github.event.head_commit.message || format('CI ({0})', github.ref_name) }}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}${{ inputs.nightly && '-nightly' || '' }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/master' && !startsWith(github.ref, 'refs/heads/release/') }}
 
 on:
@@ -59,6 +60,11 @@ on:
         type: string
   workflow_dispatch:
     inputs:
+      nightly:
+        description: 'Identify a scheduled nightly CI run'
+        required: false
+        default: false
+        type: boolean
       run_builds:
         description: 'Run build jobs'
         required: false
@@ -118,7 +124,7 @@ jobs:
             edition: datacenter-search
     with:
       staging_image_name: ${{ needs.load-config.outputs.staging_image }}
-      tag: ${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}
+      tag: ${{ needs.load-config.outputs.current_version }}-${{ inputs.nightly && 'nightly' || 'master' }}-${{ matrix.edition }}
       version: ${{ matrix.version }}
       runs_on: github-ubuntu-latest-s
 
@@ -126,6 +132,7 @@ jobs:
   test-commercial-editions:
     needs: [load-config, build-commercial-editions]
     if: |
+      (!inputs.nightly || success()) &&
       (github.event_name != 'workflow_dispatch' || (always() && inputs.run_tests)) &&
       (github.event_name != 'workflow_dispatch' || (always() && (inputs.editions == 'all' || inputs.editions == 'commercial-only')))
     name: Test commercial edition (${{ matrix.test_name }}, ${{ matrix.architecture }})
@@ -157,7 +164,7 @@ jobs:
             architecture: arm64
     with:
       staging_image_name: ${{ needs.load-config.outputs.staging_image }}
-      tag: ${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}
+      tag: ${{ needs.load-config.outputs.current_version }}-${{ inputs.nightly && 'nightly' || 'master' }}-${{ matrix.edition }}
       test_name: ${{ matrix.test_name }}
       architecture: ${{ matrix.architecture }}
       runs_on: ${{ matrix.architecture == 'arm64' && 'github-ubuntu-24.04-arm-s' || 'github-ubuntu-latest-s' }}
@@ -216,7 +223,7 @@ jobs:
 
       - name: Pull staging image
         run: |
-          docker pull ${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}
+          docker pull ${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-${{ inputs.nightly && 'nightly' || 'master' }}-${{ matrix.edition }}
 
       # Two invocations produce JSON (for the CVSS policy evaluator) and SARIF (for the
       # Security tab). --config/--ignorefile/--ignore-unfixed/--show-suppressed are kept
@@ -230,7 +237,7 @@ jobs:
           # show-suppressed has no dedicated action input; set it via env instead.
           TRIVY_SHOW_SUPPRESSED: 'true'
         with:
-          image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}'
+          image-ref: "${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-${{ inputs.nightly && 'nightly' || 'master' }}-${{ matrix.edition }}"
           format: 'json'
           output: 'trivy-${{ matrix.edition }}.json'
           vuln-type: 'os'
@@ -246,7 +253,7 @@ jobs:
           TRIVY_SEVERITY: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           TRIVY_SHOW_SUPPRESSED: 'true'
         with:
-          image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}'
+          image-ref: "${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-${{ inputs.nightly && 'nightly' || 'master' }}-${{ matrix.edition }}"
           format: 'sarif'
           limit-severities-for-sarif: true
           output: 'trivy-${{ matrix.edition }}.sarif'
