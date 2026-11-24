@@ -30,7 +30,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Optional
 
@@ -43,13 +43,9 @@ CVSS_VERSION_FIELDS = (
     ("V2Score", "v2"),
 )
 
-TRIVY_SEVERITY_TO_BAND = {
-    "UNKNOWN": "UNKNOWN",
-    "LOW": "LOW",
-    "MEDIUM": "MEDIUM",
-    "HIGH": "HIGH",
-    "CRITICAL": "CRITICAL",
-}
+CVSS_BANDS = ((0.0, "NONE"), (3.9, "LOW"), (6.9, "MEDIUM"), (8.9, "HIGH"))
+BANDS = tuple(band for _, band in CVSS_BANDS) + ("CRITICAL", "UNKNOWN")
+TRIVY_SEVERITY_TO_BAND = {band: band for band in BANDS if band != "NONE"}
 
 # UNKNOWN means we have no CVSS score anywhere AND no usable Trivy severity --
 # i.e. zero information, not a real "no impact" score. Fail closed on that so
@@ -93,15 +89,10 @@ def score_to_band(score: float) -> str:
     in exactly one band, and comparing it directly is what "never rounds
     down" actually means here.
     """
-    if score <= 0.0:
-        return "NONE"
-    if score <= 3.9:
-        return "LOW"
-    if score <= 6.9:
-        return "MEDIUM"
-    if score <= 8.9:
-        return "HIGH"
-    return "CRITICAL"
+    for upper_bound, band in CVSS_BANDS:
+        if score <= upper_bound:
+            return band
+    return BANDS[-2]
 
 
 def _best_field(scores: dict[str, Any]) -> Optional[tuple[float, str]]:
@@ -215,10 +206,57 @@ def _format_suppressed(target: str, entry: dict[str, Any]) -> str:
     )
 
 
-def evaluate_path(path: Path) -> ReportResult:
+def evaluate_path(path: Path) -> tuple[dict[str, Any], ReportResult]:
     with path.open(encoding="utf-8") as fh:
         report = json.load(fh)
-    return evaluate_report(report)
+    if not isinstance(report, dict):
+        raise ValueError("Trivy report must be a JSON object")
+    return report, evaluate_report(report)
+
+
+def summarize_report(path: Path, report: dict[str, Any], result: ReportResult) -> dict[str, Any]:
+    return {
+        "report": str(path),
+        "image": report.get("ArtifactName", ""),
+        "image_id": (report.get("Metadata") or {}).get("ImageID", ""),
+        "counts_per_band": {
+            band: sum(finding.band == band for finding in result.findings)
+            for band in BANDS
+        },
+        "suppressed_count": len(result.suppressed),
+        "violations": [asdict(finding) for finding in result.violations],
+    }
+
+
+def print_report(result: ReportResult) -> None:
+    if result.suppressed:
+        print(f"-- {len(result.suppressed)} suppressed finding(s) (governed, unexpired) --")
+        for target, entry in result.suppressed:
+            print(f"  {_format_suppressed(target, entry)}")
+
+    if result.findings:
+        print(f"-- {len(result.findings)} finding(s) evaluated --")
+        for finding in result.findings:
+            print(f"  {_format_finding(finding)}")
+    else:
+        print("-- no findings --")
+
+    violations = result.violations
+    if violations:
+        print(f"-- POLICY VIOLATION: {len(violations)} finding(s) in a failing band (Medium+ or Unknown) --")
+    else:
+        print("-- no policy violations --")
+    print()
+
+
+def write_summary(output: Path, summaries: list[dict[str, Any]]) -> None:
+    output_path = Path.cwd() / output.name
+    if output_path.is_symlink():
+        raise ValueError("--summary-output must not be a symbolic link")
+    output_path.write_text(
+        json.dumps({"schema_version": 1, "reports": summaries}, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 
 def main(argv: Optional[list[str]] = None) -> int:
@@ -229,33 +267,38 @@ def main(argv: Optional[list[str]] = None) -> int:
         type=Path,
         help="Path(s) to Trivy JSON report file(s) to evaluate.",
     )
+    parser.add_argument(
+        "--summary-output", type=Path,
+        help="Write a versioned JSON summary to a filename in the current directory.",
+    )
     args = parser.parse_args(argv)
 
+    if args.summary_output and (args.summary_output.is_absolute() or args.summary_output.name != str(args.summary_output)):
+        parser.error("--summary-output must be a filename in the current directory")
+
     total_violations = 0
+    summaries = []
+    report_errors = 0
 
     for report_path in args.reports:
         print(f"== Evaluating {report_path} ==")
-        result = evaluate_path(report_path)
+        try:
+            report, result = evaluate_path(report_path)
+            summary = summarize_report(report_path, report, result)
+            print_report(result)
+        except (OSError, ValueError, TypeError, AttributeError) as error:
+            print(f"ERROR: cannot load {report_path}: {error}", file=sys.stderr)
+            report_errors += 1
+            continue
+        summaries.append(summary)
+        total_violations += len(result.violations)
 
-        if result.suppressed:
-            print(f"-- {len(result.suppressed)} suppressed finding(s) (governed, unexpired) --")
-            for target, entry in result.suppressed:
-                print(f"  {_format_suppressed(target, entry)}")
+    if args.summary_output:
+        write_summary(args.summary_output, summaries)
 
-        if result.findings:
-            print(f"-- {len(result.findings)} finding(s) evaluated --")
-            for finding in result.findings:
-                print(f"  {_format_finding(finding)}")
-        else:
-            print("-- no findings --")
-
-        violations = result.violations
-        if violations:
-            print(f"-- POLICY VIOLATION: {len(violations)} finding(s) in a failing band (Medium+ or Unknown) --")
-            total_violations += len(violations)
-        else:
-            print("-- no policy violations --")
-        print()
+    if report_errors:
+        print(f"FAILED: {report_errors} report(s) could not be loaded.", file=sys.stderr)
+        return 1
 
     if total_violations:
         print(f"FAILED: {total_violations} finding(s) violate the policy (CVSS >= Medium, or Unknown with no data).")
