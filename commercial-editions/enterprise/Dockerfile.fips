@@ -2,7 +2,7 @@
 ARG SONARQUBE_IMAGE
 FROM ${SONARQUBE_IMAGE} AS distribution
 
-FROM registry.access.redhat.com/ubi9/openjdk-25:latest@sha256:164b98409ed54f6a5ebd31d628aed70b8b27613ba2ca5f5540675de0d016ad7c
+FROM registry.access.redhat.com/ubi9/openjdk-25@sha256:164b98409ed54f6a5ebd31d628aed70b8b27613ba2ca5f5540675de0d016ad7c
 
 USER 0
 RUN useradd --no-create-home --uid 1000 --gid 0 --home-dir /opt/sonarqube sonarqube
