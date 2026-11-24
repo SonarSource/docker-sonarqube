@@ -4,6 +4,7 @@ Run with: python3 -m pytest .github/workflows/scripts/tests -v
 """
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -27,7 +28,7 @@ def evaluator():
 
 
 def _evaluate(evaluator, fixture_name):
-    return evaluator.evaluate_path(FIXTURES_DIR / fixture_name)
+    return evaluator.evaluate_path(FIXTURES_DIR / fixture_name)[1]
 
 
 def test_nvd_v4_takes_precedence_over_v3_and_v2(evaluator):
@@ -197,3 +198,88 @@ def test_main_exits_nonzero_for_violations(evaluator, capsys):
     exit_code = evaluator.main([str(FIXTURES_DIR / "medium_plus_fails.json")])
     capsys.readouterr()
     assert exit_code != 0
+
+
+@pytest.mark.parametrize(
+    "fixture_name, exit_code, band, suppressed",
+    [
+        ("no_violations_clean.json", 0, None, 0),
+        ("medium_plus_fails.json", 1, "MEDIUM", 0),
+        ("unexpired_suppression.json", 0, None, 1),
+        ("unknown_severity_fails.json", 1, "UNKNOWN", 0),
+    ],
+)
+def test_summary_written_before_policy_exit(evaluator, tmp_path, fixture_name, exit_code, band, suppressed, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    output = Path("summary.json")
+    report = FIXTURES_DIR / fixture_name
+    assert evaluator.main([str(report), "--summary-output", str(output)]) == exit_code
+    summary = json.loads(output.read_text())
+    assert summary["schema_version"] == 1
+    (result,) = summary["reports"]
+    assert result["report"] == str(report)
+    assert result["suppressed_count"] == suppressed
+    assert sum(result["counts_per_band"].values()) == int(band is not None)
+    assert len(result["violations"]) == exit_code
+    if band:
+        (violation,) = result["violations"]
+        assert violation["band"] == band
+        assert violation["id"]
+        assert violation["source"]
+        assert violation["score_display"]
+
+
+def test_summary_preserves_image_identity_and_multiple_reports(evaluator, tmp_path, monkeypatch):
+    report = tmp_path / "image.json"
+    report.write_text(json.dumps({"ArtifactName": "registry/image:tag", "Metadata": {"ImageID": "sha256:123"}}))
+    monkeypatch.chdir(tmp_path)
+    output = Path("summary.json")
+    assert evaluator.main([str(report), str(FIXTURES_DIR / "medium_plus_fails.json"),
+                           "--summary-output", str(output)]) == 1
+    summaries = json.loads(output.read_text())["reports"]
+    assert len(summaries) == 2
+    assert summaries[0]["image"] == "registry/image:tag"
+    assert summaries[0]["image_id"] == "sha256:123"
+    assert summaries[1]["violations"]
+
+
+@pytest.mark.parametrize("output", ["../summary.json", "/tmp/summary.json", "nested/summary.json"])
+def test_summary_rejects_paths_outside_current_directory(evaluator, output):
+    with pytest.raises(SystemExit) as error:
+        evaluator.main([str(FIXTURES_DIR / "no_violations_clean.json"), "--summary-output", output])
+    assert error.value.code == 2
+
+
+def test_summary_rejects_symbolic_links(evaluator, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    Path("summary.json").symlink_to(tmp_path / "other.json")
+    with pytest.raises(ValueError, match="symbolic link"):
+        evaluator.main([str(FIXTURES_DIR / "no_violations_clean.json"), "--summary-output", "summary.json"])
+
+
+@pytest.mark.parametrize("bad_first", [False, True])
+@pytest.mark.parametrize("bad_content", [
+    None, "{invalid json", "null", "[]", '"x"',
+    '{"Metadata": "x"}',
+    '{"Results": [{"ModifiedFindings": ["x"]}]}',
+    '{"Results": [{"Vulnerabilities": [{"VulnerabilityID": null}]}]}',
+    '{"Results": [{"Vulnerabilities": [{"PkgName": []}]}]}',
+    '{"Results": [1]}', '{"Results": {"x": 1}}',
+    '{"Results": [{"Vulnerabilities": ["x"]}]}',
+    '{"Results": [{"Vulnerabilities": [{"CVSS": {"nvd": {"V3Score": []}}}]}]}',
+    '{"Results": [{"Vulnerabilities": [{"CVSS": {"nvd": {"V3Score": {}}}}]}]}',
+])
+def test_summary_keeps_loaded_reports_when_another_report_is_unreadable(
+    evaluator, tmp_path, monkeypatch, capsys, bad_first, bad_content
+):
+    monkeypatch.chdir(tmp_path)
+    bad_report = tmp_path / "unreadable.json"
+    if bad_content is not None:
+        bad_report.write_text(bad_content)
+    valid_report = FIXTURES_DIR / "medium_plus_fails.json"
+    reports = [str(bad_report), str(valid_report)] if bad_first else [str(valid_report), str(bad_report)]
+    assert evaluator.main(reports + ["--summary-output", "summary.json"]) == 1
+    (result,) = json.loads(Path("summary.json").read_text())["reports"]
+    assert result["report"] == str(valid_report)
+    assert result["violations"]
+    assert "cannot load" in capsys.readouterr().err
