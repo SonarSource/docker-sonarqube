@@ -106,12 +106,22 @@ on:
           - community-only
 
 jobs:
+  tag-suffix:
+    runs-on: github-ubuntu-latest-s
+    outputs:
+      value: ${{ steps.suffix.outputs.value }}
+    steps:
+      - id: suffix
+        env:
+          TAG_SUFFIX: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: echo "value=${TAG_SUFFIX}" >> "$GITHUB_OUTPUT"
+
   load-config:
     uses: ./.github/workflows/load-config.yml
 
   # Build phase - all editions in parallel
   build-commercial-editions:
-    needs: load-config
+    needs: [load-config, tag-suffix]
     if: |
       (github.event_name != 'workflow_dispatch' || inputs.run_builds) &&
       (github.event_name != 'workflow_dispatch' || inputs.editions == 'all' || inputs.editions == 'commercial-only')
@@ -134,12 +144,12 @@ jobs:
             edition: datacenter-search
     with:
       staging_image_name: ${{ needs.load-config.outputs.staging_image }}
-      tag: ${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}
+      tag: ${{ needs.load-config.outputs.current_version }}-${{ needs.tag-suffix.outputs.value }}-${{ matrix.edition }}
       version: ${{ matrix.version }}
       runs_on: github-ubuntu-latest-s
 
   build-community-build:
-    needs: load-config
+    needs: [load-config, tag-suffix]
     if: |
       (github.event_name != 'workflow_dispatch' || inputs.run_builds) &&
       (github.event_name != 'workflow_dispatch' || inputs.editions == 'all' || inputs.editions == 'community-only')
@@ -150,13 +160,13 @@ jobs:
     uses: ./.github/workflows/multi-arch-build-template.yml
     with:
       staging_image_name: ${{ needs.load-config.outputs.staging_image }}
-      tag: ${{ needs.load-config.outputs.community_build_version }}-master-community
+      tag: ${{ needs.load-config.outputs.community_build_version }}-${{ needs.tag-suffix.outputs.value }}-community
       version: community-build
       runs_on: github-ubuntu-latest-s
 
   # Test phase - runs immediately after builds complete (no workflow_run delay)
   test-commercial-editions:
-    needs: [load-config, build-commercial-editions]
+    needs: [load-config, tag-suffix, build-commercial-editions]
     if: |
       (!inputs.nightly || success()) &&
       (github.event_name != 'workflow_dispatch' || (always() && inputs.run_tests)) &&
@@ -190,13 +200,13 @@ jobs:
             architecture: arm64
     with:
       staging_image_name: ${{ needs.load-config.outputs.staging_image }}
-      tag: ${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}
+      tag: ${{ needs.load-config.outputs.current_version }}-${{ needs.tag-suffix.outputs.value }}-${{ matrix.edition }}
       test_name: ${{ matrix.test_name }}
       architecture: ${{ matrix.architecture }}
       runs_on: ${{ matrix.architecture == 'arm64' && 'github-ubuntu-24.04-arm-s' || 'github-ubuntu-latest-s' }}
 
   test-community-build:
-    needs: [load-config, build-community-build]
+    needs: [load-config, tag-suffix, build-community-build]
     if: |
       (!inputs.nightly || success()) &&
       (github.event_name != 'workflow_dispatch' || (always() && inputs.run_tests)) &&
@@ -212,7 +222,7 @@ jobs:
         architecture: [amd64, arm64]
     with:
       staging_image_name: ${{ needs.load-config.outputs.staging_image }}
-      tag: ${{ needs.load-config.outputs.community_build_version }}-master-community
+      tag: ${{ needs.load-config.outputs.community_build_version }}-${{ needs.tag-suffix.outputs.value }}-community
       test_name: docker
       architecture: ${{ matrix.architecture }}
       runs_on: ${{ matrix.architecture == 'arm64' && 'github-ubuntu-24.04-arm-s' || 'github-ubuntu-latest-s' }}
@@ -242,7 +252,7 @@ jobs:
   # build-commercial-editions / build-community-build split so every staging image
   # (developer, enterprise, datacenter-app, datacenter-search, community) is scanned.
   trivy-scan-commercial-editions:
-    needs: [load-config, build-commercial-editions]
+    needs: [load-config, tag-suffix, build-commercial-editions]
     if: |
       always() &&
       (github.event_name != 'workflow_dispatch' || inputs.editions == 'all' || inputs.editions == 'commercial-only')
@@ -277,7 +287,7 @@ jobs:
 
       - name: Pull staging image
         run: |
-          docker pull ${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}
+          docker pull ${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-${{ needs.tag-suffix.outputs.value }}-${{ matrix.edition }}
 
       # Two invocations produce JSON (for the CVSS policy evaluator) and SARIF (for the
       # Security tab). --config/--ignorefile/--ignore-unfixed/--show-suppressed are kept
@@ -291,7 +301,7 @@ jobs:
           # show-suppressed has no dedicated action input; set it via env instead.
           TRIVY_SHOW_SUPPRESSED: 'true'
         with:
-          image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}'
+          image-ref: "${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-${{ needs.tag-suffix.outputs.value }}-${{ matrix.edition }}"
           format: 'json'
           output: 'trivy-${{ matrix.edition }}.json'
           vuln-type: 'os'
@@ -307,7 +317,7 @@ jobs:
           TRIVY_SEVERITY: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           TRIVY_SHOW_SUPPRESSED: 'true'
         with:
-          image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}'
+          image-ref: "${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-${{ needs.tag-suffix.outputs.value }}-${{ matrix.edition }}"
           format: 'sarif'
           limit-severities-for-sarif: true
           output: 'trivy-${{ matrix.edition }}.sarif'
@@ -353,7 +363,7 @@ jobs:
           category: 'image-${{ matrix.edition }}'
 
   trivy-scan-community-build:
-    needs: [load-config, build-community-build]
+    needs: [load-config, tag-suffix, build-community-build]
     if: |
       always() &&
       (github.event_name != 'workflow_dispatch' || inputs.editions == 'all' || inputs.editions == 'community-only')
@@ -384,7 +394,7 @@ jobs:
 
       - name: Pull staging image
         run: |
-          docker pull ${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.community_build_version }}-master-community
+          docker pull ${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.community_build_version }}-${{ needs.tag-suffix.outputs.value }}-community
 
       - name: Run Trivy vulnerability scanner (JSON, for policy evaluation)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
@@ -392,7 +402,7 @@ jobs:
           TRIVY_SEVERITY: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           TRIVY_SHOW_SUPPRESSED: 'true'
         with:
-          image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.community_build_version }}-master-community'
+          image-ref: "${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.community_build_version }}-${{ needs.tag-suffix.outputs.value }}-community"
           format: 'json'
           output: 'trivy-community.json'
           vuln-type: 'os'
@@ -408,7 +418,7 @@ jobs:
           TRIVY_SEVERITY: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           TRIVY_SHOW_SUPPRESSED: 'true'
         with:
-          image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.community_build_version }}-master-community'
+          image-ref: "${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.community_build_version }}-${{ needs.tag-suffix.outputs.value }}-community"
           format: 'sarif'
           limit-severities-for-sarif: true
           output: 'trivy-community.sarif'
@@ -497,6 +507,7 @@ jobs:
     name: QA Validator
     needs:
       - load-config
+      - tag-suffix
       - test-trivy-policy-script
       - build-commercial-editions
       - build-community-build
