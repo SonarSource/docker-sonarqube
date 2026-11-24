@@ -194,7 +194,7 @@ def test_large_message_keeps_links_and_omitted_count():
     text = nightly.message({"community": findings}, {"community": set()}, run())
     assert len(text.encode()) <= nightly.MAX_MESSAGE_BYTES
     assert "more findings" in text
-    assert text.endswith("#artifacts|Scan results>")
+    assert text.splitlines()[1].endswith("#artifacts|Scan results>")
 
 
 def test_rerun_suppresses_delivered_findings_but_sends_new_ones(monkeypatch):
