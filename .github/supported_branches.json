@@ -1,3 +1,3 @@
 {
-  "supported_branches": ["master"]
+  "supported_branches": ["master", "release/2026.5"]
 }
