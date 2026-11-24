@@ -12,7 +12,7 @@
     volumes:
       - agentic_signing_hunter:/run/agentic-signing:ro
 ${storage_volume_line}
-    environment:
+${fips_volume_line}    environment:
       SCRIPT_PATH: /home/agent/app/.venv/bin/detection-agent
       PLAYBOOK_KEY: appsec
       PLAYBOOK_VERSION: stable

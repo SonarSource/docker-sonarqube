@@ -191,6 +191,30 @@ On Docker Desktop, Rancher Desktop or colima, pass `--sandbox runc` and `--host-
 
 Then follow the bundle's `ZIP-INSTRUCTIONS.md`.
 
+## Hunter Agent on a FIPS host
+
+Use a FIPS-enabled Red Hat Linux host and select matching versioned FIPS images for Hunter and the
+Agent Orchestrator. For a bundled Enterprise Server, select an Enterprise FIPS image as well.
+
+```bash
+python3 generate.py --edition enterprise --components hunter --tls off \
+  --image-tag "${AGENT_VERSION:?set the agent version}-fips" \
+  --sonarqube-tag "${SERVER_VERSION:?set the Server version}-fips"
+```
+
+You can build the Enterprise image from a released Enterprise distribution. Use a registry and
+tag accessible to the Docker host running the bundle.
+
+```bash
+docker build --build-arg "SONARQUBE_IMAGE=sonarqube:${SERVER_VERSION:?set the Server version}-enterprise" \
+  -f ../commercial-editions/enterprise/Dockerfile.fips \
+  -t "sonarqube:${SERVER_VERSION}-fips-enterprise" ../commercial-editions/enterprise
+```
+
+The generated bundle mounts the host's FIPS flag read-only into Hunter's gVisor sandbox. Configure
+FIPS-capable TLS termination separately. An existing FIPS-enabled ZIP installation can use
+`--edition none` and the same FIPS agent image tag.
+
 ## TLS
 
 - **Into the bundle** (`--tls on`, bundled SonarQube): an nginx proxy terminates https in front of

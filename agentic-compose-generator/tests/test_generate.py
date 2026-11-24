@@ -73,6 +73,19 @@ class ProfilesTest(unittest.TestCase):
                 self.assertTrue((bundle / "docker-compose.yaml").is_file())
                 self.assertTrue((bundle / gen.MANIFEST_FILE).is_file())
 
+    def test_fips_hunter_bundle_uses_matching_images_and_read_only_host_flag(self):
+        code, out, err = run("--edition", "enterprise", "--components", "hunter", "--tls", "off",
+                             "--image-tag", "1.0-fips", "--sonarqube-tag", "2026.5-fips", "--out", "-")
+        self.assertEqual(code, 0, err)
+        self.assertIn("image: sonarqube:2026.5-fips-enterprise", out)
+        self.assertIn("image: sonarsource/sonarqube-agent-orchestrator:1.0-fips", out)
+        self.assertIn("image: sonarsource/sonarqube-hunter-agent:1.0-fips", out)
+        self.assertIn("source: /proc/sys/crypto/fips_enabled\n"
+                      "        target: /run/host-fips-enabled\n"
+                      "        read_only: true\n"
+                      "        bind:\n"
+                      "          create_host_path: false", out)
+
 
 class RefusalsTest(unittest.TestCase):
     def assert_refused(self, *argv: str, message: str):
@@ -83,6 +96,13 @@ class RefusalsTest(unittest.TestCase):
 
     def test_nfs_without_server(self):
         self.assert_refused("--edition", "enterprise", "--storage", "nfs", message="--nfs-server")
+
+    def test_fips_image_tag_requires_matching_components_and_server(self):
+        self.assert_refused("--edition", "enterprise", "--image-tag", "1.0-fips", message="--components hunter")
+        self.assert_refused("--edition", "enterprise", "--image-tag", "1.0-fips", "--components", "hunter",
+                            message="-fips --sonarqube-tag")
+        self.assert_refused("--edition", "enterprise", "--image-tag", "1.0-fips", "--components", "hunter",
+                            "--sonarqube-tag", "2026.5-fips", message="--tls off")
 
     def test_developer_edition_is_refused(self):
         self.assert_refused("--edition", "developer", message="not supported")
