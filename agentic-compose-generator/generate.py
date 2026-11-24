@@ -305,6 +305,20 @@ def resolve_s3_egress(args: argparse.Namespace) -> list[str]:
             "region, not only yours" + ("" if dotted else "; drop it to allowlist the bucket host alone")]
 
 
+def validate_fips_images(args: argparse.Namespace) -> None:
+    args.hunter_fips = bool(args.image_tag and args.image_tag.endswith("-fips"))
+    if not args.hunter_fips:
+        return
+    if args.components != {"hunter"}:
+        raise ConfigError("FIPS image tags require --components hunter")
+    if args.edition != "none" and not (
+        args.edition == "enterprise" and args.sonarqube_tag and args.sonarqube_tag.endswith("-fips")
+    ):
+        raise ConfigError("FIPS image tags require --edition none or --edition enterprise with a -fips --sonarqube-tag")
+    if args.tls_on:
+        raise ConfigError("FIPS image tags require --tls off and FIPS-capable external TLS termination")
+
+
 def validate_and_normalize(args: argparse.Namespace) -> list[str]:
     notes: list[str] = []
 
@@ -366,16 +380,7 @@ def validate_and_normalize(args: argparse.Namespace) -> list[str]:
     args.tls_on = args.tls == "on"
     args.custom_ca_dir = args.custom_ca_dir or ""  # a profile may carry an explicit null
     validate_plain_values(args)
-    args.hunter_fips = bool(args.image_tag and args.image_tag.endswith("-fips"))
-    if args.hunter_fips:
-        if args.components != {"hunter"}:
-            raise ConfigError("FIPS image tags require --components hunter")
-        if args.edition != "none" and not (
-            args.edition == "enterprise" and args.sonarqube_tag and args.sonarqube_tag.endswith("-fips")
-        ):
-            raise ConfigError("FIPS image tags require --edition none or --edition enterprise with a -fips --sonarqube-tag")
-        if args.tls_on:
-            raise ConfigError("FIPS image tags require --tls off and FIPS-capable external TLS termination")
+    validate_fips_images(args)
     # Compose expands only a leading '~/' as the home directory; pathlib would read '~name' as another
     # user's home, so the two would disagree about which directory is meant.
     if args.custom_ca_dir.startswith("~") and args.custom_ca_dir != "~" and not args.custom_ca_dir.startswith("~/"):
