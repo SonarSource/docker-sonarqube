@@ -134,9 +134,6 @@ jobs:
 
   test-trivy-policy-script:
     name: Test Trivy CVSS policy script
-    permissions:
-      contents: read
-      id-token: write
     runs-on: github-ubuntu-latest-s
     steps:
       - name: Checkout code
@@ -146,11 +143,6 @@ jobs:
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12'
-
-      - name: Configure pip registry
-        uses: SonarSource/ci-github-actions/config-pip@43609e4795f6400aa0b66dc1f5277f1fc3fb4768
-        env:
-          BUILD_NUMBER: ${{ github.run_number }}
 
       - name: Install test dependencies
         run: pip install pytest
