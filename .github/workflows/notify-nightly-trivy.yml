@@ -1,0 +1,84 @@
+name: Notify new nightly Trivy findings
+
+on:
+  workflow_run:
+    workflows: ['CI - Build and Test']
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Completed nightly CI run to compare'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: nightly-trivy-notification-${{ inputs.run_id || github.event.workflow_run.id }}
+  cancel-in-progress: false
+
+jobs:
+  compare:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.event == 'workflow_dispatch' &&
+       startsWith(github.event.workflow_run.display_title, 'Nightly CI (') &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: github-ubuntu-latest-s
+    outputs:
+      message: ${{ steps.compare.outputs.message }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - name: Compare nightly summaries
+        id: compare
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ inputs.run_id || github.event.workflow_run.id }}
+        run: |
+          python3 .github/workflows/scripts/compare-nightly-trivy.py --repository "$GITHUB_REPOSITORY" --run-id "$RUN_ID"
+          echo "message=$(jq -c '.text' trivy-notification.json)" >> "$GITHUB_OUTPUT"
+      - name: Retain notification candidate
+        if: steps.compare.outputs.message != '""'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: trivy-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: trivy-notification.json
+          if-no-files-found: error
+
+  notify:
+    needs: compare
+    if: needs.compare.outputs.message != '' && needs.compare.outputs.message != '""'
+    permissions:
+      id-token: write
+    uses: ./.github/workflows/slack_notify.yml
+    with:
+      message: ${{ fromJSON(needs.compare.outputs.message) }}
+      title: New nightly Trivy findings
+      color: warning
+
+  record:
+    needs: [compare, notify]
+    runs-on: github-ubuntu-latest-s
+    steps:
+      - name: Download sent notification
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: trivy-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Record sent findings
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: trivy-notified-${{ inputs.run_id || github.event.workflow_run.id }}
+          path: trivy-notification.json
+          if-no-files-found: error
+
+  notify-failure:
+    needs: [compare, notify, record]
+    if: failure()
+    permissions:
+      id-token: write
+    uses: ./.github/workflows/slack_notify.yml

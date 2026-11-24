@@ -2,6 +2,19 @@
 name: Notify Slack on Failure
 on:
   workflow_call:
+    inputs:
+      message:
+        type: string
+        required: false
+        default: ''
+      title:
+        type: string
+        required: false
+        default: Build Failed
+      color:
+        type: string
+        required: false
+        default: danger
 
 jobs:
   slack-notifications:
@@ -21,12 +34,13 @@ jobs:
         env:
           SLACK_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).SLACK_TOKEN }}
           SLACK_CHANNEL: squad-sq-platform-build-notification
-          SLACK_TITLE: Build Failed
-          SLACK_MESSAGE: |
-            Workflow failed in ${{ github.repository }} 🚨
-            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-            Branch: ${{ github.ref_name }}
-            Commit: ${{ github.sha }}
+          SLACK_TITLE: ${{ inputs.title }}
+          SLACK_MESSAGE: |-
+            ${{ inputs.message || format('Workflow failed in {0} 🚨
+            {1}/{0}/actions/runs/{2}
+            Branch: {3}
+            Commit: {4}
+            ', github.repository, github.server_url, github.run_id, github.ref_name, github.sha) }}
           SLACK_USERNAME: BuildBot
-          SLACK_COLOR: danger
+          SLACK_COLOR: ${{ inputs.color }}
 
