@@ -94,7 +94,7 @@ jobs:
             edition: datacenter-search
     with:
       staging_image_name: ${{ needs.load-config.outputs.staging_image }}
-      tag: ${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}
+      tag: ${{ needs.load-config.outputs.current_version }}-${{ inputs.nightly && 'nightly' || 'master' }}-${{ matrix.edition }}
       version: ${{ matrix.version }}
       runs_on: github-ubuntu-latest-s
 
@@ -134,7 +134,7 @@ jobs:
             architecture: arm64
     with:
       staging_image_name: ${{ needs.load-config.outputs.staging_image }}
-      tag: ${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}
+      tag: ${{ needs.load-config.outputs.current_version }}-${{ inputs.nightly && 'nightly' || 'master' }}-${{ matrix.edition }}
       test_name: ${{ matrix.test_name }}
       architecture: ${{ matrix.architecture }}
       runs_on: ${{ matrix.architecture == 'arm64' && 'github-ubuntu-24.04-arm-s' || 'github-ubuntu-latest-s' }}
@@ -193,7 +193,7 @@ jobs:
 
       - name: Pull staging image
         run: |
-          docker pull ${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}
+          docker pull ${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-${{ inputs.nightly && 'nightly' || 'master' }}-${{ matrix.edition }}
 
       # Two invocations produce JSON (for the CVSS policy evaluator) and SARIF (for the
       # Security tab). --config/--ignorefile/--ignore-unfixed/--show-suppressed are kept
@@ -207,7 +207,7 @@ jobs:
           # show-suppressed has no dedicated action input; set it via env instead.
           TRIVY_SHOW_SUPPRESSED: 'true'
         with:
-          image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}'
+          image-ref: "${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-${{ inputs.nightly && 'nightly' || 'master' }}-${{ matrix.edition }}"
           format: 'json'
           output: 'trivy-${{ matrix.edition }}.json'
           vuln-type: 'os'
@@ -223,7 +223,7 @@ jobs:
           TRIVY_SEVERITY: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           TRIVY_SHOW_SUPPRESSED: 'true'
         with:
-          image-ref: '${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-master-${{ matrix.edition }}'
+          image-ref: "${{ needs.load-config.outputs.staging_image }}:${{ needs.load-config.outputs.current_version }}-${{ inputs.nightly && 'nightly' || 'master' }}-${{ matrix.edition }}"
           format: 'sarif'
           limit-severities-for-sarif: true
           output: 'trivy-${{ matrix.edition }}.sarif'
