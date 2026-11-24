@@ -1,7 +1,8 @@
 name: CI - Build and Test
+run-name: ${{ inputs.nightly && format('Nightly CI ({0})', github.ref_name) || github.event.pull_request.title || github.event.head_commit.message || format('CI ({0})', github.ref_name) }}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}${{ inputs.nightly && '-nightly' || '' }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/master' && !startsWith(github.ref, 'refs/heads/release/') }}
 
 on:
@@ -54,6 +55,11 @@ on:
         type: string
   workflow_dispatch:
     inputs:
+      nightly:
+        description: 'Identify a scheduled nightly CI run'
+        required: false
+        default: false
+        type: boolean
       run_builds:
         description: 'Run build jobs'
         required: false
@@ -192,6 +198,7 @@ jobs:
     # always() below drops the implicit success() check, so gate on changes explicitly.
     if: |
       needs.changes.outputs.images == 'true' &&
+      (!inputs.nightly || success()) &&
       (github.event_name != 'workflow_dispatch' || (always() && inputs.run_tests)) &&
       (github.event_name != 'workflow_dispatch' || (always() && (inputs.editions == 'all' || inputs.editions == 'commercial-only')))
     name: Test commercial edition (${{ matrix.test_name }}, ${{ matrix.architecture }})
@@ -232,6 +239,7 @@ jobs:
     needs: [changes, load-config, build-community-build]
     if: |
       needs.changes.outputs.images == 'true' &&
+      (!inputs.nightly || success()) &&
       (github.event_name != 'workflow_dispatch' || (always() && inputs.run_tests)) &&
       (github.event_name != 'workflow_dispatch' || (always() && (inputs.editions == 'all' || inputs.editions == 'community-only')))
     name: Test community edition (${{ matrix.architecture }})
