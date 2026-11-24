@@ -18,7 +18,7 @@ import string
 import subprocess
 import sys
 import tempfile
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 
 def read_utf8(path: Path) -> str:
@@ -60,6 +60,7 @@ HOST_GATEWAY_NAME = "host.docker.internal"
 # File names in the bundle CA's working directory and in the proxies' tls/ directories.
 CA_CERT_FILE = "ca.crt"
 LEAF_CERT_FILE = "tls.crt"
+LEAF_KEY_FILE = "tls.key"
 LEAF_CONFIG_FILE = "leaf.cnf"
 # Written into an openssl config file and a SAN, so no spaces, commas or brackets. No `:` either:
 # IPv6 literals aren't supported — tls-proxy/entrypoint.sh refuses them and the URLs built from
@@ -1317,7 +1318,7 @@ def check_bundle_certs(args: argparse.Namespace, out_dir: Path) -> tuple[bool, l
     """Whether the bundle CA and certificates must be (re)issued. Run before anything is written, so
     a refusal leaves the bundle as it was."""
     leaves = bundle_cert_leaves(args, out_dir)
-    existing = [out_dir / "tls" / CA_CERT_FILE] + [d / f for d in leaves for f in (LEAF_CERT_FILE, "tls.key")]
+    existing = [out_dir / "tls" / CA_CERT_FILE] + [d / f for d in leaves for f in (LEAF_CERT_FILE, LEAF_KEY_FILE)]
     if not all(path.exists() for path in existing):
         return True, ["issued a CA for this bundle (tls/ca.crt) and certificates for agentic-proxy and "
                       "sonarqube-tls-proxy; the CA key was not kept."]
@@ -1342,13 +1343,13 @@ def write_bundle_certs(args: argparse.Namespace, out_dir: Path, reissue: bool) -
     notes = []
     if reissue:
         with tempfile.TemporaryDirectory() as work:
-            write_file(Path(work, "ca.cnf"), CA_CONFIG.encode())
+            write_file(Path(work), "ca.cnf", CA_CONFIG.encode())
             openssl(work, "req", "-x509", "-new", "-newkey", "rsa:2048", "-nodes", "-sha256", "-days", "3650",
                     "-config", "ca.cnf", "-extensions", "v3_ca", "-keyout", "ca.key", "-out", CA_CERT_FILE)
             ca_cert.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(Path(work, CA_CERT_FILE), ca_cert)
             for leaf_dir, names in leaves.items():
-                write_file(Path(work, LEAF_CONFIG_FILE),
+                write_file(Path(work), LEAF_CONFIG_FILE,
                            LEAF_CONFIG.format(cn=names[0], san=san_entries(names)).encode())
                 openssl(work, "req", "-new", "-newkey", "rsa:2048", "-nodes", "-config", LEAF_CONFIG_FILE,
                         "-keyout", "leaf.key", "-out", "leaf.csr")
@@ -1359,8 +1360,9 @@ def write_bundle_certs(args: argparse.Namespace, out_dir: Path, reissue: bool) -
                 leaf_dir.mkdir(parents=True, exist_ok=True)
                 # Full chain, so a client that only has the CA can still build the path.
                 chain = read_utf8(Path(work, "leaf.crt")) + read_utf8(Path(work, CA_CERT_FILE))
-                write_file(leaf_dir / LEAF_CERT_FILE, chain.encode())
-                write_file(leaf_dir / "tls.key", Path(work, "leaf.key").read_bytes(), 0o600)
+                write_file(out_dir, (leaf_dir / LEAF_CERT_FILE).relative_to(out_dir).as_posix(), chain.encode())
+                key_relative = (leaf_dir / LEAF_KEY_FILE).relative_to(out_dir).as_posix()
+                write_file(out_dir, key_relative, Path(work, "leaf.key").read_bytes(), 0o600)
 
     if custom_ca_is_external(args.custom_ca_dir):
         notes.append(f"copy tls/ca.crt into {args.custom_ca_dir} as {BUNDLE_CA_FILE}: the containers "
@@ -1427,15 +1429,43 @@ def file_digest(rel: str, data: bytes) -> str:
     return sha256("\n".join(lines).encode())
 
 
+def bundle_path(root: Path, relative: str) -> Path:
+    """Validate a child name before any bundle filesystem access.
+
+    The output root is user-selected. Child names must stay within it, including
+    after symlink resolution. This assumes no concurrent hostile filesystem writer.
+    """
+    child = Path(relative)
+    windows = PureWindowsPath(relative)
+    if (not relative or child.is_absolute() or windows.drive or windows.root
+            or "\\" in relative or ".." in child.parts or child == Path(".")):
+        raise ConfigError(f"bundle path '{relative}' must stay inside the bundle directory")
+    base = root.resolve()
+    try:
+        target = base / child
+        resolved = target.resolve()
+        if not str(resolved).startswith(str(base).rstrip(os.sep) + os.sep):
+            raise ValueError("path escapes bundle")
+    except (ValueError, OSError, RuntimeError) as exc:
+        raise ConfigError(f"bundle path '{relative}' must stay inside the bundle directory") from exc
+    if resolved == base:
+        raise ConfigError(f"bundle path '{relative}' must name a bundle child")
+    return target
+
+
 def read_manifest(out_dir: Path) -> dict[str, str]:
-    path = out_dir / MANIFEST_FILE
+    path = bundle_path(out_dir, MANIFEST_FILE)
     if not path.exists():
         return {}
     try:
         files = json.loads(read_utf8(path)).get("files", {})
     except (ValueError, AttributeError) as exc:
         raise ConfigError(f"{path} is corrupt; delete it and rerun with --force") from exc
-    return files if isinstance(files, dict) else {}
+    if not isinstance(files, dict):
+        return {}
+    for rel in files:
+        bundle_path(out_dir, rel)
+    return files
 
 
 def read_env_values(env_file: Path) -> dict[str, str]:
@@ -1454,7 +1484,7 @@ def reuse_env_values(args: argparse.Namespace, out_dir: Path) -> list[str]:
     flight, and a new JWT secret would log every Data Center user out. Also keeps the cluster
     addresses and published ports the README tells users to edit in .env, so that edit doesn't
     block regeneration."""
-    existing = read_env_values(out_dir / ".env")
+    existing = read_env_values(bundle_path(out_dir, ".env"))
     args.cluster_subnet = existing.get("SONARQUBE_CLUSTER_SUBNET") or DATACENTER_CLUSTER_SUBNET
     args.app_node_ips = [existing.get(ip_var(node)) or node_ip
                          for node, node_ip in zip(DATACENTER_APP_NODES, DATACENTER_APP_NODE_IPS)]
@@ -1478,9 +1508,10 @@ def plan_writes(out_dir: Path, files: dict[str, bytes], force: bool) -> tuple[di
     was never written by the generator at all."""
     manifest = read_manifest(out_dir)
     plan: dict[str, list[str]] = {"created": [], "updated": [], "unchanged": []}
+    targets = {rel: bundle_path(out_dir, rel) for rel in files}
     edited = []
     for rel, data in files.items():
-        path = out_dir / rel
+        path = targets[rel]
         if not path.exists():
             plan["created"].append(rel)
             continue
@@ -1499,23 +1530,24 @@ def plan_writes(out_dir: Path, files: dict[str, bytes], force: bool) -> tuple[di
     return plan, stale
 
 
-def write_file(path: Path, data: bytes, mode: int | None = None) -> None:
+def write_file(root: Path, relative: str, data: bytes, mode: int | None = None) -> None:
+    path = bundle_path(root, relative)
     path.parent.mkdir(parents=True, exist_ok=True)
-    if mode is None:
-        path.write_bytes(data)
-        return
     # Created with the final mode, so a secret is never readable by others, even briefly.
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, mode)
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_BINARY", 0)
+    fd = os.open(path, flags, 0o666 if mode is None else mode)
     with os.fdopen(fd, "wb") as handle:
         # By path: os.fchmod doesn't exist on Windows before Python 3.13.
-        os.chmod(path, mode)
+        if mode is not None:
+            os.chmod(path, mode)
         handle.write(data)
 
 
 def remove_stale(out_dir: Path, stale: list[str], manifest: dict[str, str]) -> list[str]:
     notes = []
+    targets = {rel: bundle_path(out_dir, rel) for rel in stale}
     for rel in stale:
-        path = out_dir / rel
+        path = targets[rel]
         if not path.exists():
             continue
         if file_digest(rel, path.read_bytes()) == manifest.get(rel):
@@ -1678,10 +1710,26 @@ def warn_if_custom_ca_dir_has_no_ca(args: argparse.Namespace, out_dir: Path) -> 
           f"or {consequence}.", file=sys.stderr)
 
 
+def validate_bundle_targets(args: argparse.Namespace, out_dir: Path) -> None:
+    bundle_path(out_dir, ".env")
+    read_manifest(out_dir)
+    if uses_bundle_ca(args):
+        cert_paths = ["tls/" + CA_CERT_FILE]
+        cert_paths += [(directory / name).relative_to(out_dir).as_posix()
+                       for directory in bundle_cert_leaves(args, out_dir)
+                       for name in (LEAF_CERT_FILE, LEAF_KEY_FILE)]
+        if not custom_ca_is_external(args.custom_ca_dir):
+            ca_dir = bundle_ca_dir(args.custom_ca_dir, out_dir, writes_into=True)
+            cert_paths.append((ca_dir / BUNDLE_CA_FILE).relative_to(out_dir.resolve()).as_posix())
+        for relative in cert_paths:
+            bundle_path(out_dir, relative)
+
+
 def write_bundle(args: argparse.Namespace, out_dir: Path, compose_text: str, sonar_properties: str,
                  texts: dict[str, str]) -> int:
     if args.custom_ca_dir and not custom_ca_is_external(args.custom_ca_dir):
         bundle_ca_dir(args.custom_ca_dir, out_dir, uses_bundle_ca(args))  # refuse before anything is written
+    validate_bundle_targets(args, out_dir)
     notes = reuse_env_values(args, out_dir)
     env_text = build_env(args)
 
@@ -1695,17 +1743,16 @@ def write_bundle(args: argparse.Namespace, out_dir: Path, compose_text: str, son
     manifest = read_manifest(out_dir)
     plan, stale = plan_writes(out_dir, files, args.force)
     reissue_certs, cert_notes = check_bundle_certs(args, out_dir) if uses_bundle_ca(args) else (False, [])
-    out_dir.mkdir(parents=True, exist_ok=True)
     for rel in plan["created"] + plan["updated"]:
-        write_file(out_dir / rel, files[rel], 0o600 if rel == ".env" else None)
+        write_file(out_dir, rel, files[rel], 0o600 if rel == ".env" else None)
         if rel in assets:
-            shutil.copymode(assets[rel], out_dir / rel)
+            shutil.copymode(assets[rel], bundle_path(out_dir, rel))
     # An .env from an older run may still be world-readable.
-    (out_dir / ".env").chmod(0o600)
+    bundle_path(out_dir, ".env").chmod(0o600)
     notes += remove_stale(out_dir, stale, manifest)
     if plan["updated"]:
         notes.append(f"updated {', '.join(plan['updated'])}.")
-    write_file(out_dir / MANIFEST_FILE, (json.dumps(
+    write_file(out_dir, MANIFEST_FILE, (json.dumps(
         {"files": {rel: file_digest(rel, data) for rel, data in sorted(files.items())}}, indent=2) + "\n").encode())
 
     if args.custom_ca_dir and not custom_ca_is_external(args.custom_ca_dir):

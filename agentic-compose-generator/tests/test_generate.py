@@ -486,6 +486,144 @@ class RegenerationTest(unittest.TestCase):
         self.assertNotIn("# my edit", compose.read_text())
 
 
+class BundlePathSafetyTest(unittest.TestCase):
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.root = Path(temp.name)
+        self.bundle = self.root / "bundle"
+        self.bundle.mkdir()
+        self.outside = self.root / "outside"
+        self.outside.write_bytes(b"sentinel")
+        self.mode = stat.S_IMODE(self.outside.stat().st_mode)
+
+    def assert_outside_unchanged(self):
+        self.assertEqual(self.outside.read_bytes(), b"sentinel")
+        self.assertEqual(stat.S_IMODE(self.outside.stat().st_mode), self.mode)
+
+    def symlink(self, path, target, directory=False):
+        try:
+            path.symlink_to(target, target_is_directory=directory)
+        except OSError as exc:
+            self.skipTest(f"symlinks unavailable: {exc}")
+
+    def generate(self):
+        return run("--edition", "enterprise", "--tls", "off", "--out", str(self.bundle), "--force")
+
+    def test_invalid_children_cannot_be_read_written_or_removed(self):
+        for relative in ("../outside", "a/../../outside", str(self.outside),
+                         "C:/outside", "C:outside", "\\outside", "a\\..\\outside", ".", ""):
+            with self.subTest(relative=relative):
+                with self.assertRaises(gen.ConfigError):
+                    gen.plan_writes(self.bundle, {relative: b"new"}, True)
+                with self.assertRaises(gen.ConfigError):
+                    gen.write_file(self.bundle, relative, b"new", 0o600)
+                with self.assertRaises(gen.ConfigError):
+                    gen.remove_stale(self.bundle, [relative], {})
+                self.assert_outside_unchanged()
+
+    def test_malicious_manifest_leaves_bundle_unchanged(self):
+        for relative in ("../outside", str(self.outside), "C:/outside", "C:outside"):
+            with self.subTest(relative=relative):
+                manifest = self.bundle / gen.MANIFEST_FILE
+                manifest.write_text(json.dumps({"files": {relative: "digest"}}))
+                before = manifest.read_bytes()
+                code, _, err = self.generate()
+                self.assertEqual(code, 1, err)
+                self.assertIn("must stay inside", err)
+                self.assertEqual(manifest.read_bytes(), before)
+                self.assertFalse((self.bundle / "docker-compose.yaml").exists())
+                self.assert_outside_unchanged()
+
+    def test_escaping_symlinks_cannot_be_read_written_or_removed(self):
+        self.symlink(self.bundle / "linked", self.outside)
+        self.symlink(self.bundle / "nested", self.root, directory=True)
+        for relative in ("linked", "nested/outside"):
+            with self.subTest(relative=relative):
+                with self.assertRaises(gen.ConfigError):
+                    gen.plan_writes(self.bundle, {"safe": b"new", relative: b"sentinel"}, True)
+                with self.assertRaises(gen.ConfigError):
+                    gen.write_file(self.bundle, relative, b"new", 0o600)
+                manifest = {relative: gen.file_digest(relative, b"sentinel")}
+                with self.assertRaises(gen.ConfigError):
+                    gen.remove_stale(self.bundle, [relative], manifest)
+                self.assertFalse((self.bundle / "safe").exists())
+                self.assert_outside_unchanged()
+        self.assertTrue((self.bundle / "linked").is_symlink())
+
+    def test_special_file_symlinks_are_refused_before_permission_changes(self):
+        for name in (".env", gen.MANIFEST_FILE, "docker-compose.yaml"):
+            with self.subTest(name=name):
+                link = self.bundle / name
+                self.symlink(link, self.outside)
+                code, _, err = self.generate()
+                self.assertEqual(code, 1, err)
+                self.assertIn("must stay inside", err)
+                self.assert_outside_unchanged()
+                self.assertEqual(list(self.bundle.iterdir()), [link])
+                link.unlink()
+
+    def test_certificate_symlink_is_refused_before_bundle_creation(self):
+        tls = self.bundle / "tls"
+        tls.mkdir()
+        self.symlink(tls / gen.CA_CERT_FILE, self.outside)
+        code, _, err = run("--edition", "none", "--tls", "on", "--storage", "s3",
+                           "--db-host", "db", "--db-password", "p", "--out", str(self.bundle), "--force")
+        self.assertEqual(code, 1, err)
+        self.assertIn("must stay inside", err)
+        self.assertFalse((self.bundle / ".env").exists())
+        self.assert_outside_unchanged()
+
+    def test_output_root_symlink_remains_supported(self):
+        output = self.root / "selected-output"
+        self.symlink(output, self.bundle, directory=True)
+        code, _, err = run("--edition", "enterprise", "--tls", "off", "--out", str(output))
+        self.assertEqual(code, 0, err)
+        self.assertTrue((self.bundle / "docker-compose.yaml").is_file())
+
+    def test_stale_validation_precedes_deletion(self):
+        safe = self.bundle / "safe"
+        safe.write_bytes(b"old")
+        manifest = {"safe": gen.file_digest("safe", b"old")}
+        with self.assertRaises(gen.ConfigError):
+            gen.remove_stale(self.bundle, ["safe", "../outside"], manifest)
+        self.assertEqual(safe.read_bytes(), b"old")
+        self.assert_outside_unchanged()
+
+    def test_stale_internal_symlink_removes_only_the_stale_entry(self):
+        code, _, err = self.generate()
+        self.assertEqual(code, 0, err)
+        compose = self.bundle / "docker-compose.yaml"
+        before = compose.read_bytes()
+        old = self.bundle / "old.yaml"
+        self.symlink(old, Path("docker-compose.yaml"))
+        manifest_path = self.bundle / gen.MANIFEST_FILE
+        manifest = json.loads(manifest_path.read_text())
+        manifest["files"]["old.yaml"] = gen.file_digest("old.yaml", before)
+        manifest_path.write_text(json.dumps(manifest))
+        code, _, err = self.generate()
+        self.assertEqual(code, 0, err)
+        self.assertFalse(old.is_symlink())
+        self.assertEqual(compose.read_bytes(), before)
+
+    def test_writes_preserve_binary_bytes_with_and_without_explicit_mode(self):
+        data = b"#!/bin/sh\nline\r\n\x00\x1a\xff\n"
+        for mode in (None, 0o600):
+            with self.subTest(mode=mode):
+                gen.write_file(self.bundle, "binary", data, mode)
+                self.assertEqual((self.bundle / "binary").read_bytes(), data)
+
+    def test_valid_nested_targets_and_stale_files(self):
+        gen.write_file(self.bundle, "nested/file", b"old")
+        plan, stale = gen.plan_writes(self.bundle, {"nested/file": b"old"}, False)
+        self.assertEqual(plan["unchanged"], ["nested/file"])
+        self.assertEqual(stale, [])
+        notes = gen.remove_stale(self.bundle, ["nested/file"],
+                                 {"nested/file": gen.file_digest("nested/file", b"old")})
+        self.assertEqual(len(notes), 1)
+        self.assertFalse((self.bundle / "nested/file").exists())
+
+
 class WindowsTest(unittest.TestCase):
     def test_runs_twice_with_an_ascii_default_encoding(self):
         # Windows reads text as cp1252 unless told otherwise, and the templates hold non-ASCII
