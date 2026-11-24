@@ -28,15 +28,21 @@ jobs:
     needs: load-branches
     runs-on: github-ubuntu-latest-s
     permissions:
-      actions: write
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
         branch: ${{ fromJSON(needs.load-branches.outputs.branches) }}
     steps:
+      - name: Get nightly trigger token
+        id: secrets
+        uses: SonarSource/vault-action-wrapper@20728776e291b4027acb3618091a31fa15c61a30 # v3
+        with:
+          secrets: |
+            development/github/token/{REPO_OWNER_NAME_DASH}-nightly-trigger token | TRIGGER_GITHUB_TOKEN;
       - name: Start branch CI
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).TRIGGER_GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           TARGET_BRANCH: ${{ matrix.branch }}
         run: gh workflow run push_and_pr.yml --ref "$TARGET_BRANCH" -f nightly=true
