@@ -2,7 +2,7 @@
   "agent-orchestrator": {
     "registry": "sonarsource",
     "name": "sonarqube-agent-orchestrator",
-    "tag": "2026.5.2"
+    "tag": "2026.5.6"
   },
   "hunter-agent": {
     "registry": "sonarsource",
@@ -12,12 +12,12 @@
   "remediation-agent": {
     "registry": "sonarsource",
     "name": "sonarqube-remediation-agent",
-    "tag": "2026.5.1"
+    "tag": "2026.5.2"
   },
   "vortex": {
     "registry": "sonarsource",
     "name": "sonar-vortex",
-    "tag": "2026.5.1"
+    "tag": "2026.5.2"
   },
   "sonarqube": {
     "registry": "",

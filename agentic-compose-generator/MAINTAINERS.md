@@ -114,12 +114,12 @@ Bump it with a small, direct edit to the file, referencing the ticket in the com
 proposes digest bumps for the third-party images.
 
 All defaults are public Docker Hub coordinates: the official `sonarqube` image
-(`sonarqube:<tag>-<edition>`, e.g. `sonarqube:2026.5.4-datacenter-app`), and for the four agentic
+(`sonarqube:<tag>-<edition>`, e.g. `sonarqube:2026.5.6-datacenter-app`), and for the four agentic
 components `sonarsource/sonarqube-agent-orchestrator`, `sonarqube-hunter-agent`,
 `sonarqube-remediation-agent` and `sonar-vortex`, tagged with the SonarQube Server line they ship
-with and a patch of their own (e.g. `2026.5.2` alongside SonarQube Server `2026.5.4`). The tags
+with and a patch of their own (e.g. `2026.5.2` alongside SonarQube Server `2026.5.6`). The tags
 can differ between components: an image is only republished when it changes (e.g. Agent
-Orchestrator and Hunter Agent `2026.5.2`, Remediation Agent and Vortex `2026.5.1`), so set each
+Orchestrator `2026.5.6`, Hunter Agent, Remediation Agent and Vortex `2026.5.2`), so set each
 one in `default-images.json`. `--image-registry`/`--image-tag`
 apply uniformly to the four agentic components only (`AGENTIC_IMAGES` in `generate.py`), so
 only pass `--image-tag` with a tag that exists for all four; the
