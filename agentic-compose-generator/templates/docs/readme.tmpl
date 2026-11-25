@@ -61,8 +61,8 @@ limit is not a disk budget. Increase disk capacity before raising
 `AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_MEMBERS` in the shell or bundle's `.env`.
 The unchanged limits are 1,000,000,000 bytes and 100,000 entries.
 
-Agent Orchestrator and Hunter Agent `2026.5.2` support configured repository limits.
-Remediation Agent `2026.5.1` retains its 1,000,000,000-byte and 100,000-entry extraction caps;
+Agent Orchestrator `2026.5.6` and Hunter Agent `2026.5.2` support configured repository limits.
+Remediation Agent `2026.5.2` retains its 1,000,000,000-byte and 100,000-entry extraction caps;
 larger Remediation repositories require a future runtime release.
 With the updated orchestrator image, `/tmp/agent-orchestrator` is owner-only and cleared
 before the application starts, including after a crash. Do not store persistent files there.

@@ -95,7 +95,7 @@ Without `--out`, the bundle goes to `out/<edition>`.
 | `--edition` | `enterprise` \| `datacenter` \| `none` | *required* | The SonarQube Server edition to run, or `none` to use your existing install. Developer Edition is not supported |
 | `--components` | comma-separated subset of `hunter,remediation,vortex` | all three | Services to run. `remediation` needs `vortex` and adds it if missing |
 | `--sonarqube-tag` | SonarQube version, 2026.5 or later, e.g. `2026.5.0` | see `default-images.json` | SonarQube image version; the edition suffix is added for you |
-| `--image-tag` | a tag published for all four agentic images | see `default-images.json` | Overrides the tag of all four agentic images at once. Their default tags can differ, since an image is only republished when it changes (e.g. `2026.5.2` for Agent Orchestrator and Hunter Agent, `2026.5.1` for Remediation Agent and Vortex), so only pass a tag that exists for every agentic image, or omit it to use the per-image defaults |
+| `--image-tag` | a tag published for all four agentic images | see `default-images.json` | Overrides the tag of all four agentic images at once. Their default tags can differ, since an image is only republished when it changes (e.g. `2026.5.6` for Agent Orchestrator, `2026.5.2` for Hunter Agent, Remediation Agent and Vortex), so only pass a tag that exists for every agentic image, or omit it to use the per-image defaults |
 | `--sonarqube-registry`, `--image-registry` | registry host, optionally with a port and a path, e.g. `mirror.example.com:5000/sonar` | Docker Hub | Pull from a mirror of the official images instead |
 | `--project-name` | lowercase letters, digits, `_`, `-` | `agentic-<edition>` | Compose project name, the prefix of every container, network and volume. Give two bundles of the same edition on one host different names |
 
@@ -143,8 +143,8 @@ limit is not a disk budget. Increase disk capacity before raising
 `AGENTIC_DISPATCHER_MAX_EXTRACTED_REPO_MEMBERS` in the shell or bundle's `.env`.
 The unchanged limits are 1,000,000,000 bytes and 100,000 entries.
 
-Agent Orchestrator and Hunter Agent `2026.5.2` support configured repository limits.
-Remediation Agent `2026.5.1` retains its 1,000,000,000-byte and 100,000-entry extraction caps;
+Agent Orchestrator `2026.5.6` and Hunter Agent `2026.5.2` support configured repository limits.
+Remediation Agent `2026.5.2` retains its 1,000,000,000-byte and 100,000-entry extraction caps;
 larger Remediation repositories require a future runtime release.
 With the updated orchestrator image, `/tmp/agent-orchestrator` is owner-only and cleared
 before the application starts, including after a crash. Do not store persistent files there.
