@@ -29,4 +29,184 @@
 #       in our runtime configuration; tracked in JIRA-1234 pending an upstream fix.
 #     expired_at: 2026-12-31
 
-vulnerabilities: []
+vulnerabilities:
+  - id: CVE-2025-1352
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2025-1376
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-102633
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-107364
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-107708
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-107778
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-107884
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-112314
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-112315
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-112316
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-112317
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-112318
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-112319
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-112320
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-112321
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-112322
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-112323
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-113351
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-115506
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-117610
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-118370
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-118380
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-119079
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-124317
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-128241
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-134703
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-71199
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-71200
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-77214
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
+  - id: CVE-2026-93990
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu base OS package; the fixed
+      version was published after the 2026.5.6 images were built and comes with the next
+      image rebuild. Tracked in SONAR-33591.
+    expired_at: 2026-12-10
