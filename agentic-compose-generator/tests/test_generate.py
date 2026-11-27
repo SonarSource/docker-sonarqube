@@ -371,6 +371,19 @@ class CustomCaDirTest(unittest.TestCase):
         self.assertFalse((self.bundle / "docker-compose.yaml").exists())
 
     @unittest.skipIf(os.name == "nt", "needs POSIX symlinks")
+    def test_tls_directory_symlinked_out_of_the_bundle_is_refused_before_certs_are_written(self):
+        outside = Path(self._tmp.name) / "outside"
+        outside.mkdir()
+        self.bundle.mkdir()
+        (self.bundle / "tls").symlink_to(outside)
+        code, _, err = run("--edition", "none", "--tls", "on", "--storage", "s3", "--db-host", "db",
+                           "--db-password", "p", "--out", str(self.bundle))
+        self.assertEqual(code, 1, err)
+        self.assertIn("'tls/ca.crt' resolves outside the bundle directory", err)
+        self.assertEqual(list(outside.iterdir()), [])
+        self.assertFalse((self.bundle / "docker-compose.yaml").exists())
+
+    @unittest.skipIf(os.name == "nt", "needs POSIX symlinks")
     def test_symlinked_directory_is_kept_when_nothing_is_written_into_it(self):
         outside = Path(self._tmp.name) / "my-ca"
         outside.mkdir()
@@ -516,6 +529,21 @@ class RegenerationTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("'docker-compose.yaml' resolves outside the bundle directory", err)
         self.assertEqual(outside.read_text(), "keep me\n")
+
+    @unittest.skipIf(os.name == "nt", "needs POSIX symlinks")
+    def test_manifest_symlinked_out_of_the_bundle_is_refused_before_anything_is_written(self):
+        self.assertEqual(self.generate()[0], 0)
+        manifest_file = self.bundle / gen.MANIFEST_FILE
+        outside = Path(self._tmp.name) / "outside.json"
+        manifest_file.rename(outside)
+        manifest_file.symlink_to(outside)
+        compose = self.bundle / "docker-compose.yaml"
+        compose.write_text(compose.read_text() + "# my edit\n")
+
+        code, err = self.generate("--force")
+        self.assertEqual(code, 1)
+        self.assertIn(f"'{gen.MANIFEST_FILE}' resolves outside the bundle directory", err)
+        self.assertIn("# my edit", compose.read_text())
 
     def test_relative_out_is_written_and_regenerated(self):
         cwd = os.getcwd()

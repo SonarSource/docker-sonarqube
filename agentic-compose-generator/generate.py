@@ -1318,6 +1318,8 @@ def check_bundle_certs(args: argparse.Namespace, out_dir: Path) -> tuple[bool, l
     a refusal leaves the bundle as it was."""
     leaves = bundle_cert_leaves(args, out_dir)
     existing = [out_dir / "tls" / CA_CERT_FILE] + [d / f for d in leaves for f in (LEAF_CERT_FILE, "tls.key")]
+    for path in existing:
+        bundle_file(out_dir, path.relative_to(out_dir).as_posix())  # refuse before anything is written
     if not all(path.exists() for path in existing):
         return True, ["issued a CA for this bundle (tls/ca.crt) and certificates for agentic-proxy and "
                       "sonarqube-tls-proxy; the CA key was not kept."]
@@ -1441,7 +1443,7 @@ def bundle_file(out_dir: Path, rel: str) -> Path:
 
 
 def read_manifest(out_dir: Path) -> dict[str, str]:
-    path = out_dir / MANIFEST_FILE
+    path = bundle_file(out_dir, MANIFEST_FILE)
     if not path.exists():
         return {}
     try:
@@ -1467,7 +1469,7 @@ def reuse_env_values(args: argparse.Namespace, out_dir: Path) -> list[str]:
     flight, and a new JWT secret would log every Data Center user out. Also keeps the cluster
     addresses and published ports the README tells users to edit in .env, so that edit doesn't
     block regeneration."""
-    existing = read_env_values(out_dir / ".env")
+    existing = read_env_values(bundle_file(out_dir, ".env"))
     args.cluster_subnet = existing.get("SONARQUBE_CLUSTER_SUBNET") or DATACENTER_CLUSTER_SUBNET
     args.app_node_ips = [existing.get(ip_var(node)) or node_ip
                          for node, node_ip in zip(DATACENTER_APP_NODES, DATACENTER_APP_NODE_IPS)]
