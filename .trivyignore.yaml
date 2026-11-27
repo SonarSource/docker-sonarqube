@@ -40,6 +40,14 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-07
+  - id: CVE-2025-11495
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) binutils OS package vulnerability (binutils/libbinutils
+      2.42-4ubuntu2.10 -> 2.42-4ubuntu2.11). Ubuntu has published the fix, but the base image used
+      by the 2026-11-27 build still ships the affected version. Tracked in SONAR-33618; remove
+      once the base image ships the fixed package.
+    expired_at: 2026-12-11
   - id: CVE-2025-15649
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -86,6 +94,62 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-07
+  - id: CVE-2025-69644
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) binutils OS package vulnerability (binutils/libbinutils
+      2.42-4ubuntu2.10 -> 2.42-4ubuntu2.11). Ubuntu has published the fix, but the base image used
+      by the 2026-11-27 build still ships the affected version. Tracked in SONAR-33618; remove
+      once the base image ships the fixed package.
+    expired_at: 2026-12-11
+  - id: CVE-2025-69652
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) binutils OS package vulnerability (binutils/libbinutils
+      2.42-4ubuntu2.10 -> 2.42-4ubuntu2.11). Ubuntu has published the fix, but the base image used
+      by the 2026-11-27 build still ships the affected version. Tracked in SONAR-33618; remove
+      once the base image ships the fixed package.
+    expired_at: 2026-12-11
+  - id: CVE-2026-102633
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.6 ->
+      2.6.1-2ubuntu0.7). Ubuntu has published the fix, but the base image used by the 2026-11-27
+      build still ships the affected version. Tracked in SONAR-33618; remove once the base image
+      ships the fixed package.
+    expired_at: 2026-12-11
+  - id: CVE-2026-113351
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.6 ->
+      2.6.1-2ubuntu0.7). Ubuntu has published the fix, but the base image used by the 2026-11-27
+      build still ships the affected version. Tracked in SONAR-33618; remove once the base image
+      ships the fixed package.
+    expired_at: 2026-12-11
+  - id: CVE-2026-115506
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.6 ->
+      2.6.1-2ubuntu0.7). Ubuntu has published the fix, but the base image used by the 2026-11-27
+      build still ships the affected version. Tracked in SONAR-33618; remove once the base image
+      ships the fixed package.
+    expired_at: 2026-12-11
+  - id: CVE-2026-117610
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.6 ->
+      2.6.1-2ubuntu0.7). Ubuntu has published the fix, but the base image used by the 2026-11-27
+      build still ships the affected version. Tracked in SONAR-33618; remove once the base image
+      ships the fixed package.
+    expired_at: 2026-12-11
+  - id: CVE-2026-118370
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.6 ->
+      2.6.1-2ubuntu0.7). Ubuntu has published the fix, but the base image used by the 2026-11-27
+      build still ships the affected version. Tracked in SONAR-33618; remove once the base image
+      ships the fixed package.
+    expired_at: 2026-12-11
   - id: CVE-2026-12087
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -96,6 +160,22 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-07
+  - id: CVE-2026-124317
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.6 ->
+      2.6.1-2ubuntu0.7). Ubuntu has published the fix, but the base image used by the 2026-11-27
+      build still ships the affected version. Tracked in SONAR-33618; remove once the base image
+      ships the fixed package.
+    expired_at: 2026-12-11
+  - id: CVE-2026-128241
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.6 ->
+      2.6.1-2ubuntu0.7). Ubuntu has published the fix, but the base image used by the 2026-11-27
+      build still ships the affected version. Tracked in SONAR-33618; remove once the base image
+      ships the fixed package.
+    expired_at: 2026-12-11
   - id: CVE-2026-13221
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -106,6 +186,14 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-07
+  - id: CVE-2026-134703
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.6 ->
+      2.6.1-2ubuntu0.7). Ubuntu has published the fix, but the base image used by the 2026-11-27
+      build still ships the affected version. Tracked in SONAR-33618; remove once the base image
+      ships the fixed package.
+    expired_at: 2026-12-11
   - id: CVE-2026-13595
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -126,6 +214,14 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-07
+  - id: CVE-2026-15003
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) binutils OS package vulnerability (binutils/libbinutils
+      2.42-4ubuntu2.10 -> 2.42-4ubuntu2.11). Ubuntu has published the fix, but the base image used
+      by the 2026-11-27 build still ships the affected version. Tracked in SONAR-33618; remove
+      once the base image ships the fixed package.
+    expired_at: 2026-12-11
   - id: CVE-2026-15059
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -218,6 +314,14 @@ vulnerabilities:
       Tracked in SONAR-31880 -- plan is to pin the specific patched package version or pick up
       an upstream base image bump before this expires.
     expired_at: 2026-11-10
+  - id: CVE-2026-19548
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) binutils OS package vulnerability (binutils/libbinutils
+      2.42-4ubuntu2.10 -> 2.42-4ubuntu2.11). Ubuntu has published the fix, but the base image used
+      by the 2026-11-27 build still ships the affected version. Tracked in SONAR-33618; remove
+      once the base image ships the fixed package.
+    expired_at: 2026-12-11
   - id: CVE-2026-27171
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -286,6 +390,22 @@ vulnerabilities:
       the specific patched package version or pick up an upstream base image bump before this
       expires.
     expired_at: 2026-11-24
+  - id: CVE-2026-3441
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) binutils OS package vulnerability (binutils/libbinutils
+      2.42-4ubuntu2.10 -> 2.42-4ubuntu2.11). Ubuntu has published the fix, but the base image used
+      by the 2026-11-27 build still ships the affected version. Tracked in SONAR-33618; remove
+      once the base image ships the fixed package.
+    expired_at: 2026-12-11
+  - id: CVE-2026-3442
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) binutils OS package vulnerability (binutils/libbinutils
+      2.42-4ubuntu2.10 -> 2.42-4ubuntu2.11). Ubuntu has published the fix, but the base image used
+      by the 2026-11-27 build still ships the affected version. Tracked in SONAR-33618; remove
+      once the base image ships the fixed package.
+    expired_at: 2026-12-11
   - id: CVE-2026-42250
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -311,6 +431,14 @@ vulnerabilities:
       Tracked in SONAR-32543 -- plan is to pin the specific patched package version or pick up
       an upstream base image bump before this expires.
     expired_at: 2026-11-24
+  - id: CVE-2026-4647
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) binutils OS package vulnerability (binutils/libbinutils
+      2.42-4ubuntu2.10 -> 2.42-4ubuntu2.11). Ubuntu has published the fix, but the base image used
+      by the 2026-11-27 build still ships the affected version. Tracked in SONAR-33618; remove
+      once the base image ships the fixed package.
+    expired_at: 2026-12-11
   - id: CVE-2026-46675
     statement: >-
       Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -720,6 +848,14 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-10
+  - id: CVE-2026-6846
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) binutils OS package vulnerability (binutils/libbinutils
+      2.42-4ubuntu2.10 -> 2.42-4ubuntu2.11). Ubuntu has published the fix, but the base image used
+      by the 2026-11-27 build still ships the affected version. Tracked in SONAR-33618; remove
+      once the base image ships the fixed package.
+    expired_at: 2026-12-11
   - id: CVE-2026-7017
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -825,6 +961,14 @@ vulnerabilities:
       pin the specific patched package version or pick up an upstream base image bump before
       this expires.
     expired_at: 2026-11-10
+  - id: CVE-2026-77214
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.6 ->
+      2.6.1-2ubuntu0.7). Ubuntu has published the fix, but the base image used by the 2026-11-27
+      build still ships the affected version. Tracked in SONAR-33618; remove once the base image
+      ships the fixed package.
+    expired_at: 2026-12-11
   - id: CVE-2026-77696
     statement: >-
       Owner: carmine.vassallo@sonarsource.com. Justification: Ubuntu 24.04 base-image
@@ -867,6 +1011,38 @@ vulnerabilities:
       the specific patched package version or pick up an upstream base image bump before this
       expires.
     expired_at: 2026-12-01
+  - id: CVE-2026-90803
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) binutils OS package vulnerability (binutils/libbinutils
+      2.42-4ubuntu2.10 -> 2.42-4ubuntu2.11). Ubuntu has published the fix, but the base image used
+      by the 2026-11-27 build still ships the affected version. Tracked in SONAR-33618; remove
+      once the base image ships the fixed package.
+    expired_at: 2026-12-11
+  - id: CVE-2026-90828
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) binutils OS package vulnerability (binutils/libbinutils
+      2.42-4ubuntu2.10 -> 2.42-4ubuntu2.11). Ubuntu has published the fix, but the base image used
+      by the 2026-11-27 build still ships the affected version. Tracked in SONAR-33618; remove
+      once the base image ships the fixed package.
+    expired_at: 2026-12-11
+  - id: CVE-2026-91782
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) binutils OS package vulnerability (binutils/libbinutils
+      2.42-4ubuntu2.10 -> 2.42-4ubuntu2.11). Ubuntu has published the fix, but the base image used
+      by the 2026-11-27 build still ships the affected version. Tracked in SONAR-33618; remove
+      once the base image ships the fixed package.
+    expired_at: 2026-12-11
+  - id: CVE-2026-93990
+    statement: >-
+      Owner: hatem.amairi@sonarsource.com. Justification: Ubuntu 24.04 base-image
+      (eclipse-temurin:25-jdk-noble) expat OS package vulnerability (libexpat1 2.6.1-2ubuntu0.6 ->
+      2.6.1-2ubuntu0.7). Ubuntu has published the fix, but the base image used by the 2026-11-27
+      build still ships the affected version. Tracked in SONAR-33618; remove once the base image
+      ships the fixed package.
+    expired_at: 2026-12-11
   - id: CVE-2026-9538
     statement: >-
       Owner: jimil.desai@sonarsource.com. Justification: Ubuntu 24.04 base-image

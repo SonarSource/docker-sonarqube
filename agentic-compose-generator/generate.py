@@ -1318,6 +1318,8 @@ def check_bundle_certs(args: argparse.Namespace, out_dir: Path) -> tuple[bool, l
     a refusal leaves the bundle as it was."""
     leaves = bundle_cert_leaves(args, out_dir)
     existing = [out_dir / "tls" / CA_CERT_FILE] + [d / f for d in leaves for f in (LEAF_CERT_FILE, "tls.key")]
+    for path in existing:
+        bundle_file(out_dir, path.relative_to(out_dir).as_posix())  # refuse before anything is written
     if not all(path.exists() for path in existing):
         return True, ["issued a CA for this bundle (tls/ca.crt) and certificates for agentic-proxy and "
                       "sonarqube-tls-proxy; the CA key was not kept."]
@@ -1427,8 +1429,21 @@ def file_digest(rel: str, data: bytes) -> str:
     return sha256("\n".join(lines).encode())
 
 
+def bundle_file(out_dir: Path, rel: str) -> Path:
+    """The file `rel` names in the bundle. Refuses one that leaves the bundle through '..', an absolute
+    path or a symlink, so an edited manifest can't make a run overwrite or delete files elsewhere.
+    os.path.realpath, not Path.resolve: before Python 3.10 on Windows, resolve() leaves a path that
+    doesn't exist yet relative."""
+    base = os.path.realpath(out_dir)
+    resolved = os.path.realpath(os.path.join(base, rel))
+    if not resolved.startswith(base + os.sep):
+        raise ConfigError(f"'{rel}' resolves outside the bundle directory {out_dir}; remove it, or the "
+                          f"symlink it goes through, and rerun")
+    return Path(resolved)
+
+
 def read_manifest(out_dir: Path) -> dict[str, str]:
-    path = out_dir / MANIFEST_FILE
+    path = bundle_file(out_dir, MANIFEST_FILE)
     if not path.exists():
         return {}
     try:
@@ -1454,7 +1469,7 @@ def reuse_env_values(args: argparse.Namespace, out_dir: Path) -> list[str]:
     flight, and a new JWT secret would log every Data Center user out. Also keeps the cluster
     addresses and published ports the README tells users to edit in .env, so that edit doesn't
     block regeneration."""
-    existing = read_env_values(out_dir / ".env")
+    existing = read_env_values(bundle_file(out_dir, ".env"))
     args.cluster_subnet = existing.get("SONARQUBE_CLUSTER_SUBNET") or DATACENTER_CLUSTER_SUBNET
     args.app_node_ips = [existing.get(ip_var(node)) or node_ip
                          for node, node_ip in zip(DATACENTER_APP_NODES, DATACENTER_APP_NODE_IPS)]
@@ -1480,7 +1495,7 @@ def plan_writes(out_dir: Path, files: dict[str, bytes], force: bool) -> tuple[di
     plan: dict[str, list[str]] = {"created": [], "updated": [], "unchanged": []}
     edited = []
     for rel, data in files.items():
-        path = out_dir / rel
+        path = bundle_file(out_dir, rel)
         if not path.exists():
             plan["created"].append(rel)
             continue
@@ -1496,6 +1511,8 @@ def plan_writes(out_dir: Path, files: dict[str, bytes], force: bool) -> tuple[di
                           f"{', '.join(edited)}. Move your changes into a docker-compose.override.yaml, which "
                           f"the generator never writes, or rerun with --force to overwrite them")
     stale = [rel for rel in manifest if rel not in files]
+    for rel in stale:
+        bundle_file(out_dir, rel)  # refuse before anything is written
     return plan, stale
 
 
@@ -1515,7 +1532,7 @@ def write_file(path: Path, data: bytes, mode: int | None = None) -> None:
 def remove_stale(out_dir: Path, stale: list[str], manifest: dict[str, str]) -> list[str]:
     notes = []
     for rel in stale:
-        path = out_dir / rel
+        path = bundle_file(out_dir, rel)
         if not path.exists():
             continue
         if file_digest(rel, path.read_bytes()) == manifest.get(rel):
@@ -1695,17 +1712,18 @@ def write_bundle(args: argparse.Namespace, out_dir: Path, compose_text: str, son
     manifest = read_manifest(out_dir)
     plan, stale = plan_writes(out_dir, files, args.force)
     reissue_certs, cert_notes = check_bundle_certs(args, out_dir) if uses_bundle_ca(args) else (False, [])
-    out_dir.mkdir(parents=True, exist_ok=True)
+    # write_file creates the bundle directory with the first file's parent.
     for rel in plan["created"] + plan["updated"]:
-        write_file(out_dir / rel, files[rel], 0o600 if rel == ".env" else None)
+        target = bundle_file(out_dir, rel)
+        write_file(target, files[rel], 0o600 if rel == ".env" else None)
         if rel in assets:
-            shutil.copymode(assets[rel], out_dir / rel)
+            shutil.copymode(assets[rel], target)
     # An .env from an older run may still be world-readable.
-    (out_dir / ".env").chmod(0o600)
+    bundle_file(out_dir, ".env").chmod(0o600)
     notes += remove_stale(out_dir, stale, manifest)
     if plan["updated"]:
         notes.append(f"updated {', '.join(plan['updated'])}.")
-    write_file(out_dir / MANIFEST_FILE, (json.dumps(
+    write_file(bundle_file(out_dir, MANIFEST_FILE), (json.dumps(
         {"files": {rel: file_digest(rel, data) for rel, data in sorted(files.items())}}, indent=2) + "\n").encode())
 
     if args.custom_ca_dir and not custom_ca_is_external(args.custom_ca_dir):
