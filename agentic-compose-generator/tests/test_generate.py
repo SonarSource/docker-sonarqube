@@ -485,6 +485,49 @@ class RegenerationTest(unittest.TestCase):
         self.assertEqual(self.generate("--force")[0], 0)
         self.assertNotIn("# my edit", compose.read_text())
 
+    def test_manifest_entry_outside_the_bundle_is_refused(self):
+        self.assertEqual(self.generate()[0], 0)
+        outside = Path(self._tmp.name) / "outside.txt"
+        outside.write_text("keep me\n")
+        manifest_file = self.bundle / gen.MANIFEST_FILE
+        manifest = json.loads(manifest_file.read_text())
+        # With a matching checksum, remove_stale would otherwise delete it.
+        manifest["files"]["../outside.txt"] = gen.sha256(outside.read_bytes())
+        manifest_file.write_text(json.dumps(manifest))
+        compose = self.bundle / "docker-compose.yaml"
+        compose.write_text(compose.read_text() + "# my edit\n")
+
+        code, err = self.generate("--force")
+        self.assertEqual(code, 1)
+        self.assertIn("'../outside.txt' resolves outside the bundle directory", err)
+        self.assertEqual(outside.read_text(), "keep me\n")
+        self.assertIn("# my edit", compose.read_text())  # refused before anything was written
+
+    @unittest.skipIf(os.name == "nt", "needs POSIX symlinks")
+    def test_bundle_file_symlinked_out_of_the_bundle_is_refused(self):
+        self.assertEqual(self.generate()[0], 0)
+        outside = Path(self._tmp.name) / "outside.yaml"
+        outside.write_text("keep me\n")
+        compose = self.bundle / "docker-compose.yaml"
+        compose.unlink()
+        compose.symlink_to(outside)
+
+        code, err = self.generate("--force")
+        self.assertEqual(code, 1)
+        self.assertIn("'docker-compose.yaml' resolves outside the bundle directory", err)
+        self.assertEqual(outside.read_text(), "keep me\n")
+
+    def test_relative_out_is_written_and_regenerated(self):
+        cwd = os.getcwd()
+        os.chdir(self._tmp.name)
+        try:
+            for attempt in ("first", "second"):
+                code, _, err = run("--edition", "enterprise", "--tls", "off", "--out", "bundle")
+                self.assertEqual(code, 0, f"{attempt} run: {err}")
+        finally:
+            os.chdir(cwd)
+        self.assertTrue((self.bundle / "docker-compose.yaml").is_file())
+
 
 class WindowsTest(unittest.TestCase):
     def test_runs_twice_with_an_ascii_default_encoding(self):

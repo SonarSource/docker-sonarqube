@@ -168,7 +168,7 @@ func GetBuildMetadataFromConfig(cfg config.ActiveVersionConfig, fileFetcher fetc
 }
 
 // GenerateTags computes a list of Docker image tags based on version, edition type, and LTA status.
-func GenerateTags(version string, editionType string, isLatestLTSTag bool, isLatestLTATag bool, isLatest bool, activeVersiontype string) ([]string, error) {
+func GenerateTags(version, editionType string, isLatestLTSTag, isLatestLTATag, isLatest bool, activeVersiontype string) ([]string, error) {
 
 	if editionType == "" {
 		return nil, fmt.Errorf("editionType cannot be empty")
